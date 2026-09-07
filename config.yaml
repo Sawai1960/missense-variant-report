@@ -1,0 +1,42 @@
+# FuncVEP 統合レポートツール 設定ファイル
+#
+# data_root 配下に raw/（ダウンロード生ファイル）と index/（Parquet 変換後）を置く。
+# OneDrive 同期フォルダーを指定しないこと（十数 GB の同期が発生する）。
+
+data_root: "D:/FuncVEP"
+
+# ゲノムアセンブリ。FuncVEP・AlphaMissense・REVEL・ClinVar いずれも GRCh38 を使う。
+assembly: "GRCh38"
+
+# 画面で最初に強調表示するモデル。
+# FuncVEP_CTI は論文のベンチマークで最良だが、臨床学習済み予測器を特徴量に含むため
+# circularity のリスクが最も高い。CTE はそれを除いたもの。
+# 判断が割れる例では必ず両方を見ること。
+primary_model: "FuncVEP_CTI"
+
+# gnomAD のアレル頻度の取得方法
+#   manual : 検査報告書の値を画面から手入力する（既定。完全オフライン）
+#   api    : gnomAD GraphQL API に問い合わせる（変異座標が外部に送信される）
+gnomad_af_mode: "manual"
+
+# ---------------------------------------------------------------------------
+# ACMG PP3/BP4 の閾値
+# ---------------------------------------------------------------------------
+# 論文の較正値は Supplementary Table 13 にあり、本文 PDF には含まれていない。
+# 値を推測で埋めることはしない。scripts/03_calibrate_acmg.py を実行すると
+# ClinVar のラベル付き変異から Pejaver ら (2022) / Tavtigian ら (2018) の
+# local posterior 法で閾値を算出し、index/acmg_thresholds.json に保存する。
+#
+# そのファイルが存在しない間、レポートは PP3/BP4 を「未較正のため判定しない」と
+# 表示し、スコアの生値のみを示す。
+acmg:
+  thresholds_file: "index/acmg_thresholds.json"
+  # 較正の事前確率。Pejaver ら 2022 が用いた値。
+  prior_pathogenic: 0.0441
+  # 較正に使う ClinVar のレビュー状態の下限（星の数）
+  min_review_stars: 2
+  # 1 遺伝子あたりの偏りを避けるため、遺伝子ごとの上限件数
+  max_variants_per_gene: 50
+
+# レポート PDF に使う日本語フォント（Windows 同梱）
+pdf_font: "C:/Windows/Fonts/NotoSansJP-VF.ttf"

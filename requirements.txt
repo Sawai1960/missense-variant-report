@@ -1,0 +1,22 @@
+# ミスセンス変異 統合レポートツール の依存パッケージ
+#
+#   python -m pip install -r requirements.txt
+#
+# 2026-08-30 に動作を確認した組み合わせ（Python 3.14.0）。
+# この構成で単体テスト 22 件と scripts/04_selftest.py（NG 0）が通っている。
+# 別のマシンで同じ結果を再現したいときのために版を固定してある。
+# 新しい版を試すときは、上げたあとに 04_selftest.py を必ず走らせること。
+
+streamlit==1.61.1     # 画面
+duckdb==1.5.5         # Parquet 索引への問い合わせ
+pandas==3.0.5         # duckdb の .df() が内部で使う。コードから直接 import はしていない
+pyarrow==24.0.0       # Parquet の書き出し（scripts/02_build_index.py）
+numpy==2.5.1          # PP3/BP4 の較正（scripts/03_calibrate_acmg.py）
+requests==2.34.2      # 参照データの取得（scripts/01_download.py）
+PyYAML==6.0.3         # config.yaml の読み込み
+fpdf2==2.8.8          # レポートの PDF 出力
+fonttools==4.63.0     # 可変フォントから静的ウェイトを切り出す（funcvep_report/pdfout.py）
+
+# 単体テストは標準ライブラリの unittest で書いてあるので pytest は要らない。
+#   python -m unittest discover -s tests
+# pytest を使う場合は 9.1.1 で確認している。
