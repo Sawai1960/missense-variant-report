@@ -8,6 +8,10 @@
     with use_lang("en"):
         t("pdf.title")            # -> "Missense Variant Report"
     t("lk.multi_nuc", n=2)        # 書式は str.format と同じ
+
+文体の方針（2026-09-08）: 読み手は遺伝の専門でない医師も含む。医学用語は使うが、
+機械学習・バイオインフォマティクスの用語（特徴量、予測器、推論、較正、不寛容）は
+使わず、「材料」「予測ツール」「予測」「判定基準」「一般の人々に少ない」と言い換える。
 """
 
 from __future__ import annotations
@@ -54,15 +58,49 @@ def join(items, wide: bool = False) -> str:
 
 # 著者私信で共通する注意書き。何度も出るのでここにまとめる。
 _NO_INFO_JA = (
-    "スコアが得られないこと自体は、病原性についても予測の信頼度についても"
-    "何ら情報を持たない（著者私信）。AlphaMissense・REVEL・ClinVar の側で"
-    "判断すること。"
+    "スコアが無いこと自体は、病気との関係についても予測の確からしさについても"
+    "何の情報も持たない（著者らに確認済み）。AlphaMissense・REVEL・ClinVar の"
+    "情報で判断すること。"
 )
 _NO_INFO_EN = (
     "The absence of a score carries no information about pathogenicity or "
-    "prediction confidence (authors, personal communication). Rely on "
+    "prediction confidence (confirmed with the authors). Rely on "
     "AlphaMissense, REVEL and ClinVar."
 )
+
+# 参考文献。両言語で共通の書誌はそのまま並べる。
+_REF_FUNCVEP = (
+    "Kayaalp B, Çil K, Conil C, Cobat A, Kars ME, Itan Y, Casanova JL, Özçelik T. "
+    "Prediction of human missense variant effects from functional evidence. "
+    "Nature Genetics (2026). doi:10.1038/s41588-026-02727-3"
+)
+_REF_AM = (
+    "Cheng J, et al. Accurate proteome-wide missense variant effect prediction "
+    "with AlphaMissense. Science 381, eadg7492 (2023)."
+)
+_REF_REVEL = (
+    "Ioannidis NM, et al. REVEL: an ensemble method for predicting the "
+    "pathogenicity of rare missense variants. Am J Hum Genet 99, 877–885 (2016)."
+)
+_REF_GNOMAD = (
+    "Karczewski KJ, et al. The mutational constraint spectrum quantified from "
+    "variation in 141,456 humans. Nature 581, 434–443 (2020)."
+)
+_REF_CLINVAR = (
+    "Landrum MJ, et al. ClinVar: improving access to variant interpretations and "
+    "supporting evidence. Nucleic Acids Res 46, D1062–D1067 (2018)."
+)
+_REF_ACMG = (
+    "Richards S, et al. Standards and guidelines for the interpretation of "
+    "sequence variants: a joint consensus recommendation of the ACMG and the AMP. "
+    "Genet Med 17, 405–424 (2015)."
+)
+_REF_PEJAVER = (
+    "Pejaver V, et al. Calibration of computational tools for missense variant "
+    "pathogenicity classification and ClinGen recommendations for PP3/BP4 "
+    "criteria. Am J Hum Genet 109, 2163–2177 (2022)."
+)
+_REF_TIERS = "Genet Med (2025). doi:10.1016/j.gim.2025.101402"
 
 _STRINGS: dict[str, tuple[str, str]] = {
     # ---------------------------------------------------------------- 共通
@@ -71,33 +109,58 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "dash": ("—", "—"),
 
     # ------------------------------------------------------------ report.py
-    "missing_label.blank": ("学習に使われたため非公開", "Withheld (used in training)"),
-    "missing_label.absent": ("学習に使われたため未収録", "Not in table (used in training)"),
+    "intro.funcvep": (
+        "FuncVEP は Kayaalp ら（Nature Genetics, 2026）が開発した予測ツール。"
+        "従来の多くのツールが ClinVar などの臨床判定や一般の人々の変異データを"
+        "教材に学習しているのに対し、FuncVEP は機能実験（変異がタンパク質の働きに"
+        "与える影響を実際に測ったデータ）を教材に学習している点が特徴で、論文では"
+        "既存の 48 種のツールを上回る精度が報告されている（機能実験に基づく評価で "
+        "78.8%→84.6%、臨床判定に基づく評価で 90.1%→92.4%）。本レポートは論文と"
+        "ともに公開された予測済みスコア（約 7,300 万変異）を引いており、再計算は"
+        "していない。",
+        "FuncVEP is a predictor developed by Kayaalp et al. (Nature Genetics, 2026). "
+        "Whereas most existing tools are trained on clinical classifications (e.g. "
+        "ClinVar) or population data, FuncVEP is trained on functional assays — "
+        "direct measurements of how a variant affects protein function. The paper "
+        "reports higher accuracy than 48 existing predictors (78.8%→84.6% on "
+        "functional benchmarks, 90.1%→92.4% on clinical benchmarks). This report "
+        "looks up the precomputed scores released with the paper (~73 million "
+        "variants); nothing is recomputed.",
+    ),
+
+    "missing_label.blank": ("非公開（モデルの教材に使われた変異）",
+                            "Withheld (variant used to train the model)"),
+    "missing_label.absent": ("未収録（全モデルの教材に使われた変異）",
+                             "Not in table (variant used to train all models)"),
     "missing_label.absent_unexplained": (
-        "予測表に未収録（作成工程の都合。著者確認済み）",
-        "Not in table (dataset assembly; confirmed by authors)",
+        "未収録（予測表の作成上の理由。著者確認済み）",
+        "Not in table (dataset assembly; confirmed by the authors)",
     ),
     "missing_label.unknown": ("FuncVEP の索引なし", "No FuncVEP index"),
     "missing_label.default": ("スコアなし", "No score"),
 
     "missing_note.blank": (
-        "この変異は一部のモデルの学習に使われたため、そのモデルのスコアが"
-        "公開されていない。「予測できなかった」ではない。" + _NO_INFO_JA,
-        "This variant was used to train some of the models, so those scores are "
-        "withheld. This does not mean it could not be predicted. " + _NO_INFO_EN,
+        "この変異は、一部のモデルを作るときの教材（学習データ）に使われている。"
+        "教材に使った変異は答えを知っているのと同じなので、著者らはそのモデルの"
+        "スコアを公開していない。「予測できなかった」のではない。" + _NO_INFO_JA,
+        "This variant was part of the training data for some of the models. "
+        "Because a model has effectively seen the answer for its training "
+        "variants, the authors withhold those scores. It does not mean the "
+        "variant could not be predicted. " + _NO_INFO_EN,
     ),
     "missing_note.absent": (
-        "この変異は 6 モデル全部の学習に使われたため、全モデルの推論から"
-        "除かれ、公開予測表から行ごと消えている。" + _NO_INFO_JA,
-        "This variant was used to train all six models, so it was excluded from "
-        "every model's inference and has no row in the released table. " + _NO_INFO_EN,
+        "この変異は 6 つのモデルすべての教材（学習データ）に使われているため、"
+        "どのモデルの予測からも除かれ、公開された予測表に行そのものが無い。"
+        + _NO_INFO_JA,
+        "This variant was in the training data of all six models, so it was "
+        "excluded from every model's predictions and has no row in the released "
+        "table. " + _NO_INFO_EN,
     ),
     "missing_note.absent_unexplained": (
-        "この変異は公開予測表に無く、公開されている学習セットにも"
-        "見当たらない。著者の照合（2026-09-07 私信）によれば、"
-        "この種の未収録は予測表の作成工程に由来する"
-        "（注釈の違いによる除外・元データに不在・処理漏れの"
-        "いずれか）。" + _NO_INFO_JA,
+        "この変異は公開された予測表に無く、公開されている教材（学習データ）の"
+        "一覧にも見当たらない。著者らの照合（2026-09-07 私信）によれば、この種の"
+        "未収録は予測表を作る工程の都合（注釈の違いによる除外・元データに無い・"
+        "処理の抜け）で生じたものである。" + _NO_INFO_JA,
         "This variant has no row in the released table and is not in any "
         "published training set. According to the authors (personal "
         "communication, 2026-09-07), such absences arise from the assembly of "
@@ -109,44 +172,66 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "The FuncVEP index is not available, so no lookup was possible.",
     ),
     "trained_models": (
-        "　学習に使ったモデル: {models}",
+        "　教材に使ったモデル: {models}",
         " Models trained on this variant: {models}",
     ),
 
     "model_note.FuncVEP_CTI": (
-        "臨床学習済み予測器を特徴量に含む。ベンチマーク最良だが循環参照の risk が最も高い",
-        "Includes clinically trained predictors as features. Best in benchmarks "
-        "but highest risk of circularity",
+        "ClinVar などの臨床判定で学習した他の予測ツールの結果も材料に含めたモデル。"
+        "論文の比較では最も高精度だが、ClinVar と同じ答えになりやすく、"
+        "ClinVar から独立した証拠としては弱い",
+        "Also uses, as inputs, the outputs of other predictors that were trained "
+        "on clinical classifications such as ClinVar. Most accurate in the paper's "
+        "comparison, but tends to agree with ClinVar and is weaker as evidence "
+        "independent of it",
     ),
     "model_note.FuncVEP_CTE": (
-        "臨床学習済み予測器を除外。ClinVar との独立性が高い",
-        "Excludes clinically trained predictors. More independent of ClinVar",
+        "臨床判定で学習した他ツールの結果を材料から外したモデル。"
+        "ClinVar から独立した証拠として扱いやすい",
+        "Excludes the outputs of clinically trained predictors from its inputs. "
+        "Easier to treat as evidence independent of ClinVar",
     ),
     "model_note.FuncVEP_SP": (
-        "他の予測器を一切使わない。最も独立だが単独性能は劣る",
-        "Uses no other predictors at all. Most independent, lower standalone performance",
+        "他の予測ツールの結果を一切使わず、配列と構造の情報だけで予測するモデル。"
+        "最も独立しているが、単独の精度は上の 2 つに劣る",
+        "Uses no other predictors at all — only sequence and structure information. "
+        "The most independent, but less accurate on its own than the two above",
     ),
     "model_note.ClinVEP_CTI": (
-        "同じ特徴量を ClinVar ラベルで学習した対照モデル",
-        "Contrast model trained on the same features with ClinVar labels",
+        "FuncVEP-CTI と同じ材料を、機能実験ではなく ClinVar の臨床判定で"
+        "学習させた比較用モデル",
+        "Comparison model trained on the same inputs as FuncVEP-CTI, but on "
+        "ClinVar clinical classifications instead of functional assays",
     ),
     "model_note.ClinVEP_CTE": (
-        "同上（臨床学習済み予測器を除外）",
-        "As above (excluding clinically trained predictors)",
+        "同上（臨床判定で学習した他ツールの結果を外したもの）",
+        "As above, excluding clinically trained predictors",
     ),
     "model_note.ClinVEP_SP": (
-        "同上（他の予測器を使わない）",
-        "As above (using no other predictors)",
+        "同上（他の予測ツールの結果を使わないもの）",
+        "As above, using no other predictors",
     ),
 
     "row.gene": ("遺伝子", "Gene"),
     "gene_value": ("{gene}（{ensg}）", "{gene} ({ensg})"),
-    "note.pli": ("1 に近いほど機能喪失変異に不寛容",
-                 "Closer to 1 = less tolerant of loss-of-function variants"),
-    "note.mis_z": ("正で大きいほどミスセンス変異に不寛容",
-                   "Larger positive = less tolerant of missense variants"),
+    "note.pli": (
+        "この遺伝子の働きを失わせる変異が、一般の人々にどれだけ少ないかを示す指標"
+        "（gnomAD）。1 に近いほど、壊れると影響が大きい遺伝子",
+        "How depleted loss-of-function variants in this gene are among the general "
+        "population (gnomAD). Closer to 1 means the gene tolerates loss poorly",
+    ),
+    "note.mis_z": (
+        "この遺伝子のアミノ酸置換が、一般の人々で予想より少ないかを示す指標"
+        "（gnomAD）。値が大きいほど、置換の影響が出やすい遺伝子",
+        "How depleted missense variants in this gene are relative to expectation "
+        "(gnomAD). Larger values mean substitutions tend to matter",
+    ),
+    "note.lof_z": (
+        "遺伝子の働きを失わせる変異について、上と同じ考え方の指標",
+        "The same measure for loss-of-function variants",
+    ),
     "row.af": ("gnomAD アレル頻度", "gnomAD allele frequency"),
-    "note.af": ("0.01 を超えるなら BA1、疾患頻度に照らして高いなら BS1 を検討",
+    "note.af": ("0.01 を超えるなら BA1、疾患の頻度に照らして高いなら BS1 を検討",
                 "Consider BA1 if above 0.01; BS1 if high relative to disease prevalence"),
     "row.hom": ("ホモ接合体数", "Homozygotes"),
     "note.hom": ("常染色体劣性疾患で 0 でないなら BS2 を検討",
@@ -154,26 +239,36 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "af.not_entered": ("未入力", "Not entered"),
     "note.af_not_entered": ("検査報告書の値を画面で入力すると表示されます",
                             "Enter the value from the laboratory report to show it here"),
-    "uncalibrated": ("PP3/BP4 未較正", "PP3/BP4 not calibrated"),
+    "uncalibrated": ("PP3/BP4 の判定基準なし", "No PP3/BP4 thresholds"),
 
-    "row.clinvep": ("ClinVEP（対照）", "ClinVEP (contrast)"),
+    "row.clinvep": ("ClinVEP（比較用）", "ClinVEP (comparison)"),
     "note.clinvep": (
-        "同じ特徴量を ClinVar ラベルで学習した対照。FuncVEP と大きく食い違う場合は"
-        "機能的影響と臨床的病原性が乖離している可能性",
-        "Contrast model trained on the same features with ClinVar labels. A large "
-        "disagreement with FuncVEP suggests functional impact and clinical "
-        "pathogenicity may diverge",
+        "FuncVEP と同じ材料を ClinVar の臨床判定で学習させた比較用のスコア。"
+        "FuncVEP（タンパク質の働きへの影響）と ClinVEP（臨床判定の予測）が大きく"
+        "食い違うときは、働きへの影響と病気との関係がずれている変異かもしれない",
+        "Comparison scores from models trained on the same inputs as FuncVEP but "
+        "on ClinVar clinical classifications. A large disagreement between FuncVEP "
+        "(effect on protein function) and ClinVEP (predicted clinical "
+        "classification) may indicate a variant where function and disease diverge",
     ),
     "note.clinvep_trained": (
-        "この変異は {models} の学習に使われたため、対照のスコアは公開されていない",
-        "Used to train {models}; the contrast score is withheld",
+        "この変異は {models} の教材に使われているため、比較用のスコアは公開されていない",
+        "Used to train {models}; the comparison score is withheld",
     ),
     "note.alphamissense": (
-        "CC BY-NC-SA 4.0 / 集団頻度で弱ラベル付けした半教師あり学習",
-        "CC BY-NC-SA 4.0 / semi-supervised, weakly labelled by population frequency",
+        "Google DeepMind の予測ツール（Cheng ら 2023, Science）。一般の人々での"
+        "変異の頻度を手がかりに学習している。likely_pathogenic / ambiguous / "
+        "likely_benign の 3 区分",
+        "Google DeepMind's predictor (Cheng et al. 2023, Science), trained using "
+        "population variant frequencies as a guide. Three classes: "
+        "likely_pathogenic / ambiguous / likely_benign",
     ),
-    "note.revel": ("{cutoff} を境とした慣用的な二値判定",
-                   "Conventional binary call at {cutoff}"),
+    "note.revel": (
+        "複数の予測ツールを統合した従来型のスコア（Ioannidis ら 2016）。"
+        "{cutoff} を境に damaging / neutral と読むのが慣例",
+        "A conventional score combining several predictors (Ioannidis et al. 2016). "
+        "By convention read as damaging / neutral at {cutoff}",
+    ),
 
     "row.significance": ("臨床的意義", "Clinical significance"),
     "note.review": ("レビュー {stars} 星（{status}）", "Review {stars} star(s) ({status})"),
@@ -197,51 +292,74 @@ _STRINGS: dict[str, tuple[str, str]] = {
                    "{d} of {n} predictors damaging (discordant)"),
 
     "disclaimer.1": (
-        "FuncVEP が予測するのはタンパク質の機能への影響（damaging / neutral）であり、"
-        "臨床的病原性そのものではない。両者を混同しないこと。",
+        "FuncVEP が予測するのはタンパク質の働きへの影響（damaging / neutral）であり、"
+        "病気を起こすかどうか（臨床的病原性）そのものではない。両者を混同しないこと。",
         "FuncVEP predicts the effect on protein function (damaging / neutral), "
         "not clinical pathogenicity itself. Do not conflate the two.",
     ),
     "disclaimer.2": (
-        "ACMG/AMP 基準では計算による証拠 PP3/BP4 として扱う。機能実験の証拠 PS3/BS3 ではない。",
+        "ACMG/AMP 基準では、コンピュータ予測による証拠 PP3/BP4 として扱う。"
+        "実験で機能を確かめた証拠 PS3/BS3 にはならない。",
         "Under ACMG/AMP it is computational evidence (PP3/BP4), not functional "
         "assay evidence (PS3/BS3).",
     ),
     "disclaimer.3": (
-        "対象はミスセンス変異のみ。スプライスへの影響、フレームシフト、ナンセンス変異は評価されない。",
+        "対象はミスセンス変異（アミノ酸置換）のみ。スプライシングへの影響、"
+        "フレームシフト、ナンセンス変異は評価されない。",
         "Missense variants only. Splicing effects, frameshifts and nonsense "
         "variants are not assessed.",
     ),
     "disclaimer.4": (
         "本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはならない。"
-        "家系内分離、表現型の一致、機能実験、専門家の検討と併せて評価すること。",
+        "家系内での分離、症状との一致、機能実験、専門家の検討と併せて評価すること。",
         "This report supports variant interpretation and must not be the sole "
         "basis for a clinical decision. Weigh it together with segregation, "
         "phenotype fit, functional studies and expert review.",
     ),
 
+    # ---------------------------------------------------------- 参考文献
+    "pdf.references": ("参考文献", "References"),
+    "ref.funcvep": (_REF_FUNCVEP, _REF_FUNCVEP),
+    "ref.thresholds": (
+        "同論文 Supplementary Table 13（PP3/BP4 の判定基準。2026-09-05 に著者から提供）",
+        "Ibid., Supplementary Table 13 (PP3/BP4 thresholds; provided by the authors, 2026-09-05)",
+    ),
+    "ref.tiers": (
+        "証拠の段階（Supporting / Moderate / Intermediate / Strong）の定義: " + _REF_TIERS
+        + "（著者の指示による）",
+        "Evidence-strength tiers (Supporting / Moderate / Intermediate / Strong): "
+        + _REF_TIERS + " (as indicated by the authors)",
+    ),
+    "ref.alphamissense": (_REF_AM, _REF_AM),
+    "ref.revel": (_REF_REVEL, _REF_REVEL),
+    "ref.gnomad": (_REF_GNOMAD, _REF_GNOMAD),
+    "ref.clinvar": (_REF_CLINVAR, _REF_CLINVAR),
+    "ref.acmg": (_REF_ACMG, _REF_ACMG),
+    "ref.pejaver": (_REF_PEJAVER, _REF_PEJAVER),
+
     # -------------------------------------------------------------- acmg.py
-    "acmg.none": ("該当なし（中間域）", "None (intermediate range)"),
+    "acmg.none": ("該当なし（PP3 にも BP4 にも達しない中間域）",
+                  "None (between the BP4 and PP3 ranges)"),
     "thr.uncalibrated": (
-        "PP3/BP4 は未較正です。scripts/03_calibrate_acmg.py を実行すると、"
-        "お手元の ClinVar から閾値を算出します。",
-        "PP3/BP4 thresholds are not calibrated. Run scripts/03_calibrate_acmg.py "
+        "PP3/BP4 の判定基準が設定されていません。scripts/03_calibrate_acmg.py を"
+        "実行すると、お手元の ClinVar から算出します。",
+        "PP3/BP4 thresholds are not set. Run scripts/03_calibrate_acmg.py "
         "to derive them from your local ClinVar.",
     ),
-    "thr.published_source": ("閾値の由来: {citation}。", "Threshold source: {citation}."),
+    "thr.published_source": ("判定基準の由来: {citation}。", "Threshold source: {citation}."),
     "thr.published_default": ("論文の公表値", "published values from the paper"),
     "thr.published_note": (
-        "著者から提供された公表値をそのまま使用しています（自前の較正ではありません）。",
-        "Published values provided by the authors are used as-is (not a local calibration).",
+        "著者から提供された公表値をそのまま使用しています（当方で算出したものではありません）。",
+        "Published values provided by the authors are used as-is (not derived locally).",
     ),
     "thr.local_head": (
-        "閾値の由来: ClinVar（{date} 時点、レビュー {stars} 星以上）の "
-        "病的 {n_p:,} 件 / 良性 {n_b:,} 件から自前で算出。",
+        "判定基準の由来: ClinVar（{date} 時点、レビュー {stars} 星以上）の "
+        "病的 {n_p:,} 件 / 良性 {n_b:,} 件から当方で算出。",
         "Threshold source: derived locally from ClinVar ({date}, review status "
         "{stars}+ stars), {n_p:,} pathogenic / {n_b:,} benign variants.",
     ),
     "thr.local_head_short": (
-        "閾値の由来: ClinVar（{date} 時点）から自前で算出。",
+        "判定基準の由来: ClinVar（{date} 時点）から当方で算出。",
         "Threshold source: derived locally from ClinVar ({date}).",
     ),
     "thr.local_params": (
@@ -270,12 +388,13 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "pdf.variant_n": ("変異 {i} / {n}", "Variant {i} / {n}"),
     "row.genomic": ("ゲノム座標", "Genomic coordinate"),
     "row.transcript": ("転写産物", "Transcript"),
-    "pdf.funcvep": ("FuncVEP（機能的影響の予測）", "FuncVEP (predicted functional impact)"),
+    "pdf.funcvep": ("FuncVEP（タンパク質の働きへの影響の予測）",
+                    "FuncVEP (predicted effect on protein function)"),
     "pdf.others": ("他の予測ツール", "Other predictors"),
     "pdf.clinvar": ("ClinVar", "ClinVar"),
     "pdf.concordance": ("指標同士の一致", "Concordance"),
     "row.summary": ("要約", "Summary"),
-    "pdf.thresholds": ("PP3/BP4 の閾値について", "PP3/BP4 thresholds"),
+    "pdf.thresholds": ("PP3/BP4 の判定基準について", "PP3/BP4 thresholds"),
     "pdf.disclaimer": ("解釈上の注意", "Interpretation caveats"),
     "pdf.font_missing": (
         "日本語フォントが見つかりません: {path}\n"
@@ -433,24 +552,24 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "This may be an overlapping-gene region.",
     ),
     "lk.warn_blank": (
-        "FuncVEP のスコアは空欄です。学習に使われた変異はスコアが"
-        "公開されていません。AlphaMissense・REVEL・ClinVar を見てください。",
-        "FuncVEP scores are blank: scores of variants used in training are "
+        "FuncVEP のスコアは空欄です。モデルの教材（学習データ）に使われた変異は"
+        "スコアが公開されていません。AlphaMissense・REVEL・ClinVar を見てください。",
+        "FuncVEP scores are blank: scores of variants used to train the models are "
         "withheld. See AlphaMissense, REVEL and ClinVar.",
     ),
     "lk.warn_absent": (
-        "この変異は 6 モデル全部の学習に使われたため、公開予測表から"
-        "行ごと除かれています。収録が無いこと自体は病原性の情報を"
-        "持ちません。AlphaMissense・REVEL・ClinVar を見てください。",
+        "この変異は 6 つのモデルすべての教材（学習データ）に使われているため、"
+        "公開された予測表から行ごと除かれています。収録が無いこと自体は病気との"
+        "関係について何の情報も持ちません。AlphaMissense・REVEL・ClinVar を見てください。",
         "This variant was used to train all six models and therefore has no row "
         "in the released table. Its absence carries no information about "
         "pathogenicity. See AlphaMissense, REVEL and ClinVar.",
     ),
     "lk.warn_absent_unexplained": (
-        "この変異は公開予測表になく、公開されている学習セットにも"
-        "見当たりません。著者の照合によれば予測表の作成工程に由来する未収録で、"
-        "収録が無いこと自体は病原性の情報を持ちません。"
-        "AlphaMissense・REVEL・ClinVar を見てください。",
+        "この変異は公開された予測表になく、公開されている教材（学習データ）の"
+        "一覧にも見当たりません。著者らの照合によれば予測表を作る工程の都合で"
+        "生じた未収録で、収録が無いこと自体は病気との関係について何の情報も"
+        "持ちません。AlphaMissense・REVEL・ClinVar を見てください。",
         "This variant has no row in the released table and is not in any "
         "published training set. Per the authors, such absences arise from the "
         "assembly of the released table and carry no information about "
@@ -529,28 +648,28 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.af_placeholder": ("例) 0.0000041 または 4.1e-6", "e.g. 0.0000041 or 4.1e-6"),
     "ui.hom": ("ホモ接合体数", "Homozygotes"),
     "ui.hom_placeholder": ("例) 0", "e.g. 0"),
-    "ui.thr.uncalibrated": ("未較正です。スコアの生値のみ表示します。",
-                            "Not calibrated. Raw scores only."),
-    "ui.thr.uncalibrated_help": ("`python scripts/03_calibrate_acmg.py` で較正できます。",
-                                 "Run `python scripts/03_calibrate_acmg.py` to calibrate."),
+    "ui.thr.uncalibrated": ("PP3/BP4 の判定基準が未設定です。スコアの生値のみ表示します。",
+                            "PP3/BP4 thresholds are not set. Raw scores only."),
+    "ui.thr.uncalibrated_help": ("`python scripts/03_calibrate_acmg.py` で算出できます。",
+                                 "Run `python scripts/03_calibrate_acmg.py` to derive them."),
     "ui.thr.published": ("論文の公表値（Supplementary Table 13）",
                          "Published values (Supplementary Table 13)"),
-    "ui.thr.published_help": ("著者から提供された較正値をそのまま使用しています。",
-                              "Calibration values provided by the authors are used as-is."),
+    "ui.thr.published_help": ("著者から提供された判定基準をそのまま使用しています。",
+                              "Thresholds provided by the authors are used as-is."),
     "ui.thr.local": (
-        "自前の較正（病的 {n_p} / 良性 {n_b} 件）",
-        "Local calibration ({n_p} pathogenic / {n_b} benign)",
+        "当方で算出した判定基準（病的 {n_p} / 良性 {n_b} 件）",
+        "Locally derived thresholds ({n_p} pathogenic / {n_b} benign)",
     ),
     "ui.thr.local_help": ("論文の公表値ではありません。判定は論文と一致しません。",
                           "Not the published values; calls will not match the paper."),
     "ui.title": ("ミスセンス変異 統合レポート", "Missense Variant Report"),
     "ui.caption": (
         "FuncVEP（Kayaalp ら, Nature Genetics 2026）の予測を軸に、AlphaMissense・"
-        "REVEL・ClinVar・gnomAD の情報をまとめます。予測は機能的影響であり、"
-        "臨床的病原性そのものではありません。",
+        "REVEL・ClinVar・gnomAD の情報をまとめます。予測はタンパク質の働きへの"
+        "影響であり、病気を起こすかどうかそのものではありません。",
         "Combines FuncVEP predictions (Kayaalp et al., Nature Genetics 2026) with "
-        "AlphaMissense, REVEL, ClinVar and gnomAD. The prediction is of functional "
-        "impact, not clinical pathogenicity itself.",
+        "AlphaMissense, REVEL, ClinVar and gnomAD. The prediction is of the effect "
+        "on protein function, not clinical pathogenicity itself.",
     ),
     "ui.query": ("変異を入力", "Enter a variant"),
     "ui.query_placeholder": (
@@ -572,16 +691,21 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.candidate": ("　（候補 {i} / {n}）", "  (candidate {i} / {n})"),
     "ui.transcript_line": ("{genomic}（GRCh38）　転写産物 {refseq} / {enst}",
                            "{genomic} (GRCh38)  Transcript {refseq} / {enst}"),
-    "ui.funcvep": ("FuncVEP（機能的影響の予測）", "FuncVEP (predicted functional impact)"),
+    "ui.funcvep": ("FuncVEP（タンパク質の働きへの影響の予測）",
+                   "FuncVEP (predicted effect on protein function)"),
     "ui.funcvep_caption": (
-        "スコアは damaging である確率。境はモデルごとに異なる（{cuts}）。",
-        "Score = probability of being damaging. Cutoffs are model-specific ({cuts}).",
+        "スコアはタンパク質の働きを損なう（damaging）と予測される確率（0〜1）。"
+        "damaging と neutral の境はモデルごとに異なる（{cuts}）。",
+        "Score = probability (0–1) that the variant is damaging to protein function. "
+        "The damaging/neutral cutoff is model-specific ({cuts}).",
     ),
-    "ui.model_notes": ("各モデルの性格", "About each model"),
+    "ui.about_funcvep": ("FuncVEP について", "About FuncVEP"),
+    "ui.model_notes": ("各モデルの違い", "About each model"),
     "ui.others": ("他の予測ツール", "Other predictors"),
     "ui.clinvar": ("ClinVar", "ClinVar"),
     "ui.concordance": ("指標同士の一致", "Concordance"),
-    "ui.thresholds": ("PP3/BP4 の閾値について", "PP3/BP4 thresholds"),
+    "ui.thresholds": ("PP3/BP4 の判定基準について", "PP3/BP4 thresholds"),
     "ui.disclaimer": ("解釈上の注意", "Interpretation caveats"),
+    "ui.references": ("参考文献", "References"),
     "ui.pdf_button": ("この内容を PDF で保存", "Save as PDF"),
 }

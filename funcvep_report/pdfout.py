@@ -13,7 +13,7 @@ from pathlib import Path
 from fpdf import FPDF
 
 from .i18n import t, use_lang
-from .report import Report, Row, disclaimer
+from .report import Report, Row, disclaimer, funcvep_intro, references
 
 INK = (26, 26, 26)
 MUTED = (110, 110, 110)
@@ -46,13 +46,21 @@ def prepare_fonts(src: Path, cache_dir: Path) -> dict[str, Path]:
 
 
 class _Doc(FPDF):
-    def __init__(self, fonts: dict[str, Path], title: str):
+    def __init__(self, fonts: dict[str, Path], title: str, wrap: str = "CHAR"):
         super().__init__(orientation="P", unit="mm", format="A4")
         self.title_text = title
+        # 日本語は単語間に空白が無いので、fpdf 既定の「空白で折り返す」だと
+        # 途中の半角空白（数字や英単語の前後）で不自然に改行される。文字単位で
+        # 折り返す。英語は単語単位のまま。両端揃えは日本語で間延びするので使わない。
+        self.wrap = wrap
         self.set_auto_page_break(auto=True, margin=18)
         self.add_font("jp", "", str(fonts["regular"]))
         self.add_font("jp", "B", str(fonts["bold"]))
         self.set_margins(16, 16, 16)
+
+    def mc(self, w: float, h: float, text: str, align: str = "L",
+           wrap: str | None = None) -> None:
+        self.multi_cell(w, h, text, align=align, wrapmode=wrap or self.wrap)
 
     def footer(self) -> None:
         self.set_y(-14)
@@ -65,7 +73,7 @@ class _Doc(FPDF):
 def _h1(doc: _Doc, text: str) -> None:
     doc.set_font("jp", "B", size=15)
     doc.set_text_color(*INK)
-    doc.multi_cell(0, 7.5, text)
+    doc.mc(0, 7.5, text)
     doc.ln(1)
 
 
@@ -93,30 +101,30 @@ def _rows(doc: _Doc, rows: list[Row], label_w: float = 42.0) -> None:
         doc.set_font("jp", size=8.5)
         doc.set_text_color(*MUTED)
         top = doc.get_y()
-        doc.multi_cell(label_w, 5, r.label, align="L")
+        doc.mc(label_w, 5, r.label)
         after_label = doc.get_y()
 
         doc.set_xy(doc.l_margin + label_w, top)
         doc.set_font("jp", size=9.5)
         doc.set_text_color(*INK)
-        doc.multi_cell(value_w, 5, r.value, align="L")
+        doc.mc(value_w, 5, r.value)
         after_value = doc.get_y()
 
         if r.note:
             doc.set_x(doc.l_margin + label_w)
             doc.set_font("jp", size=7.5)
             doc.set_text_color(*MUTED)
-            doc.multi_cell(value_w, 4, r.note, align="L")
+            doc.mc(value_w, 4, r.note)
             after_value = doc.get_y()
 
         doc.set_y(max(after_label, after_value) + 1.2)
 
 
 def _para(doc: _Doc, text: str, size: float = 8.5,
-          color: tuple[int, int, int] = MUTED) -> None:
+          color: tuple[int, int, int] = MUTED, wrap: str | None = None) -> None:
     doc.set_font("jp", size=size)
     doc.set_text_color(*color)
-    doc.multi_cell(0, 4.6, text)
+    doc.mc(0, 4.6, text, wrap=wrap)
     doc.ln(0.8)
 
 
@@ -137,14 +145,14 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     bullet = "・" if rep.lang == "ja" else "- "
     wide = t("sep.wide")
 
-    doc = _Doc(fonts, t("pdf.title"))
+    doc = _Doc(fonts, t("pdf.title"), wrap="CHAR" if rep.lang == "ja" else "WORD")
     doc.alias_nb_pages()
     doc.add_page()
 
     _h1(doc, t("pdf.title"))
     doc.set_font("jp", size=8.5)
     doc.set_text_color(*MUTED)
-    doc.multi_cell(0, 4.6, t("pdf.meta", query=rep.query, created=rep.created))
+    doc.mc(0, 4.6, t("pdf.meta", query=rep.query, created=rep.created))
     doc.ln(1)
 
     if rep.error:
@@ -174,6 +182,8 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
         ])
 
         _h2(doc, t("pdf.funcvep"))
+        if i == 1:
+            _para(doc, funcvep_intro())
         _rows(doc, vr.predictions)
         if vr.funcvep_note:
             _para(doc, vr.funcvep_note)
@@ -194,6 +204,11 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     _h2(doc, t("pdf.disclaimer"))
     for d in disclaimer():
         _para(doc, bullet + d)
+
+    _h2(doc, t("pdf.references"))
+    for n, ref in enumerate(references(), 1):
+        # 書誌は英文が主なので、日本語版でも単語単位で折り返す
+        _para(doc, f"{n}. {ref}", size=7.5, wrap="WORD")
 
     return bytes(doc.output())
 

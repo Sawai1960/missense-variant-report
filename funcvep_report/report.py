@@ -60,6 +60,22 @@ def disclaimer() -> list[str]:
     return [t(f"disclaimer.{i}") for i in (1, 2, 3, 4)]
 
 
+def funcvep_intro() -> str:
+    """FuncVEP 欄の冒頭に置く、論文の要点の説明。"""
+    return t("intro.funcvep")
+
+
+# 参考文献。並び順は本文での登場順（FuncVEP → 判定基準 → 他ツール → 基準）。
+_REFERENCE_KEYS = (
+    "ref.funcvep", "ref.thresholds", "ref.tiers", "ref.pejaver", "ref.acmg",
+    "ref.alphamissense", "ref.revel", "ref.clinvar", "ref.gnomad",
+)
+
+
+def references() -> list[str]:
+    return [t(k) for k in _REFERENCE_KEYS]
+
+
 @dataclass
 class Row:
     label: str
@@ -167,7 +183,7 @@ def build(res: Resolution, thresholds: dict | None,
             Row(t("row.gene"), gene_value),
             Row("pLI", _fmt(c.get("pLI"), 3), t("note.pli")),
             Row("missense z", _fmt(c.get("mis_z"), 2), t("note.mis_z")),
-            Row("LoF z", _fmt(c.get("lof_z"), 2), ""),
+            Row("LoF z", _fmt(c.get("lof_z"), 2), t("note.lof_z")),
         ]
     else:
         rep.gene_rows = [Row(t("row.gene"), gene_value)]

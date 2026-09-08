@@ -17,7 +17,7 @@ from funcvep_report.config import FUNCVEP_MODELS
 from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
 from funcvep_report.pdfout import render_stream
-from funcvep_report.report import disclaimer, missing_label
+from funcvep_report.report import disclaimer, funcvep_intro, missing_label, references
 
 # 言語は他のどの文字列より先に決める。set_page_config はスクリプト先頭でしか
 # 呼べないので、タイトルだけはここで確定させる。
@@ -160,6 +160,9 @@ for i, vr in enumerate(rep.variants, 1):
                  refseq=v.refseq_nuc, enst=v.enst))
 
     st.subheader(t("ui.funcvep"))
+    if i == 1:
+        with st.expander(t("ui.about_funcvep"), expanded=True):
+            st.write(funcvep_intro())
     _cuts = " / ".join(
         f"{m.split('_')[1]} {binary_cutoff(m, thresholds):.4f}" for m in FUNCVEP_MODELS
     )
@@ -214,6 +217,10 @@ with st.expander(t("ui.thresholds")):
 st.subheader(t("ui.disclaimer"))
 for d in disclaimer():
     st.markdown("- " + d)
+
+with st.expander(t("ui.references")):
+    for n, ref in enumerate(references(), 1):
+        st.markdown(f"{n}. {ref}")
 
 st.divider()
 try:
