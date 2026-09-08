@@ -143,10 +143,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "この変異は一部のモデルの学習に使用されている。正解が既知の変異で、"
         "スコアを公開しても予測としての意味がないため、著者らはそのモデルの"
         "スコアを公開していない。「予測できなかった」のではない。" + _NO_INFO_JA,
-        "This variant was part of the training data for some of the models. "
-        "Because a model has effectively seen the answer for its training "
-        "variants, the authors withhold those scores. It does not mean the "
-        "variant could not be predicted. " + _NO_INFO_EN,
+        "This variant was used to train some of the models. Its answer was "
+        "already known to those models, so their scores would not be a "
+        "meaningful prediction; the authors therefore withhold them. It does "
+        "not mean the variant could not be predicted. " + _NO_INFO_EN,
     ),
     "missing_note.absent": (
         "この変異は 6 つのモデルすべての学習に使用されているため、"
@@ -217,18 +217,18 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "note.pli": (
         "この遺伝子の機能喪失変異が、一般にはあまりみられないという指標（gnomAD）。"
         "1 に近いほど「壊れると影響が大きい遺伝子」",
-        "How depleted loss-of-function variants in this gene are among the general "
-        "population (gnomAD). Closer to 1 means the gene tolerates loss poorly",
+        "Loss-of-function variants in this gene are rarely seen in the general "
+        "population (gnomAD). Closer to 1 = a gene where loss has a large effect",
     ),
     "note.mis_z": (
         "この遺伝子のミスセンス変異が、一般には予想より少ないという指標（gnomAD）。"
         "値が大きいほど「ミスセンス変異の影響が出やすい遺伝子」",
-        "How depleted missense variants in this gene are relative to expectation "
-        "(gnomAD). Larger values mean substitutions tend to matter",
+        "Missense variants in this gene are rarer than expected in the general "
+        "population (gnomAD). Larger values = a gene where missense variants tend to matter",
     ),
     "note.lof_z": (
         "機能喪失変異について、missense z と同じ考え方の指標",
-        "The same measure for loss-of-function variants",
+        "The same measure as missense z, for loss-of-function variants",
     ),
     "row.af": ("gnomAD アレル頻度", "gnomAD allele frequency"),
     "note.af": ("0.01 を超えるなら BA1、疾患の頻度に照らして高いなら BS1 を検討",
