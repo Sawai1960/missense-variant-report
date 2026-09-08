@@ -128,9 +128,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "variants); nothing is recomputed.",
     ),
 
-    "missing_label.blank": ("非公開（モデルの教材に使われた変異）",
+    "missing_label.blank": ("非公開（モデルの学習に使用された変異）",
                             "Withheld (variant used to train the model)"),
-    "missing_label.absent": ("未収録（全モデルの教材に使われた変異）",
+    "missing_label.absent": ("未収録（全モデルの学習に使用された変異）",
                              "Not in table (variant used to train all models)"),
     "missing_label.absent_unexplained": (
         "未収録（予測表の作成上の理由。著者確認済み）",
@@ -140,8 +140,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "missing_label.default": ("スコアなし", "No score"),
 
     "missing_note.blank": (
-        "この変異は、一部のモデルを作るときの教材（学習データ）に使われている。"
-        "教材に使った変異は答えを知っているのと同じなので、著者らはそのモデルの"
+        "この変異は一部のモデルの学習に使用されている。正解が既知の変異で、"
+        "スコアを公開しても予測としての意味がないため、著者らはそのモデルの"
         "スコアを公開していない。「予測できなかった」のではない。" + _NO_INFO_JA,
         "This variant was part of the training data for some of the models. "
         "Because a model has effectively seen the answer for its training "
@@ -149,7 +149,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "variant could not be predicted. " + _NO_INFO_EN,
     ),
     "missing_note.absent": (
-        "この変異は 6 つのモデルすべての教材（学習データ）に使われているため、"
+        "この変異は 6 つのモデルすべての学習に使用されているため、"
         "どのモデルの予測からも除かれ、公開された予測表に行そのものが無い。"
         + _NO_INFO_JA,
         "This variant was in the training data of all six models, so it was "
@@ -157,7 +157,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "table. " + _NO_INFO_EN,
     ),
     "missing_note.absent_unexplained": (
-        "この変異は公開された予測表に無く、公開されている教材（学習データ）の"
+        "この変異は公開された予測表に無く、公開されている学習データの"
         "一覧にも見当たらない。著者らの照合（2026-09-07 私信）によれば、この種の"
         "未収録は予測表を作る工程の都合（注釈の違いによる除外・元データに無い・"
         "処理の抜け）で生じたものである。" + _NO_INFO_JA,
@@ -172,7 +172,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "The FuncVEP index is not available, so no lookup was possible.",
     ),
     "trained_models": (
-        "　教材に使ったモデル: {models}",
+        "　学習に使用したモデル: {models}",
         " Models trained on this variant: {models}",
     ),
 
@@ -252,7 +252,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "classification) may indicate a variant where function and disease diverge",
     ),
     "note.clinvep_trained": (
-        "この変異は {models} の教材に使われているため、比較用のスコアは公開されていない",
+        "この変異は {models} の学習に使用されているため、比較用のスコアは公開されていない",
         "Used to train {models}; the comparison score is withheld",
     ),
     "note.alphamissense": (
@@ -552,13 +552,13 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "This may be an overlapping-gene region.",
     ),
     "lk.warn_blank": (
-        "FuncVEP のスコアは空欄です。モデルの教材（学習データ）に使われた変異は"
+        "FuncVEP のスコアは空欄です。モデルの学習に使用された変異は"
         "スコアが公開されていません。AlphaMissense・REVEL・ClinVar を見てください。",
         "FuncVEP scores are blank: scores of variants used to train the models are "
         "withheld. See AlphaMissense, REVEL and ClinVar.",
     ),
     "lk.warn_absent": (
-        "この変異は 6 つのモデルすべての教材（学習データ）に使われているため、"
+        "この変異は 6 つのモデルすべての学習に使用されているため、"
         "公開された予測表から行ごと除かれています。収録が無いこと自体は病気との"
         "関係について何の情報も持ちません。AlphaMissense・REVEL・ClinVar を見てください。",
         "This variant was used to train all six models and therefore has no row "
@@ -566,7 +566,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "pathogenicity. See AlphaMissense, REVEL and ClinVar.",
     ),
     "lk.warn_absent_unexplained": (
-        "この変異は公開された予測表になく、公開されている教材（学習データ）の"
+        "この変異は公開された予測表になく、公開されている学習データの"
         "一覧にも見当たりません。著者らの照合によれば予測表を作る工程の都合で"
         "生じた未収録で、収録が無いこと自体は病気との関係について何の情報も"
         "持ちません。AlphaMissense・REVEL・ClinVar を見てください。",
