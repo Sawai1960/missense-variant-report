@@ -308,6 +308,8 @@ def build(res: Resolution, thresholds: dict | None,
         n_tot = len(decided)
         if n_tot == 0:
             vr.concordance = t("conc.none")
+        elif n_tot == 1:
+            vr.concordance = t("conc.single_damaging" if n_dmg else "conc.single_neutral")
         elif n_dmg == n_tot:
             vr.concordance = t("conc.all_damaging", n=n_tot)
         elif n_dmg == 0:
