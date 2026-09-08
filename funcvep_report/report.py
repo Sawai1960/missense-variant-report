@@ -93,7 +93,7 @@ class VariantReport:
     others: list[Row] = field(default_factory=list)
     clinvar_rows: list[Row] = field(default_factory=list)
     concordance: str = ""
-    concordance_detail: str = ""
+    concordance_rows: list[Row] = field(default_factory=list)
 
 
 @dataclass
@@ -316,14 +316,15 @@ def build(res: Resolution, thresholds: dict | None,
             vr.concordance = t("conc.all_neutral", n=n_tot)
         else:
             vr.concordance = t("conc.mixed", n=n_tot, d=n_dmg)
+        # 縦に並べる: damaging 側 / neutral 側 / 要約
         if decided:
             dmg = [k.replace("_", "-") for k, v in decided.items() if v]
             neu = [k.replace("_", "-") for k, v in decided.items() if not v]
-            vr.concordance_detail = t(
-                "conc.sides",
-                damaging=join(dmg) or t("lk.none"),
-                neutral=join(neu) or t("lk.none"),
-            )
+            vr.concordance_rows = [
+                Row(t("row.damaging_side"), join(dmg) or t("conc.no_tool")),
+                Row(t("row.neutral_side"), join(neu) or t("conc.no_tool")),
+            ]
+        vr.concordance_rows.append(Row(t("row.summary"), vr.concordance))
 
         rep.variants.append(vr)
 

@@ -195,9 +195,7 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
         _rows(doc, vr.clinvar_rows)
 
         _h2(doc, t("pdf.concordance"))
-        _rows(doc, [Row(t("row.summary"),
-                        vr.concordance_detail or vr.concordance,
-                        vr.concordance if vr.concordance_detail else "")])
+        _rows(doc, vr.concordance_rows)
 
     if rep.threshold_note:
         _h2(doc, t("pdf.thresholds"))

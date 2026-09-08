@@ -208,8 +208,8 @@ for i, vr in enumerate(rep.variants, 1):
             st.caption(r.note)
 
     st.subheader(t("ui.concordance"))
-    st.info(f"{vr.concordance_detail}{t('sep.wide')}{vr.concordance}"
-            if vr.concordance_detail else vr.concordance)
+    for r in vr.concordance_rows:
+        st.write(f"**{r.label}** {r.value}")
 
 st.divider()
 with st.expander(t("ui.thresholds")):
