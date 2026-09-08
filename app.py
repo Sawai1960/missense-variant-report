@@ -1,6 +1,8 @@
 """ミスセンス変異 統合レポート — Streamlit 画面。
 
     streamlit run app.py
+
+表示言語はサイドバーで切り替える（日本語 / English）。?lang=en でも指定できる。
 """
 
 from __future__ import annotations
@@ -12,24 +14,21 @@ import streamlit as st
 from funcvep_report import build_report, load_config
 from funcvep_report.acmg import binary_cutoff, describe_thresholds
 from funcvep_report.config import FUNCVEP_MODELS
+from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
 from funcvep_report.pdfout import render_stream
-from funcvep_report.report import (
-    DISCLAIMER, FUNCVEP_MISSING_LABEL,
-)
+from funcvep_report.report import disclaimer, missing_label
 
-st.set_page_config(page_title="ミスセンス変異 統合レポート",
-                   page_icon="🧬", layout="wide")
+# 言語は他のどの文字列より先に決める。set_page_config はスクリプト先頭でしか
+# 呼べないので、タイトルだけはここで確定させる。
+_query_lang = st.query_params.get("lang", "")
+if "lang" not in st.session_state:
+    st.session_state["lang"] = _query_lang if _query_lang in LANGS else "ja"
+set_lang(st.session_state["lang"])
 
-STEP_NAME = {
-    "mane": "MANE（遺伝子・転写産物）",
-    "cds": "MANE CDS（HGVS 変換）",
-    "alphamissense": "AlphaMissense（座標変換の要）",
-    "funcvep": "FuncVEP スコア",
-    "revel": "REVEL",
-    "clinvar": "ClinVar",
-    "constraint": "gnomAD 遺伝子制約",
-}
+st.set_page_config(page_title=t("ui.page_title"), page_icon="🧬", layout="wide")
+
+STEPS = ("mane", "cds", "alphamissense", "funcvep", "revel", "clinvar", "constraint")
 
 
 @st.cache_resource
@@ -43,71 +42,73 @@ avail = store.availability()
 
 # ---------------------------------------------------------------- サイドバー
 with st.sidebar:
-    st.subheader("データの状態")
-    for key, label in STEP_NAME.items():
-        st.write(("✅ " if avail.get(key) else "⬜ ") + label)
-    if not all(avail.values()):
-        st.caption(
-            "未取得の項目があります。ターミナルで\n"
-            "`python scripts/01_download.py`\n"
-            "`python scripts/02_build_index.py`\n"
-            "を実行してください。"
-        )
+    chosen = st.radio(
+        t("ui.language"),
+        LANGS,
+        index=LANGS.index(st.session_state["lang"]),
+        format_func=lambda code: LANG_NAMES[code],
+        horizontal=True,
+    )
+    if chosen != st.session_state["lang"]:
+        st.session_state["lang"] = chosen
+        st.query_params["lang"] = chosen
+        st.rerun()
 
     st.divider()
-    st.subheader("集団頻度")
-    st.caption("検査報告書に記載の gnomAD の値を入力すると、レポートに載ります。")
-    af_text = st.text_input("アレル頻度", value="",
-                            placeholder="例) 0.0000041 または 4.1e-6")
-    hom_text = st.text_input("ホモ接合体数", value="", placeholder="例) 0")
+    st.subheader(t("ui.data_status"))
+    for key in STEPS:
+        st.write(("✅ " if avail.get(key) else "⬜ ") + t(f"ui.step.{key}"))
+    if not all(avail.values()):
+        st.caption(t("ui.missing_data"))
+
+    st.divider()
+    st.subheader(t("ui.population"))
+    st.caption(t("ui.population_help"))
+    af_text = st.text_input(t("ui.af"), value="", placeholder=t("ui.af_placeholder"))
+    hom_text = st.text_input(t("ui.hom"), value="", placeholder=t("ui.hom_placeholder"))
 
     st.divider()
     thresholds = cfg.load_thresholds()
     st.subheader("PP3/BP4")
     if thresholds is None:
-        st.warning("未較正です。スコアの生値のみ表示します。")
-        st.caption("`python scripts/03_calibrate_acmg.py` で較正できます。")
+        st.warning(t("ui.thr.uncalibrated"))
+        st.caption(t("ui.thr.uncalibrated_help"))
     else:
         meta = thresholds.get("meta", {})
         if meta.get("source") == "published":
-            st.success("論文の公表値（Supplementary Table 13）")
-            st.caption("著者から提供された較正値をそのまま使用しています。")
+            st.success(t("ui.thr.published"))
+            st.caption(t("ui.thr.published_help"))
         else:
-            st.warning(f"自前の較正（病的 {meta.get('n_pathogenic', '?'):,} / "
-                       f"良性 {meta.get('n_benign', '?'):,} 件）")
-            st.caption("論文の公表値ではありません。判定は論文と一致しません。")
+            st.warning(t("ui.thr.local",
+                         n_p=f"{meta.get('n_pathogenic', '?'):,}"
+                         if isinstance(meta.get("n_pathogenic"), int) else "?",
+                         n_b=f"{meta.get('n_benign', '?'):,}"
+                         if isinstance(meta.get("n_benign"), int) else "?"))
+            st.caption(t("ui.thr.local_help"))
 
 # ------------------------------------------------------------------ 本体
-st.title("ミスセンス変異 統合レポート")
-st.caption(
-    "FuncVEP（Kayaalp ら, Nature Genetics 2026）の予測を軸に、AlphaMissense・"
-    "REVEL・ClinVar・gnomAD の情報をまとめます。予測は機能的影響であり、"
-    "臨床的病原性そのものではありません。"
-)
+st.title(t("ui.title"))
+st.caption(t("ui.caption"))
 
 # ?q=BRCA1+R1699W で直接開けるようにしておく。記録に URL を残すときに使える。
 query = st.text_input(
-    "変異を入力",
+    t("ui.query"),
     value=st.query_params.get("q", ""),
-    placeholder="BRCA1 p.Arg1699Trp　/　BRCA1 R1699W　/　NM_007294.4:c.5095C>T",
+    placeholder=t("ui.query_placeholder"),
 )
 if query and st.query_params.get("q") != query:
     st.query_params["q"] = query
 
-with st.expander("入力できる形式"):
-    st.markdown(
-        "- **遺伝子記号 + アミノ酸置換** — `BRCA1 p.Arg1699Trp` / `BRCA1 R1699W` / `TP53:p.R175H`\n"
-        "- **HGVS 転写産物表記** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`\n\n"
-        "転写産物は MANE Select を参照します。対象はミスセンス変異のみです。"
-    )
+with st.expander(t("ui.formats")):
+    st.markdown(t("ui.formats_body"))
 
 if not query:
     st.stop()
 
 missing_core = [k for k in ("mane", "cds", "alphamissense") if not avail.get(k)]
 if missing_core:
-    st.error("必要な索引がありません: "
-             + "、".join(STEP_NAME[k] for k in missing_core))
+    st.error(t("ui.missing_index",
+               items=", ".join(t(f"ui.step.{k}") for k in missing_core)))
     st.stop()
 
 
@@ -118,7 +119,7 @@ def _num(text: str, cast):
         return None
 
 
-with st.spinner("照合しています…"):
+with st.spinner(t("ui.resolving")):
     res = resolve(query, store)
     rep = build_report(
         res, thresholds,
@@ -136,13 +137,13 @@ for w in rep.warnings:
 
 col_gene, col_pop = st.columns(2)
 with col_gene:
-    st.subheader("遺伝子")
+    st.subheader(t("ui.gene"))
     for r in rep.gene_rows:
         st.write(f"**{r.label}** {r.value}")
         if r.note:
             st.caption(r.note)
 with col_pop:
-    st.subheader("集団頻度")
+    st.subheader(t("ui.population"))
     for r in rep.population_rows:
         st.write(f"**{r.label}** {r.value}")
         if r.note:
@@ -153,15 +154,16 @@ for i, vr in enumerate(rep.variants, 1):
     st.divider()
     head = f"{v.gene} {v.hgvs_p}"
     if len(rep.variants) > 1:
-        head += f"　（候補 {i} / {len(rep.variants)}）"
+        head += t("ui.candidate", i=i, n=len(rep.variants))
     st.header(head)
-    st.caption(f"{v.genomic}（GRCh38）　転写産物 {v.refseq_nuc} / {v.enst}")
+    st.caption(t("ui.transcript_line", genomic=v.genomic,
+                 refseq=v.refseq_nuc, enst=v.enst))
 
-    st.subheader("FuncVEP（機能的影響の予測）")
-    _cuts = "／".join(
+    st.subheader(t("ui.funcvep"))
+    _cuts = " / ".join(
         f"{m.split('_')[1]} {binary_cutoff(m, thresholds):.4f}" for m in FUNCVEP_MODELS
     )
-    st.caption(f"スコアは damaging である確率。境はモデルごとに異なる（{_cuts}）。")
+    st.caption(t("ui.funcvep_caption", cuts=_cuts))
     cols = st.columns(len(FUNCVEP_MODELS))
     for c, model in zip(cols, FUNCVEP_MODELS):
         score = vr.variant.evidence.funcvep.get(model)
@@ -170,8 +172,7 @@ for i, vr in enumerate(rep.variants, 1):
             st.markdown(f"**{model.replace('_', '-')}**")
             if score is None:
                 st.markdown("### —")
-                st.caption(FUNCVEP_MISSING_LABEL.get(
-                    vr.funcvep_status, "スコアなし"))
+                st.caption(missing_label(vr.funcvep_status))
                 continue
             damaging = score >= binary_cutoff(model, thresholds)
             colour = "#b3261e" if damaging else "#1e6b34"
@@ -182,36 +183,36 @@ for i, vr in enumerate(rep.variants, 1):
                 f"{'Damaging' if damaging else 'Neutral'}</div>",
                 unsafe_allow_html=True,
             )
-            st.caption(a.label if a else "PP3/BP4 未較正")
+            st.caption(a.label if a else t("uncalibrated"))
 
     if vr.funcvep_note:
         st.info(vr.funcvep_note)
 
-    with st.expander("各モデルの性格"):
+    with st.expander(t("ui.model_notes")):
         for r in vr.predictions:
             st.write(f"**{r.label}** {r.value}")
             st.caption(r.note)
 
-    st.subheader("他の予測ツール")
+    st.subheader(t("ui.others"))
     for r in vr.others:
         st.write(f"**{r.label}** {r.value}")
         st.caption(r.note)
 
-    st.subheader("ClinVar")
+    st.subheader(t("ui.clinvar"))
     for r in vr.clinvar_rows:
         st.write(f"**{r.label}** {r.value}")
         if r.note:
             st.caption(r.note)
 
-    st.subheader("指標同士の一致")
-    st.info(f"{vr.concordance}　　{vr.concordance_detail}")
+    st.subheader(t("ui.concordance"))
+    st.info(f"{vr.concordance}{t('sep.wide')}{vr.concordance_detail}")
 
 st.divider()
-with st.expander("PP3/BP4 の閾値について"):
+with st.expander(t("ui.thresholds")):
     st.text(rep.threshold_note)
 
-st.subheader("解釈上の注意")
-for d in DISCLAIMER:
+st.subheader(t("ui.disclaimer"))
+for d in disclaimer():
     st.markdown("- " + d)
 
 st.divider()
@@ -220,7 +221,7 @@ try:
                         cache_dir=cfg.paths.index / "fonts")
     safe = "".join(ch if ch.isalnum() else "_" for ch in rep.query)[:60]
     st.download_button(
-        "この内容を PDF で保存",
+        t("ui.pdf_button"),
         data=pdf,
         file_name=f"variant_report_{safe}.pdf",
         mime="application/pdf",

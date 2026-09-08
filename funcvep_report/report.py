@@ -2,6 +2,9 @@
 
 このモジュールは判定を下さない。各指標を並べ、指標同士が一致しているかどうかを
 示すところまでを担う。最終的な解釈は人が行う。
+
+利用者に見せる文字列はすべて i18n.t() を通す。言語は呼び出し側が
+i18n.use_lang() / set_lang() で決め、Report.lang に記録される。
 """
 
 from __future__ import annotations
@@ -11,6 +14,7 @@ from datetime import datetime
 
 from .acmg import Assignment, assign, binary_cutoff
 from .config import FUNCVEP_MODELS
+from .i18n import get_lang, join, t
 from .lookup import ResolvedVariant, Resolution, clinvar_stars
 
 # FuncVEP のスコアを二値にするときの境。論文はモデルごとに異なる値を与えており
@@ -28,52 +32,32 @@ REVEL_CUTOFF = 0.5
 # いずれも生物学的・配列的・QC 上の除外ではない。したがって収録が無いこと自体は
 # 病原性についても予測の信頼度についても情報を持たない。ここを取り違えると、
 # 「予測できないほど珍しい変異」と誤読されうる。
-FUNCVEP_MISSING_LABEL = {
-    "blank": "学習に使われたため非公開",
-    "absent": "学習に使われたため未収録",
-    "absent_unexplained": "予測表に未収録（作成工程の都合。著者確認済み）",
-    "unknown": "FuncVEP の索引なし",
-}
+_MISSING_STATUSES = ("blank", "absent", "absent_unexplained", "unknown")
 
-_NO_INFO = (
-    "スコアが得られないこと自体は、病原性についても予測の信頼度についても"
-    "何ら情報を持たない（著者私信）。AlphaMissense・REVEL・ClinVar の側で"
-    "判断すること。"
-)
-FUNCVEP_MISSING_NOTE = {
-    "blank": "この変異は一部のモデルの学習に使われたため、そのモデルのスコアが"
-             "公開されていない。「予測できなかった」ではない。" + _NO_INFO,
-    "absent": "この変異は 6 モデル全部の学習に使われたため、全モデルの推論から"
-              "除かれ、公開予測表から行ごと消えている。" + _NO_INFO,
-    "absent_unexplained": "この変異は公開予測表に無く、公開されている学習セットにも"
-                          "見当たらない。著者の照合（2026-09-07 私信）によれば、"
-                          "この種の未収録は予測表の作成工程に由来する"
-                          "（注釈の違いによる除外・元データに不在・処理漏れの"
-                          "いずれか）。" + _NO_INFO,
-    "unknown": "FuncVEP の索引がないため照会できない。",
-}
+
+def missing_label(status: str) -> str:
+    """スコア欄に出す短いラベル。"""
+    key = status if status in _MISSING_STATUSES else "default"
+    return t(f"missing_label.{key}")
 
 
 def missing_note(status: str, train_models: list[str] | None) -> str:
     """未収録の注記。どのモデルの学習に使われたかが分かる場合は付け足す。"""
     if status == "scored":
         return ""
-    note = FUNCVEP_MISSING_NOTE.get(status, "")
+    note = t(f"missing_note.{status}") if status in _MISSING_STATUSES else ""
     if train_models:
-        note += "　学習に使ったモデル: " + "、".join(
-            m.replace("_", "-") for m in train_models
-        )
+        note += t("trained_models",
+                  models=join(m.replace("_", "-") for m in train_models))
     return note
 
 
-MODEL_NOTE = {
-    "FuncVEP_CTI": "臨床学習済み予測器を特徴量に含む。ベンチマーク最良だが循環参照の risk が最も高い",
-    "FuncVEP_CTE": "臨床学習済み予測器を除外。ClinVar との独立性が高い",
-    "FuncVEP_SP": "他の予測器を一切使わない。最も独立だが単独性能は劣る",
-    "ClinVEP_CTI": "同じ特徴量を ClinVar ラベルで学習した対照モデル",
-    "ClinVEP_CTE": "同上（臨床学習済み予測器を除外）",
-    "ClinVEP_SP": "同上（他の予測器を使わない）",
-}
+def model_note(model: str) -> str:
+    return t(f"model_note.{model}")
+
+
+def disclaimer() -> list[str]:
+    return [t(f"disclaimer.{i}") for i in (1, 2, 3, 4)]
 
 
 @dataclass
@@ -102,6 +86,7 @@ class Report:
     created: str
     gene: str | None
     ensg: str | None
+    lang: str = "ja"
     variants: list[VariantReport] = field(default_factory=list)
     gene_rows: list[Row] = field(default_factory=list)
     population_rows: list[Row] = field(default_factory=list)
@@ -116,13 +101,13 @@ def _fmt(x, digits: int = 3) -> str:
     索引の型が想定と違っても表示だけで落ちないようにしておく。
     """
     if x is None:
-        return "—"
+        return t("dash")
     try:
         f = float(x)
     except (TypeError, ValueError):
         return str(x)
     if f != f:                      # NaN
-        return "—"
+        return t("dash")
     return f"{f:.{digits}f}"
 
 
@@ -133,7 +118,7 @@ def _phenotypes(raw: str | None, limit: int = 6) -> str:
     重複を除いて数を絞る。
     """
     if not raw:
-        return "—"
+        return t("dash")
     seen: list[str] = []
     for part in str(raw).split("|"):
         p = part.strip()
@@ -142,17 +127,17 @@ def _phenotypes(raw: str | None, limit: int = 6) -> str:
         if p not in seen:
             seen.append(p)
     if not seen:
-        return "記載なし"
-    shown = "、".join(seen[:limit])
+        return t("phenotypes.none")
+    shown = join(seen[:limit])
     if len(seen) > limit:
-        shown += f"　ほか {len(seen) - limit} 件"
+        shown += t("phenotypes.more", n=len(seen) - limit)
     return shown
 
 
 def _call(score: float | None, cutoff: float,
           hi: str = "Damaging", lo: str = "Neutral") -> str:
     if score is None:
-        return "—"
+        return t("dash")
     return hi if score >= cutoff else lo
 
 
@@ -160,11 +145,13 @@ def build(res: Resolution, thresholds: dict | None,
           gnomad_af: float | None = None,
           gnomad_hom: int | None = None,
           threshold_note: str = "") -> Report:
+    wide = t("sep.wide")
     rep = Report(
         query=res.query,
         created=datetime.now().strftime("%Y-%m-%d %H:%M"),
         gene=res.gene,
         ensg=res.ensg,
+        lang=get_lang(),
         warnings=list(res.warnings),
         error=res.error,
         threshold_note=threshold_note,
@@ -173,34 +160,30 @@ def build(res: Resolution, thresholds: dict | None,
         return rep
 
     # --- 遺伝子レベル ---
+    gene_value = t("gene_value", gene=res.gene, ensg=res.ensg)
     if res.constraint:
         c = res.constraint
         rep.gene_rows = [
-            Row("遺伝子", f"{res.gene}（{res.ensg}）"),
-            Row("pLI", _fmt(c.get("pLI"), 3),
-                "1 に近いほど機能喪失変異に不寛容"),
-            Row("missense z", _fmt(c.get("mis_z"), 2),
-                "正で大きいほどミスセンス変異に不寛容"),
+            Row(t("row.gene"), gene_value),
+            Row("pLI", _fmt(c.get("pLI"), 3), t("note.pli")),
+            Row("missense z", _fmt(c.get("mis_z"), 2), t("note.mis_z")),
             Row("LoF z", _fmt(c.get("lof_z"), 2), ""),
         ]
     else:
-        rep.gene_rows = [Row("遺伝子", f"{res.gene}（{res.ensg}）")]
+        rep.gene_rows = [Row(t("row.gene"), gene_value)]
 
     # --- 集団頻度（手入力または API） ---
     if gnomad_af is not None:
         rep.population_rows.append(
-            Row("gnomAD アレル頻度", f"{gnomad_af:.3e}",
-                "0.01 を超えるなら BA1、疾患頻度に照らして高いなら BS1 を検討")
+            Row(t("row.af"), f"{gnomad_af:.3e}", t("note.af"))
         )
         if gnomad_hom is not None:
             rep.population_rows.append(
-                Row("ホモ接合体数", str(gnomad_hom),
-                    "常染色体劣性疾患で 0 でないなら BS2 を検討")
+                Row(t("row.hom"), str(gnomad_hom), t("note.hom"))
             )
     else:
         rep.population_rows.append(
-            Row("gnomAD アレル頻度", "未入力",
-                "検査報告書の値を画面で入力すると表示されます")
+            Row(t("row.af"), t("af.not_entered"), t("note.af_not_entered"))
         )
 
     # --- 変異ごと ---
@@ -216,13 +199,13 @@ def build(res: Resolution, thresholds: dict | None,
             a = assign(score, model, thresholds)
             vr.acmg[model] = a
             if score is None:
-                value = "—"
-                head = FUNCVEP_MISSING_LABEL.get(vr.funcvep_status, "スコアなし")
+                value = t("dash")
+                head = missing_label(vr.funcvep_status)
             else:
-                value = f"{_fmt(score)}　{_call(score, binary_cutoff(model, thresholds))}"
-                head = a.label if a else "PP3/BP4 未較正"
+                value = f"{_fmt(score)}{wide}{_call(score, binary_cutoff(model, thresholds))}"
+                head = a.label if a else t("uncalibrated")
             vr.predictions.append(
-                Row(model.replace("_", "-"), value, head + "｜" + MODEL_NOTE[model])
+                Row(model.replace("_", "-"), value, head + "｜" + model_note(model))
             )
 
         clin_scores = {k: v for k, v in ev.funcvep.items() if k.startswith("ClinVEP")}
@@ -230,11 +213,10 @@ def build(res: Resolution, thresholds: dict | None,
         if clin_scores:
             vr.others.append(
                 Row(
-                    "ClinVEP（対照）",
+                    t("row.clinvep"),
                     " / ".join(f"{k.split('_')[1]} {_fmt(v)}"
                                for k, v in clin_scores.items()),
-                    "同じ特徴量を ClinVar ラベルで学習した対照。FuncVEP と大きく食い違う場合は"
-                    "機能的影響と臨床的病原性が乖離している可能性",
+                    t("note.clinvep"),
                 )
             )
         elif clin_trained:
@@ -242,19 +224,23 @@ def build(res: Resolution, thresholds: dict | None,
             # 空欄の理由を書かないと「対照が壊れている」と誤読されうる。
             vr.others.append(
                 Row(
-                    "ClinVEP（対照）", "—",
-                    "この変異は " + "、".join(m.replace("_", "-") for m in clin_trained)
-                    + " の学習に使われたため、対照のスコアは公開されていない",
+                    t("row.clinvep"), t("dash"),
+                    t("note.clinvep_trained",
+                      models=join(m.replace("_", "-") for m in clin_trained)),
                 )
             )
 
         vr.others.append(
-            Row("AlphaMissense", f"{_fmt(ev.am_score)}　{ev.am_class or '—'}",
-                "CC BY-NC-SA 4.0 / 集団頻度で弱ラベル付けした半教師あり学習")
+            Row("AlphaMissense",
+                f"{_fmt(ev.am_score)}{wide}{ev.am_class}" if ev.am_score is not None
+                else t("dash"),
+                t("note.alphamissense"))
         )
         vr.others.append(
-            Row("REVEL", f"{_fmt(ev.revel)}　{_call(ev.revel, REVEL_CUTOFF)}",
-                f"{REVEL_CUTOFF} を境とした慣用的な二値判定")
+            Row("REVEL",
+                f"{_fmt(ev.revel)}{wide}{_call(ev.revel, REVEL_CUTOFF)}"
+                if ev.revel is not None else t("dash"),
+                t("note.revel", cutoff=REVEL_CUTOFF))
         )
 
         # --- ClinVar ---
@@ -262,18 +248,17 @@ def build(res: Resolution, thresholds: dict | None,
             cv = ev.clinvar
             stars = clinvar_stars(cv.get("review_status"))
             vr.clinvar_rows = [
-                Row("臨床的意義", str(cv.get("significance") or "—"),
-                    f"レビュー {stars} 星（{cv.get('review_status')}）"),
-                Row("提出者数", str(cv.get("n_submitters") or "—"), ""),
-                Row("最終評価", str(cv.get("last_evaluated") or "—"), ""),
-                Row("表現型", _phenotypes(cv.get("phenotypes")), ""),
-                Row("ClinVar 表記", str(cv.get("name") or "—")[:200],
-                    f"VariationID {cv.get('variation_id')}"),
+                Row(t("row.significance"), str(cv.get("significance") or t("dash")),
+                    t("note.review", stars=stars, status=cv.get("review_status"))),
+                Row(t("row.submitters"), str(cv.get("n_submitters") or t("dash")), ""),
+                Row(t("row.last_evaluated"), str(cv.get("last_evaluated") or t("dash")), ""),
+                Row(t("row.phenotypes"), _phenotypes(cv.get("phenotypes")), ""),
+                Row(t("row.clinvar_name"), str(cv.get("name") or t("dash"))[:200],
+                    t("note.variation_id", id=cv.get("variation_id"))),
             ]
         else:
             vr.clinvar_rows = [
-                Row("臨床的意義", "ClinVar に登録なし",
-                    "新規変異、あるいは未提出の変異である可能性")
+                Row(t("row.significance"), t("clinvar.none"), t("note.clinvar_none"))
             ]
 
         # --- 指標同士の一致 ---
@@ -293,27 +278,17 @@ def build(res: Resolution, thresholds: dict | None,
         n_dmg = sum(1 for v in decided.values() if v)
         n_tot = len(decided)
         if n_tot == 0:
-            vr.concordance = "判定できる指標がありません"
+            vr.concordance = t("conc.none")
         elif n_dmg == n_tot:
-            vr.concordance = f"{n_tot} 指標すべてが damaging 側"
+            vr.concordance = t("conc.all_damaging", n=n_tot)
         elif n_dmg == 0:
-            vr.concordance = f"{n_tot} 指標すべてが neutral 側"
+            vr.concordance = t("conc.all_neutral", n=n_tot)
         else:
-            vr.concordance = f"{n_tot} 指標中 {n_dmg} が damaging 側（不一致）"
-        vr.concordance_detail = "　".join(
+            vr.concordance = t("conc.mixed", n=n_tot, d=n_dmg)
+        vr.concordance_detail = wide.join(
             f"{k}:{'D' if v else 'N'}" for k, v in decided.items()
         )
 
         rep.variants.append(vr)
 
     return rep
-
-
-DISCLAIMER = [
-    "FuncVEP が予測するのはタンパク質の機能への影響（damaging / neutral）であり、"
-    "臨床的病原性そのものではない。両者を混同しないこと。",
-    "ACMG/AMP 基準では計算による証拠 PP3/BP4 として扱う。機能実験の証拠 PS3/BS3 ではない。",
-    "対象はミスセンス変異のみ。スプライスへの影響、フレームシフト、ナンセンス変異は評価されない。",
-    "本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはならない。"
-    "家系内分離、表現型の一致、機能実験、専門家の検討と併せて評価すること。",
-]

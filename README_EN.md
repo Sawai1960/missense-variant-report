@@ -1,9 +1,9 @@
 # Missense Variant Report — a local FuncVEP/ClinVEP lookup tool
 
-*English overview for the FuncVEP authors. The tool itself (UI, PDF reports,
-design documents) is in Japanese, as it is used by clinicians at
-Hyogo Medical University, Japan. This page summarises what the tool does and
-how your released resources are used. The Japanese design document is
+*English overview for the FuncVEP authors. The interface and the PDF reports
+can be shown in either Japanese or English (sidebar switch, or `?lang=en`);
+the design document and user guide are in Japanese, as the tool is used by
+clinicians at Hyogo Medical University, Japan. The Japanese design document is
 [docs/設計書.md](docs/設計書.md); [README.md](README.md) is the Japanese
 user guide.*
 
@@ -54,26 +54,29 @@ license. **This repository contains only our own code and documentation** —
 no FuncVEP data, no derived index. Anyone cloning it must obtain the released
 predictions from Zenodo themselves (`scripts/01_download.py`).
 
+## Running it
+
+```bash
+python -m pip install -r requirements.txt
+python scripts/01_download.py        # references, ~5.5 GB
+python scripts/02_build_index.py     # builds the local index, ~1 h
+python scripts/05_fetch_training_sets.py   # optional: training-set membership
+streamlit run app.py
+```
+
+`config.yaml` sets the data directory (`data_root`) and the PDF font.
+`scripts/04_selftest.py` runs a set of known variants end to end.
+
 ## Repository layout
 
 | Path | Contents |
 |---|---|
-| `app.py` | Streamlit UI |
-| `funcvep_report/` | Library: variant parsing, index lookup, ACMG tiers, report assembly, PDF output |
+| `app.py` | Streamlit UI (Japanese / English) |
+| `funcvep_report/` | Library: variant parsing, index lookup, ACMG tiers, report assembly, PDF output, string catalogue (`i18n.py`) |
 | `scripts/01–06` | Download references, build the index, optional local calibration (kept for comparison only), self-test, fetch training sets, audit absent scores |
 | `data/acmg_thresholds_published.json` | Supplementary Table 13 values as provided by the authors |
 | `docs/設計書.md` | Design document (Japanese): architecture, coordinate handling, calibration comparison, verification log |
 | `docs/funcvep_discrepancies.tsv` | The discrepancy table shared with the authors (2026-09-06) |
-
-## Reading the sample PDFs (section guide)
-
-The PDF sections are, in order: **遺伝子** gene & gnomAD constraint /
-**集団頻度** population frequency (manual entry) / **変異** variant &
-coordinates / **FuncVEP（機能的影響の予測）** FuncVEP scores with
-damaging–neutral calls at your per-model binary cutoffs and PP3/BP4 tiers /
-**他の予測ツール** ClinVEP, AlphaMissense, REVEL / **ClinVar** /
-**指標同士の一致** concordance / **PP3/BP4 の閾値について** threshold
-provenance / **解釈上の注意** interpretation caveats.
 
 ## Acknowledgements
 

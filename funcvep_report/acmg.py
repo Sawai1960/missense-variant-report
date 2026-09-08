@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .i18n import t
+
 C = 350.0
 
 # 病原性側（PP3）の陽性尤度比の下限
@@ -55,7 +57,7 @@ class Assignment:
     @property
     def label(self) -> str:
         if self.criterion is None:
-            return "該当なし（中間域）"
+            return t("acmg.none")
         return f"{self.criterion}_{STRENGTH_JA[self.strength]}"
 
     @property
@@ -105,45 +107,41 @@ def binary_cutoff(model: str, thresholds: dict | None, default: float = 0.5) -> 
 def describe_thresholds(model: str, thresholds: dict | None) -> str:
     """画面と PDF に出す、閾値の由来の説明文。"""
     if thresholds is None:
-        return (
-            "PP3/BP4 は未較正です。scripts/03_calibrate_acmg.py を実行すると、"
-            "お手元の ClinVar から閾値を算出します。"
-        )
+        return t("thr.uncalibrated")
     meta = thresholds.get("meta", {})
-    t = (thresholds.get("models") or {}).get(model, {})
+    tm = (thresholds.get("models") or {}).get(model, {})
 
     if meta.get("source") == "published":
         lines = [
-            f"閾値の由来: {meta.get('citation', '論文の公表値')}。",
-            "著者から提供された公表値をそのまま使用しています（自前の較正ではありません）。",
+            t("thr.published_source",
+              citation=meta.get("citation") or t("thr.published_default")),
+            t("thr.published_note"),
         ]
     else:
         n_p, n_b = meta.get("n_pathogenic"), meta.get("n_benign")
         date = meta.get("clinvar_date", "?")
         head = (
-            f"閾値の由来: ClinVar（{date} 時点、レビュー "
-            f"{meta.get('min_review_stars', '?')} 星以上）の "
-            f"病的 {n_p:,} 件 / 良性 {n_b:,} 件から自前で算出。"
+            t("thr.local_head", date=date, stars=meta.get("min_review_stars", "?"),
+              n_p=n_p, n_b=n_b)
             if isinstance(n_p, int) and isinstance(n_b, int)
-            else f"閾値の由来: ClinVar（{date} 時点）から自前で算出。"
+            else t("thr.local_head_short", date=date)
         )
         lines = [
             head,
-            f"事前確率 {meta.get('prior_pathogenic', '?')}、"
-            f"ブートストラップ {meta.get('bootstrap', '?')} 回の保守的な下限を採用。",
-            "論文の公表値ではないため、論文の判定とは一致しません。",
+            t("thr.local_params", prior=meta.get("prior_pathogenic", "?"),
+              boot=meta.get("bootstrap", "?")),
+            t("thr.local_warn"),
         ]
 
-    for crit in ("PP3", "BP4"):
+    for crit, key in (("PP3", "thr.pp3_line"), ("BP4", "thr.bp4_line")):
         parts = [
-            f"{STRENGTH_JA[s]} {t[crit][s]:.4f}"
-            for s in _ORDER if t.get(crit, {}).get(s) is not None
+            f"{STRENGTH_JA[s]} {tm[crit][s]:.4f}"
+            for s in _ORDER if tm.get(crit, {}).get(s) is not None
         ]
         if parts:
-            arrow = "以上" if crit == "PP3" else "以下"
-            lines.append(f"{crit}: " + " / ".join(parts) + f" {arrow}")
+            lines.append(t(key, parts=" / ".join(parts)))
 
-    cut = t.get("binary")
+    cut = tm.get("binary")
     if cut is not None:
-        lines.append(f"damaging/neutral の境: {cut:.4f}（モデルごとに異なる。0.5 ではない）")
+        lines.append(t("thr.binary", cut=cut))
     return "\n".join(lines)

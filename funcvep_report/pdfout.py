@@ -12,7 +12,8 @@ from pathlib import Path
 
 from fpdf import FPDF
 
-from .report import DISCLAIMER, Report, Row
+from .i18n import t, use_lang
+from .report import Report, Row, disclaimer
 
 INK = (26, 26, 26)
 MUTED = (110, 110, 110)
@@ -57,7 +58,7 @@ class _Doc(FPDF):
         self.set_y(-14)
         self.set_font("jp", size=7.5)
         self.set_text_color(*MUTED)
-        self.cell(0, 5, f"{self.title_text}　—　{self.page_no()} / {{nb}}",
+        self.cell(0, 5, f"{self.title_text}{t('sep.wide')}—{t('sep.wide')}{self.page_no()} / {{nb}}",
                   align="C")
 
 
@@ -84,6 +85,11 @@ def _rows(doc: _Doc, rows: list[Row], label_w: float = 42.0) -> None:
     avail = doc.w - doc.l_margin - doc.r_margin
     value_w = avail - label_w
     for r in rows:
+        # ラベルと値は同じ高さから書き始める。ラベルの描画中に自動改ページが
+        # 起きると値だけが前ページの高さに戻されて空白ページができるので、
+        # 行の頭で余白が足りなければ先に改ページしておく。
+        if doc.get_y() > doc.h - doc.b_margin - 14:
+            doc.add_page()
         doc.set_font("jp", size=8.5)
         doc.set_text_color(*MUTED)
         top = doc.get_y()
@@ -115,73 +121,79 @@ def _para(doc: _Doc, text: str, size: float = 8.5,
 
 
 def render(rep: Report, font_path: Path, cache_dir: Path | None = None) -> bytes:
+    """レポートを PDF にする。見出しの言語はレポート作成時の言語に合わせる。"""
+    with use_lang(rep.lang):
+        return _render(rep, font_path, cache_dir)
+
+
+def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     if not font_path.exists():
-        raise FileNotFoundError(
-            f"日本語フォントが見つかりません: {font_path}\n"
-            "config.yaml の pdf_font を実在する TTF に変えてください。"
-        )
+        raise FileNotFoundError(t("pdf.font_missing", path=font_path))
     # 既定の C:\Windows\Fonts は書き込めないので、必ず書ける場所に切り出す
     fonts = prepare_fonts(
         font_path,
         cache_dir or (Path.home() / ".cache" / "funcvep_report" / "fonts"),
     )
+    bullet = "・" if rep.lang == "ja" else "- "
+    wide = t("sep.wide")
 
-    doc = _Doc(fonts, "ミスセンス変異 統合レポート")
+    doc = _Doc(fonts, t("pdf.title"))
     doc.alias_nb_pages()
     doc.add_page()
 
-    _h1(doc, "ミスセンス変異 統合レポート")
+    _h1(doc, t("pdf.title"))
     doc.set_font("jp", size=8.5)
     doc.set_text_color(*MUTED)
-    doc.multi_cell(0, 4.6, f"入力: {rep.query}　　作成: {rep.created}")
+    doc.multi_cell(0, 4.6, t("pdf.meta", query=rep.query, created=rep.created))
     doc.ln(1)
 
     if rep.error:
-        _h2(doc, "解決できませんでした")
+        _h2(doc, t("pdf.unresolved"))
         _para(doc, rep.error, size=9.5, color=INK)
         return bytes(doc.output())
 
     if rep.warnings:
-        _h2(doc, "注意")
+        _h2(doc, t("pdf.warnings"))
         for w in rep.warnings:
-            _para(doc, "・" + w)
+            _para(doc, bullet + w)
 
-    _h2(doc, "遺伝子")
+    _h2(doc, t("pdf.gene"))
     _rows(doc, rep.gene_rows)
 
-    _h2(doc, "集団頻度")
+    _h2(doc, t("pdf.population"))
     _rows(doc, rep.population_rows)
 
     for i, vr in enumerate(rep.variants, 1):
         v = vr.variant
-        head = f"変異 {i} / {len(rep.variants)}" if len(rep.variants) > 1 else "変異"
-        _h2(doc, f"{head}　{v.gene} {v.hgvs_p}")
+        head = (t("pdf.variant_n", i=i, n=len(rep.variants))
+                if len(rep.variants) > 1 else t("pdf.variant"))
+        _h2(doc, f"{head}{wide}{v.gene} {v.hgvs_p}")
         _rows(doc, [
-            Row("ゲノム座標", str(v.genomic), "GRCh38"),
-            Row("転写産物", f"{v.refseq_nuc}　{v.enst}", ""),
+            Row(t("row.genomic"), str(v.genomic), "GRCh38"),
+            Row(t("row.transcript"), f"{v.refseq_nuc}{wide}{v.enst}", ""),
         ])
 
-        _h2(doc, "FuncVEP（機能的影響の予測）")
+        _h2(doc, t("pdf.funcvep"))
         _rows(doc, vr.predictions)
         if vr.funcvep_note:
             _para(doc, vr.funcvep_note)
 
-        _h2(doc, "他の予測ツール")
+        _h2(doc, t("pdf.others"))
         _rows(doc, vr.others)
 
-        _h2(doc, "ClinVar")
+        _h2(doc, t("pdf.clinvar"))
         _rows(doc, vr.clinvar_rows)
 
-        _h2(doc, "指標同士の一致")
-        _rows(doc, [Row("要約", vr.concordance, vr.concordance_detail)])
+        _h2(doc, t("pdf.concordance"))
+        _rows(doc, [Row(t("row.summary"), vr.concordance, vr.concordance_detail)])
 
     if rep.threshold_note:
-        _h2(doc, "PP3/BP4 の閾値について")
+        _h2(doc, t("pdf.thresholds"))
         _para(doc, rep.threshold_note)
 
-    _h2(doc, "解釈上の注意")
-    for d in DISCLAIMER:
-        _para(doc, "・" + d)
+    _h2(doc, t("pdf.disclaimer"))
+    for d in disclaimer():
+        _para(doc, bullet + d)
 
     return bytes(doc.output())
 

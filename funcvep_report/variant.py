@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from .i18n import t
+
 AA3_TO_1 = {
     "Ala": "A", "Arg": "R", "Asn": "N", "Asp": "D", "Cys": "C",
     "Gln": "Q", "Glu": "E", "Gly": "G", "His": "H", "Ile": "I",
@@ -51,7 +53,7 @@ def _aa_to_one(token: str) -> str:
     key = t.capitalize()
     if key in AA3_TO_1:
         return AA3_TO_1[key]
-    raise ParseError(f"アミノ酸として解釈できません: {token}")
+    raise ParseError(t("vp.bad_aa", token=token))
 
 
 @dataclass(frozen=True)
@@ -121,7 +123,7 @@ _CODING_RE = re.compile(
 def parse(text: str) -> ProteinInput | CodingInput:
     """1 行の入力を解析する。どちらの形式にも当てはまらなければ ParseError。"""
     if not text or not text.strip():
-        raise ParseError("入力が空です。")
+        raise ParseError(t("vp.empty"))
     s = text.strip()
 
     m = _CODING_RE.match(s)
@@ -138,18 +140,13 @@ def parse(text: str) -> ProteinInput | CodingInput:
     if m:
         alt_tok = m.group("alt")
         if alt_tok == "=":
-            raise ParseError(
-                "同義置換（p.Xxx123=）は対象外です。FuncVEP はミスセンス変異のみを扱います。"
-            )
+            raise ParseError(t("vp.synonymous"))
         aa_ref = _aa_to_one(m.group("ref"))
         aa_alt = "*" if alt_tok == "*" else _aa_to_one(alt_tok)
         if aa_alt == "*":
-            raise ParseError(
-                "ナンセンス変異（終止コドン生成）は対象外です。"
-                "FuncVEP はミスセンス変異のみを扱います。"
-            )
+            raise ParseError(t("vp.nonsense"))
         if aa_ref == aa_alt:
-            raise ParseError("参照アミノ酸と変異アミノ酸が同じです。")
+            raise ParseError(t("vp.same_aa"))
         return ProteinInput(
             gene=m.group("gene").upper(),
             aa_ref=aa_ref,
@@ -157,11 +154,7 @@ def parse(text: str) -> ProteinInput | CodingInput:
             aa_alt=aa_alt,
         )
 
-    raise ParseError(
-        "入力形式を認識できません。次のいずれかで入力してください。\n"
-        "  ・遺伝子記号 + アミノ酸置換    例) BRCA1 p.Arg1699Trp / BRCA1 R1699W\n"
-        "  ・HGVS 転写産物表記            例) NM_007294.4:c.5095C>T"
-    )
+    raise ParseError(t("vp.unrecognized"))
 
 
 def translate_codon(codon: str) -> str:
@@ -175,22 +168,17 @@ def apply_cds_substitution(cds: str, cds_pos: int, ref: str, alt: str) -> tuple[
     参照塩基が一致しない場合は ParseError。
     """
     if cds_pos < 1 or cds_pos > len(cds):
-        raise ParseError(
-            f"c.{cds_pos} はこの転写産物のコード領域（1〜{len(cds)}）の外です。"
-        )
+        raise ParseError(t("vp.out_of_range", pos=cds_pos, length=len(cds)))
     observed = cds[cds_pos - 1].upper()
     if observed != ref.upper():
-        raise ParseError(
-            f"参照塩基が一致しません。c.{cds_pos} の実際の塩基は {observed} ですが、"
-            f"入力は {ref} となっています。転写産物の指定を確認してください。"
-        )
+        raise ParseError(t("vp.ref_mismatch", pos=cds_pos, observed=observed, ref=ref))
 
     codon_index = (cds_pos - 1) // 3          # 0 始まり
     offset = (cds_pos - 1) % 3
     start = codon_index * 3
     ref_codon = cds[start:start + 3].upper()
     if len(ref_codon) < 3:
-        raise ParseError("コドンが配列末端で欠けています。")
+        raise ParseError(t("vp.codon_truncated"))
     alt_codon = ref_codon[:offset] + alt.upper() + ref_codon[offset + 1:]
 
     aa_ref = translate_codon(ref_codon)

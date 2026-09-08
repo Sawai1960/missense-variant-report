@@ -18,6 +18,7 @@ from pathlib import Path
 import duckdb
 
 from .config import FUNCVEP_MODELS, MODELS, Config
+from .i18n import join, t
 from .variant import (
     CodingInput,
     ParseError,
@@ -260,12 +261,7 @@ class Store:
         if not info or info["agreement"] >= 0.95:
             return None
         if info["offset"] is None:
-            return (
-                "AlphaMissense がこの遺伝子について別のアイソフォームを使っており、"
-                "残基番号の対応が一定のずれでは説明できません。\n"
-                "そのまま番号を当てはめると別の残基のスコアを示す恐れがあるため、"
-                "ここで止めています。"
-            )
+            return t("lk.numbering_note")
         return None
 
     def transcript_agreement(self, refseq_nuc: str, chrom: str,
@@ -495,7 +491,8 @@ def _explain_no_coordinate(store: Store, row: dict, aa_ref: str,
     多くは 1 塩基置換では作れない置換なので、その場合は到達可能な置換を示す。
     """
     gene = row["gene"]
-    head = f"{gene} p.{aa_ref}{position}{aa_alt} に対応するゲノム座標を特定できませんでした。\n"
+    pv = f"{aa_ref}{position}{aa_alt}"
+    head = t("lk.no_coord_head", gene=gene, pv=pv)
 
     cds = store.cds_for(row["refseq_nuc"])
     if cds is not None:
@@ -504,46 +501,28 @@ def _explain_no_coordinate(store: Store, row: dict, aa_ref: str,
         if len(codon) == 3:
             reachable = _reachable_by_one_base(codon)
             if aa_alt not in reachable:
-                listed = "、".join(sorted(reachable)) or "なし"
-                return (
-                    head
-                    + f"{gene} の {position} 番目のコドンは {codon} で、"
-                    f"{aa_ref} から {aa_alt} へは 1 塩基の置換では変えられません"
-                    f"（2 塩基以上の変化が必要）。\n"
-                    f"この位置で 1 塩基置換により生じうるのは {listed} です。\n"
-                    "報告書の表記をもう一度ご確認ください。"
-                )
+                listed = join(sorted(reachable)) or t("lk.none")
+                return head + t("lk.not_one_base", gene=gene, position=position,
+                                codon=codon, aa_ref=aa_ref, aa_alt=aa_alt,
+                                listed=listed)
 
     # 領域内に候補はあったが、番号体系が違うので採らなかった場合
     if rejected:
         seen: dict[str, tuple[float, int]] = {}
         for enst, agr, n in rejected:
             seen.setdefault(enst, (agr, n))
-        listed = "、".join(
-            f"{enst}（一致率 {agr:.2f}、{n} 残基で比較）"
+        listed = join(
+            t("lk.rejected_item", enst=enst, agr=agr, n=n)
             for enst, (agr, n) in list(seen.items())[:3]
         )
-        return (
-            head
-            + f"{gene} の領域内に p.{aa_ref}{position}{aa_alt} と書ける行はありましたが、"
-            "その転写産物は MANE と残基番号の付き方が違います: "
-            + listed + "。\n"
-            "同じ残基番号に同じアミノ酸が来ているだけで、指しているのは別の残基です。"
-            "そのまま採用すると別の場所のスコアを表示してしまうため、ここで止めています。\n"
-            "報告書の NM_ 番号を使った HGVS 表記での入力もお試しください。"
-        )
+        return head + t("lk.rejected", gene=gene, pv=pv, listed=listed)
 
     # 番号体系のずれが原因かどうかを対応表から確かめる
     note = store.numbering_note(row["ensg"], row["enst"])
     if note:
         return head + note
 
-    return (
-        head
-        + "AlphaMissense にこのアミノ酸置換の記載がありません。"
-        "この転写産物が AlphaMissense の対象外である可能性があります。\n"
-        "HGVS 転写産物表記での入力もお試しください。"
-    )
+    return head + t("lk.not_in_am")
 
 
 def resolve(text: str, store: Store) -> Resolution:
@@ -557,23 +536,19 @@ def resolve(text: str, store: Store) -> Resolution:
         return res
 
     if not store._ready(store.p.mane):
-        res.error = "MANE の索引がありません。scripts/02_build_index.py mane を実行してください。"
+        res.error = t("lk.no_mane_index")
         return res
 
     # --- 転写産物と遺伝子を決める ---
     if isinstance(parsed, CodingInput):
         rows = store.mane_by_transcript(parsed.transcript)
         if not rows:
-            res.error = (
-                f"転写産物 {parsed.transcript} が MANE に見つかりません。\n"
-                "MANE Select 以外の転写産物は対象外です。"
-                "遺伝子記号とアミノ酸置換での入力をお試しください。"
-            )
+            res.error = t("lk.tx_not_found", tx=parsed.transcript)
             return res
         row = rows[0]
         cds = store.cds_for(row["refseq_nuc"])
         if cds is None:
-            res.error = f"{row['refseq_nuc']} の CDS 配列が索引にありません。"
+            res.error = t("lk.no_cds", refseq=row["refseq_nuc"])
             return res
         try:
             aa_ref, position, aa_alt = apply_cds_substitution(
@@ -583,30 +558,21 @@ def resolve(text: str, store: Store) -> Resolution:
             res.error = str(exc)
             return res
         if aa_ref == aa_alt:
-            res.error = (
-                f"この置換は同義置換です（{aa_ref}{position} のまま変わりません）。"
-                "FuncVEP はミスセンス変異のみを扱います。"
-            )
+            res.error = t("lk.synonymous", aa_ref=aa_ref, position=position)
             return res
         if aa_alt == "*":
-            res.error = (
-                f"この置換は終止コドンを生じます（p.{aa_ref}{position}Ter）。"
-                "FuncVEP はミスセンス変異のみを扱います。"
-            )
+            res.error = t("lk.stop_gain", aa_ref=aa_ref, position=position)
             return res
         if parsed.gene and parsed.gene.upper() != row["gene"].upper():
             res.warnings.append(
-                f"入力の遺伝子名 {parsed.gene} と転写産物の遺伝子 {row['gene']} が"
-                "一致しません。転写産物側を採用しました。"
+                t("lk.gene_mismatch", input_gene=parsed.gene, tx_gene=row["gene"])
             )
     else:
         rows = store.mane_by_gene(parsed.gene)
         if not rows:
             hints = store.gene_suggestions(parsed.gene)
-            res.error = (
-                f"遺伝子 {parsed.gene} が MANE に見つかりません。"
-                "正式な HGNC 記号で入力してください。"
-                + (f"\n候補: {', '.join(hints)}" if hints else "")
+            res.error = t("lk.gene_not_found", gene=parsed.gene) + (
+                t("lk.hints", hints=", ".join(hints)) if hints else ""
             )
             return res
         aa_ref, position, aa_alt = parsed.aa_ref, parsed.position, parsed.aa_alt
@@ -624,7 +590,7 @@ def resolve(text: str, store: Store) -> Resolution:
             start = (position - 1) * 3
             if start + 3 > len(cds):
                 mismatches.append(
-                    f"{cand['refseq_nuc']} は {len(cds) // 3 - 1} 残基しかありません"
+                    t("lk.too_short", refseq=cand["refseq_nuc"], n=len(cds) // 3 - 1)
                 )
                 continue
             actual = translate_codon(cds[start:start + 3])
@@ -632,32 +598,25 @@ def resolve(text: str, store: Store) -> Resolution:
                 row = cand
                 break
             mismatches.append(
-                f"{cand['refseq_nuc']} の {position} 番目は {actual}"
+                t("lk.residue_is", refseq=cand["refseq_nuc"], position=position,
+                  actual=actual)
             )
 
         if row is None:
             if not mismatches:
                 # CDS が索引に無い。照合はできないが先へ進める。
                 row = rows[0]
-                res.warnings.append(
-                    f"{row['refseq_nuc']} の CDS が索引に無いため、"
-                    "参照アミノ酸の確認を省きました。"
-                )
+                res.warnings.append(t("lk.cds_skipped", refseq=row["refseq_nuc"]))
             else:
-                res.error = (
-                    f"{parsed.gene} の {position} 番目のアミノ酸が、入力された "
-                    f"{aa_ref} と一致する転写産物がありません。\n"
-                    + "　".join(mismatches)
-                    + "\n報告書の転写産物番号を使った HGVS 表記でお試しください。"
-                )
+                res.error = t("lk.no_matching_tx", gene=parsed.gene, position=position,
+                              aa_ref=aa_ref, mismatches=join(mismatches, wide=True))
                 return res
 
         if len(rows) > 1:
             others = ", ".join(r["refseq_nuc"] for r in rows if r is not row)
             res.warnings.append(
-                f"{row['gene']} には複数の MANE 転写産物があります。"
-                f"参照アミノ酸が一致した {row['refseq_nuc']}"
-                f"（{row['mane_status']}）を使いました。他: {others}"
+                t("lk.multi_mane", gene=row["gene"], refseq=row["refseq_nuc"],
+                  status=row["mane_status"], others=others)
             )
 
     res.gene = row["gene"]
@@ -688,10 +647,8 @@ def resolve(text: str, store: Store) -> Resolution:
                     hits = []
             if hits and offset:
                 res.warnings.append(
-                    f"AlphaMissense は別のアイソフォームを使っており、"
-                    f"残基番号が {offset:+d} ずれています。"
-                    f"{row['gene']} p.{protein_variant} を "
-                    f"p.{am_pv} として照会しました。"
+                    t("lk.offset_warn", offset=offset, gene=row["gene"],
+                      pv=protein_variant, am_pv=am_pv)
                 )
         if not hits:
             found = store.am_by_region(
@@ -712,16 +669,9 @@ def resolve(text: str, store: Store) -> Resolution:
                 else:
                     rejected_isoforms.append((str(h["enst"]), agr, compared))
             if hits:
-                res.warnings.append(
-                    "転写産物 ID が AlphaMissense と一致しなかったため、"
-                    "遺伝子の領域内での一致を採用しました"
-                    "（残基番号の付き方が MANE と一致することを確認済み）。"
-                )
+                res.warnings.append(t("lk.region_warn"))
     except MissingIndex:
-        res.error = (
-            "AlphaMissense の索引がありません。アミノ酸変化からゲノム座標を求めるには"
-            "この索引が必要です。scripts/02_build_index.py alphamissense を実行してください。"
-        )
+        res.error = t("lk.no_am_index")
         return res
 
     if not hits:
@@ -734,10 +684,7 @@ def resolve(text: str, store: Store) -> Resolution:
         for h in hits
     ]
     if len(variants) > 1:
-        res.warnings.append(
-            f"同じアミノ酸置換を生じる塩基置換が {len(variants)} 通りあります。"
-            "すべて表示します。検査報告書の塩基座標と照合してください。"
-        )
+        res.warnings.append(t("lk.multi_nuc", n=len(variants)))
 
     # --- 証拠を集める ---
     fv = store.funcvep_for(variants)
@@ -767,8 +714,7 @@ def resolve(text: str, store: Store) -> Resolution:
             }
             if fv[key].get("ensg") and fv[key]["ensg"] != row["ensg"]:
                 res.warnings.append(
-                    f"FuncVEP 側の遺伝子 {fv[key]['ensg']} が "
-                    f"{row['ensg']} と一致しません。重複遺伝子領域の可能性があります。"
+                    t("lk.ensg_mismatch", fv_ensg=fv[key]["ensg"], ensg=row["ensg"])
                 )
         res.variants.append(
             ResolvedVariant(
@@ -783,27 +729,12 @@ def resolve(text: str, store: Store) -> Resolution:
         # スコアが出ない理由は 2 つあり、利用者の受け取り方が変わるので分けて伝える。
         statuses = {v.evidence.funcvep_status for v in res.variants}
         if statuses == {"blank"}:
-            res.warnings.append(
-                "FuncVEP のスコアは空欄です。学習に使われた変異はスコアが"
-                "公開されていません。AlphaMissense・REVEL・ClinVar を見てください。"
-            )
+            res.warnings.append(t("lk.warn_blank"))
         elif statuses == {"absent"}:
-            res.warnings.append(
-                "この変異は 6 モデル全部の学習に使われたため、公開予測表から"
-                "行ごと除かれています。収録が無いこと自体は病原性の情報を"
-                "持ちません。AlphaMissense・REVEL・ClinVar を見てください。"
-            )
+            res.warnings.append(t("lk.warn_absent"))
         elif statuses == {"absent_unexplained"}:
-            res.warnings.append(
-                "この変異は公開予測表になく、公開されている学習セットにも"
-                "見当たりません。理由は未確定です。収録が無いこと自体は"
-                "病原性の情報を持ちません。"
-                "AlphaMissense・REVEL・ClinVar を見てください。"
-            )
+            res.warnings.append(t("lk.warn_absent_unexplained"))
         elif statuses and "scored" not in statuses:
-            res.warnings.append(
-                "FuncVEP のスコアが得られません（候補ごとに理由が異なります）。"
-                "AlphaMissense・REVEL・ClinVar を見てください。"
-            )
+            res.warnings.append(t("lk.warn_mixed"))
 
     return res
