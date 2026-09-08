@@ -215,19 +215,19 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "row.gene": ("遺伝子", "Gene"),
     "gene_value": ("{gene}（{ensg}）", "{gene} ({ensg})"),
     "note.pli": (
-        "この遺伝子の働きを失わせる変異が、一般の人々にどれだけ少ないかを示す指標"
-        "（gnomAD）。1 に近いほど、壊れると影響が大きい遺伝子",
+        "この遺伝子の機能喪失変異が、一般にはあまりみられないという指標（gnomAD）。"
+        "1 に近いほど「壊れると影響が大きい遺伝子」",
         "How depleted loss-of-function variants in this gene are among the general "
         "population (gnomAD). Closer to 1 means the gene tolerates loss poorly",
     ),
     "note.mis_z": (
-        "この遺伝子のアミノ酸置換が、一般の人々で予想より少ないかを示す指標"
-        "（gnomAD）。値が大きいほど、置換の影響が出やすい遺伝子",
+        "この遺伝子のミスセンス変異が、一般には予想より少ないという指標（gnomAD）。"
+        "値が大きいほど「ミスセンス変異の影響が出やすい遺伝子」",
         "How depleted missense variants in this gene are relative to expectation "
         "(gnomAD). Larger values mean substitutions tend to matter",
     ),
     "note.lof_z": (
-        "遺伝子の働きを失わせる変異について、上と同じ考え方の指標",
+        "機能喪失変異について、missense z と同じ考え方の指標",
         "The same measure for loss-of-function variants",
     ),
     "row.af": ("gnomAD アレル頻度", "gnomAD allele frequency"),
