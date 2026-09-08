@@ -14,7 +14,7 @@ from datetime import datetime
 
 from .acmg import Assignment, assign, binary_cutoff
 from .config import FUNCVEP_MODELS
-from .i18n import get_lang, join, t
+from .i18n import get_lang, has, join, t
 from .lookup import ResolvedVariant, Resolution, clinvar_stars
 
 # FuncVEP のスコアを二値にするときの境。論文はモデルごとに異なる値を与えており
@@ -150,6 +150,17 @@ def _phenotypes(raw: str | None, limit: int = 6) -> str:
     return shown
 
 
+def _gloss(term: str | None, seen: set[str]) -> str:
+    """判定語（Damaging など）の初回出現にだけ和訳を添える。日本語版のみ。"""
+    if term is None:
+        return t("dash")
+    key = f"gloss.{term}"
+    if get_lang() != "ja" or term in seen or not has(key):
+        return term
+    seen.add(term)
+    return t(key)
+
+
 def _call(score: float | None, cutoff: float,
           hi: str = "Damaging", lo: str = "Neutral") -> str:
     if score is None:
@@ -162,6 +173,7 @@ def build(res: Resolution, thresholds: dict | None,
           gnomad_hom: int | None = None,
           threshold_note: str = "") -> Report:
     wide = t("sep.wide")
+    seen_terms: set[str] = set()
     rep = Report(
         query=res.query,
         created=datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -218,7 +230,8 @@ def build(res: Resolution, thresholds: dict | None,
                 value = t("dash")
                 head = missing_label(vr.funcvep_status)
             else:
-                value = f"{_fmt(score)}{wide}{_call(score, binary_cutoff(model, thresholds))}"
+                value = (f"{_fmt(score)}{wide}"
+                         f"{_gloss(_call(score, binary_cutoff(model, thresholds)), seen_terms)}")
                 head = a.label if a else t("uncalibrated")
             vr.predictions.append(
                 Row(model.replace("_", "-"), value, head + "｜" + model_note(model))
@@ -248,13 +261,13 @@ def build(res: Resolution, thresholds: dict | None,
 
         vr.others.append(
             Row("AlphaMissense",
-                f"{_fmt(ev.am_score)}{wide}{ev.am_class}" if ev.am_score is not None
+                f"{_fmt(ev.am_score)}{wide}{_gloss(ev.am_class, seen_terms)}" if ev.am_score is not None
                 else t("dash"),
                 t("note.alphamissense"))
         )
         vr.others.append(
             Row("REVEL",
-                f"{_fmt(ev.revel)}{wide}{_call(ev.revel, REVEL_CUTOFF)}"
+                f"{_fmt(ev.revel)}{wide}{_gloss(_call(ev.revel, REVEL_CUTOFF), seen_terms)}"
                 if ev.revel is not None else t("dash"),
                 t("note.revel", cutoff=REVEL_CUTOFF))
         )
@@ -301,9 +314,14 @@ def build(res: Resolution, thresholds: dict | None,
             vr.concordance = t("conc.all_neutral", n=n_tot)
         else:
             vr.concordance = t("conc.mixed", n=n_tot, d=n_dmg)
-        vr.concordance_detail = wide.join(
-            f"{k}:{'D' if v else 'N'}" for k, v in decided.items()
-        )
+        if decided:
+            dmg = [k.replace("_", "-") for k, v in decided.items() if v]
+            neu = [k.replace("_", "-") for k, v in decided.items() if not v]
+            vr.concordance_detail = t(
+                "conc.sides",
+                damaging=join(dmg) or t("lk.none"),
+                neutral=join(neu) or t("lk.none"),
+            )
 
         rep.variants.append(vr)
 

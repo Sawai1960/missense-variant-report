@@ -144,4 +144,5 @@ def describe_thresholds(model: str, thresholds: dict | None) -> str:
     cut = tm.get("binary")
     if cut is not None:
         lines.append(t("thr.binary", cut=cut))
+    lines.insert(0, t("thr.explain"))
     return "\n".join(lines)

@@ -50,6 +50,10 @@ def t(key: str, **kw) -> str:
     return s.format(**kw) if kw else s
 
 
+def has(key: str) -> bool:
+    return key in _STRINGS
+
+
 def join(items, wide: bool = False) -> str:
     """一覧の区切り。日本語は読点、英語はコンマ。"""
     sep = t("sep.wide" if wide else "sep.list")
@@ -100,7 +104,12 @@ _REF_PEJAVER = (
     "pathogenicity classification and ClinGen recommendations for PP3/BP4 "
     "criteria. Am J Hum Genet 109, 2163–2177 (2022)."
 )
-_REF_TIERS = "Genet Med (2025). doi:10.1016/j.gim.2025.101402"
+_REF_TIERS = (
+    "Bergquist T, Stenton SL, Nadeau EAW, et al. Calibration of additional "
+    "computational tools expands ClinGen recommendation options for variant "
+    "classification with PP3/BP4 criteria. Genet Med 27, 101402 (2025). "
+    "doi:10.1016/j.gim.2025.101402"
+)
 
 _STRINGS: dict[str, tuple[str, str]] = {
     # ---------------------------------------------------------------- 共通
@@ -283,6 +292,15 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "phenotypes.none": ("記載なし", "Not stated"),
     "phenotypes.more": ("　ほか {n} 件", " and {n} more"),
 
+    # 判定語の初回出現にだけ添える和訳（日本語版のみ）
+    "gloss.Damaging": ("Damaging（機能を損なう）", "Damaging"),
+    "gloss.Neutral": ("Neutral（影響なし）", "Neutral"),
+    "gloss.likely_pathogenic": ("likely_pathogenic（病的の可能性が高い）", "likely_pathogenic"),
+    "gloss.ambiguous": ("ambiguous（判定保留）", "ambiguous"),
+    "gloss.likely_benign": ("likely_benign（良性の可能性が高い）", "likely_benign"),
+
+    "conc.sides": ("damaging 側: {damaging}　／　neutral 側: {neutral}",
+                   "damaging: {damaging}  /  neutral: {neutral}"),
     "conc.none": ("判定できる指標がありません", "No predictor could be called"),
     "conc.all_damaging": ("{n} 指標すべてが damaging 側",
                           "All {n} predictors on the damaging side"),
@@ -325,10 +343,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "Ibid., Supplementary Table 13 (PP3/BP4 thresholds; provided by the authors, 2026-09-05)",
     ),
     "ref.tiers": (
-        "証拠の段階（Supporting / Moderate / Intermediate / Strong）の定義: " + _REF_TIERS
-        + "（著者の指示による）",
-        "Evidence-strength tiers (Supporting / Moderate / Intermediate / Strong): "
-        + _REF_TIERS + " (as indicated by the authors)",
+        _REF_TIERS + "（証拠の段階 Supporting / Moderate / Intermediate / Strong の定義。"
+        "FuncVEP の著者の指示による）",
+        _REF_TIERS + " (defines the Supporting / Moderate / Intermediate / Strong "
+        "tiers; as indicated by the FuncVEP authors)",
     ),
     "ref.alphamissense": (_REF_AM, _REF_AM),
     "ref.revel": (_REF_REVEL, _REF_REVEL),
@@ -338,8 +356,18 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ref.pejaver": (_REF_PEJAVER, _REF_PEJAVER),
 
     # -------------------------------------------------------------- acmg.py
-    "acmg.none": ("該当なし（PP3 にも BP4 にも達しない中間域）",
-                  "None (between the BP4 and PP3 ranges)"),
+    "acmg.none": ("該当なし（中間域）", "None (intermediate range)"),
+    "thr.explain": (
+        "PP3 / BP4 は ACMG/AMP 基準の証拠項目で、PP3 はコンピュータ予測が「病的」を"
+        "支持する証拠、BP4 は「良性」を支持する証拠。強さは Supporting → Moderate → "
+        "Intermediate → Strong の順に強い。どちらの基準にも達しないスコアは"
+        "「該当なし（中間域）」で、証拠として数えない。",
+        "PP3 and BP4 are ACMG/AMP evidence criteria: PP3 is computational evidence "
+        "supporting pathogenicity, BP4 computational evidence supporting a benign "
+        "interpretation. Strength increases Supporting → Moderate → Intermediate → "
+        "Strong. A score reaching neither threshold is \"None (intermediate range)\" "
+        "and does not count as evidence.",
+    ),
     "thr.uncalibrated": (
         "PP3/BP4 の判定基準が設定されていません。scripts/03_calibrate_acmg.py を"
         "実行すると、お手元の ClinVar から算出します。",
