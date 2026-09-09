@@ -242,15 +242,15 @@ for i, vr in enumerate(rep.variants, 1):
         st.write(f"**{r.label}** {r.value}")
         st.caption(r.note)
 
+    st.subheader(t("ui.concordance"))
+    for r in vr.concordance_rows:
+        st.write(f"**{r.label}** {r.value}")
+
     st.subheader(t("ui.clinvar"))
     for r in vr.clinvar_rows:
         st.write(f"**{r.label}** {r.value}")
         if r.note:
             st.caption(r.note)
-
-    st.subheader(t("ui.concordance"))
-    for r in vr.concordance_rows:
-        st.write(f"**{r.label}** {r.value}")
 
 st.divider()
 with st.expander(t("ui.thresholds")):
