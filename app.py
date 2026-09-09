@@ -14,6 +14,7 @@ import streamlit as st
 from funcvep_report import build_report, load_config
 from funcvep_report.acmg import binary_cutoff, describe_thresholds
 from funcvep_report.config import FUNCVEP_MODELS
+from funcvep_report.gnomad import lookup as gnomad_lookup
 from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
 from funcvep_report.pdfout import render_stream
@@ -62,10 +63,12 @@ with st.sidebar:
         st.caption(t("ui.missing_data"))
 
     st.divider()
-    st.subheader(t("ui.population"))
-    st.caption(t("ui.population_help"))
-    af_text = st.text_input(t("ui.af"), value="", placeholder=t("ui.af_placeholder"))
-    hom_text = st.text_input(t("ui.hom"), value="", placeholder=t("ui.hom_placeholder"))
+    gnomad_online = st.checkbox(
+        t("ui.gnomad_online"),
+        value=st.session_state.get("gnomad_online", cfg.gnomad_af_mode == "api"),
+        help=t("ui.gnomad_online_help"),
+    )
+    st.session_state["gnomad_online"] = gnomad_online
 
     st.divider()
     thresholds = cfg.load_thresholds()
@@ -102,6 +105,12 @@ if query and st.query_params.get("q") != query:
 with st.expander(t("ui.formats")):
     st.markdown(t("ui.formats_body"))
 
+with st.expander(t("ui.population_manual")):
+    st.caption(t("ui.population_help"))
+    col_af, col_hom = st.columns(2)
+    af_text = col_af.text_input(t("ui.af"), value="", placeholder=t("ui.af_placeholder"))
+    hom_text = col_hom.text_input(t("ui.hom"), value="", placeholder=t("ui.hom_placeholder"))
+
 if not query:
     st.stop()
 
@@ -119,14 +128,35 @@ def _num(text: str, cast):
         return None
 
 
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def _gnomad(chrom: str, pos: int, ref: str, alt: str):
+    """同じ変異を日に何度も照会しないよう 24 時間は結果を持つ。"""
+    return gnomad_lookup(chrom, pos, ref, alt)
+
+
 with st.spinner(t("ui.resolving")):
     res = resolve(query, store)
-    rep = build_report(
-        res, thresholds,
-        gnomad_af=_num(af_text, float),
-        gnomad_hom=_num(hom_text, int),
-        threshold_note=describe_thresholds(cfg.primary_model, thresholds),
-    )
+
+gnomad_results = None
+if gnomad_online and not res.error:
+    with st.spinner(t("ui.gnomad_querying")):
+        gnomad_results = {}
+        for rv in res.variants:
+            g = rv.genomic
+            r = _gnomad(g.chrom, g.pos, g.ref, g.alt)
+            if r.status == "error":
+                # 失敗をキャッシュに残さない。次の照会で再試行できるようにする
+                _gnomad.clear(g.chrom, g.pos, g.ref, g.alt)
+            gnomad_results[g.funcvep_id] = r
+
+rep = build_report(
+    res, thresholds,
+    gnomad_af=_num(af_text, float),
+    gnomad_hom=_num(hom_text, int),
+    threshold_note=describe_thresholds(cfg.primary_model, thresholds),
+    gnomad_results=gnomad_results,
+    gnomad_online=gnomad_online,
+)
 
 if rep.error:
     st.error(rep.error)
@@ -135,14 +165,19 @@ if rep.error:
 for w in rep.warnings:
     st.warning(w)
 
-col_gene, col_pop = st.columns(2)
-with col_gene:
-    st.subheader(t("ui.gene"))
-    for r in rep.gene_rows:
-        st.write(f"**{r.label}** {r.value}")
-        if r.note:
-            st.caption(r.note)
-with col_pop:
+# 集団頻度が取れていないときは、手入力の場所を案内する
+if _num(af_text, float) is None:
+    if not gnomad_online:
+        st.info(t("ui.af_prompt_offline"))
+    elif any(vr.gnomad is None or vr.gnomad.status == "error" for vr in rep.variants):
+        st.info(t("ui.af_prompt_failed"))
+
+st.subheader(t("ui.gene"))
+for r in rep.gene_rows:
+    st.write(f"**{r.label}** {r.value}")
+    if r.note:
+        st.caption(r.note)
+if rep.population_rows:
     st.subheader(t("ui.population"))
     for r in rep.population_rows:
         st.write(f"**{r.label}** {r.value}")
@@ -158,6 +193,12 @@ for i, vr in enumerate(rep.variants, 1):
     st.header(head)
     st.caption(t("ui.transcript_line", genomic=v.genomic,
                  refseq=v.refseq_nuc, enst=v.enst))
+
+    st.subheader(t("ui.population_gnomad"))
+    for r in vr.population_rows:
+        st.write(f"**{r.label}** {r.value}")
+        if r.note:
+            st.caption(r.note)
 
     st.subheader(t("ui.funcvep"))
     if i == 1:

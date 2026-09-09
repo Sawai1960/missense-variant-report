@@ -289,15 +289,63 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "The corresponding z-score for loss-of-function variants",
     ),
     "row.af": ("gnomAD アレル頻度", "gnomAD allele frequency"),
-    "note.af": ("0.01 を超えるなら BA1、疾患の頻度に照らして高いなら BS1 を検討",
-                "Consider BA1 above 0.01, or BS1 if high relative to disease prevalence"),
+    "af.value": ("{af}（{ac} / {an} アレル）", "{af} ({ac} / {an} alleles)"),
+    "af.ba1": ("BA1 該当（0.05 超）", "BA1 (above 0.05)"),
+    "af.filtered": ("　品質フィルタ: {filters}", "  quality filters: {filters}"),
+    "note.af": (
+        "gnomAD v4（エクソームとゲノムの合算、{retrieved} 取得）。0.05 を超える場合は "
+        "BA1（良性の単独で十分な根拠）。疾患の頻度に照らして高い場合は BS1 を検討する",
+        "gnomAD v4 (exomes and genomes combined, retrieved {retrieved}). Above 0.05 "
+        "meets BA1 (stand-alone benign); consider BS1 if high relative to disease "
+        "prevalence",
+    ),
+    "note.af_manual": (
+        "画面で入力された値。0.05 を超える場合は BA1（良性の単独で十分な根拠）。"
+        "疾患の頻度に照らして高い場合は BS1 を検討する",
+        "Entered manually. Above 0.05 meets BA1 (stand-alone benign); consider BS1 "
+        "if high relative to disease prevalence",
+    ),
     "row.hom": ("ホモ接合体数", "Homozygotes"),
     "note.hom": ("常染色体潜性（劣性）遺伝の疾患で 0 でないなら BS2 を検討",
                  "For autosomal recessive disorders, consider BS2 if non-zero"),
-    "af.not_entered": ("未入力", "Not entered"),
-    "note.af_not_entered": (
-        '検査報告書の値を画面で入力すると表示される',
-        'Enter the value from the laboratory report to include it',
+    "af.absent": ("収録なし（約 80 万人で観察されず）",
+                  "Absent (not observed in about 800,000 individuals)"),
+    "note.af_absent": (
+        "gnomAD v4（{retrieved} 取得）。集団データベースに存在しないことは "
+        "PM2_supporting（病的方向の弱い根拠）の候補となる。この位置の読み取り深度は"
+        "平均 {depth}（20 リード以上の割合 {frac}）で十分である",
+        "gnomAD v4 (retrieved {retrieved}). Absence from population databases is a "
+        "candidate for PM2_supporting. Coverage at this position is adequate "
+        "(mean depth {depth}; fraction over 20 reads {frac})",
+    ),
+    "note.af_absent_lowcov": (
+        "gnomAD v4（{retrieved} 取得）。この位置の読み取り深度が不十分（平均 {depth}、"
+        "20 リード以上の割合 {frac}）なため、収録が無いことを根拠としない",
+        "gnomAD v4 (retrieved {retrieved}). Coverage at this position is inadequate "
+        "(mean depth {depth}; fraction over 20 reads {frac}), so absence is not "
+        "used as evidence",
+    ),
+    "note.af_absent_nocov": (
+        "gnomAD v4（{retrieved} 取得）。集団データベースに存在しないことは "
+        "PM2_supporting（病的方向の弱い根拠）の候補となる。この位置の読み取り深度は"
+        "取得できなかった",
+        "gnomAD v4 (retrieved {retrieved}). Absence from population databases is a "
+        "candidate for PM2_supporting. Coverage at this position could not be "
+        "retrieved",
+    ),
+    "af.failed": ("取得できなかった", "Could not be retrieved"),
+    "note.af_failed": (
+        "gnomAD への接続に失敗した（{reason}）。検査報告書に記載された gnomAD の値、"
+        "または gnomAD のサイトで確認した値を画面で入力すると表示される",
+        "The gnomAD query failed ({reason}). Enter the gnomAD value from the "
+        "laboratory report, or from the gnomAD website, to include it",
+    ),
+    "af.offline": ("未取得（オンライン照会が無効）", "Not retrieved (online lookup disabled)"),
+    "note.af_offline": (
+        "サイドバーで gnomAD のオンライン照会を有効にするか、検査報告書に記載された "
+        "gnomAD の値、または gnomAD のサイトで確認した値を画面で入力する",
+        "Enable online gnomAD lookup in the sidebar, or enter the gnomAD value from "
+        "the laboratory report or the gnomAD website",
     ),
     "uncalibrated": ("PP3/BP4 の判定基準なし", "No PP3/BP4 thresholds"),
 
@@ -475,7 +523,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "pdf.unresolved": ("解決できませんでした", "Could not resolve"),
     "pdf.warnings": ("注意", "Notes"),
     "pdf.gene": ("遺伝子", "Gene"),
-    "pdf.population": ("集団頻度", "Population frequency"),
+    "pdf.population": ("集団頻度（手入力）", "Population frequency (manual)"),
+    "pdf.population_gnomad": ("集団頻度（gnomAD）", "Population frequency (gnomAD)"),
     "pdf.variant": ("変異", "Variant"),
     "pdf.variant_n": ("変異 {i} / {n}", "Variant {i} / {n}"),
     "row.genomic": ("ゲノム座標", "Genomic coordinate"),
@@ -744,11 +793,36 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "`python scripts/01_download.py`\n"
         "`python scripts/02_build_index.py`",
     ),
-    "ui.population": ("集団頻度", "Population frequency"),
+    "ui.population": ("集団頻度（手入力）", "Population frequency (manual)"),
+    "ui.population_gnomad": ("集団頻度（gnomAD）", "Population frequency (gnomAD)"),
+    "ui.population_manual": ("集団頻度を手入力する（任意）",
+                             "Enter population frequency manually (optional)"),
     "ui.population_help": (
-        "検査報告書に記載の gnomAD の値を入力すると、レポートに載ります。",
-        "Enter the gnomAD values from the laboratory report to include them.",
+        "通常は gnomAD から自動で取得します。取得できない場合や、検査報告書に記載された"
+        "値を報告書に載せたい場合に入力してください。",
+        "Normally retrieved from gnomAD automatically. Enter values here if the lookup "
+        "fails or to include the values printed on the laboratory report.",
     ),
+    "ui.gnomad_online": ("gnomAD をオンラインで照会", "Query gnomAD online"),
+    "ui.gnomad_online_help": (
+        "変異のゲノム座標だけを gnomAD の公開 API に送り、アレル頻度とホモ接合体数を"
+        "取得します。患者情報は送りません。",
+        "Sends only the genomic coordinates of the variant to the public gnomAD API "
+        "to retrieve allele frequency and homozygote count. No patient data is sent.",
+    ),
+    "ui.af_prompt_failed": (
+        "gnomAD から集団頻度を取得できませんでした。検査報告書の値か gnomAD のサイトの"
+        "値を「集団頻度を手入力する」に入力すると、報告書に反映されます。",
+        "Population frequency could not be retrieved from gnomAD. Enter the value from "
+        "the laboratory report or the gnomAD website under the manual-entry section.",
+    ),
+    "ui.af_prompt_offline": (
+        "gnomAD のオンライン照会が無効のため、集団頻度は未取得です。サイドバーで有効に"
+        "するか、「集団頻度を手入力する」に入力してください。",
+        "Online gnomAD lookup is disabled, so population frequency was not retrieved. "
+        "Enable it in the sidebar or enter values manually.",
+    ),
+    "ui.gnomad_querying": ("gnomAD に照会しています…", "Querying gnomAD…"),
     "ui.af": ("アレル頻度", "Allele frequency"),
     "ui.af_placeholder": ("例) 0.0000041 または 4.1e-6", "e.g. 0.0000041 or 4.1e-6"),
     "ui.hom": ("ホモ接合体数", "Homozygotes"),

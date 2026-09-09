@@ -15,6 +15,7 @@ from datetime import datetime
 from .acmg import Assignment, assign, binary_cutoff
 from .config import FUNCVEP_MODELS
 from .i18n import get_lang, has, join, t
+from .gnomad import GnomadResult
 from .lookup import ResolvedVariant, Resolution, clinvar_stars
 
 # FuncVEP のスコアを二値にするときの境。論文はモデルごとに異なる値を与えており
@@ -94,6 +95,8 @@ class VariantReport:
     clinvar_rows: list[Row] = field(default_factory=list)
     concordance: str = ""
     concordance_rows: list[Row] = field(default_factory=list)
+    population_rows: list[Row] = field(default_factory=list)
+    gnomad: GnomadResult | None = None
 
 
 @dataclass
@@ -181,10 +184,41 @@ def _call(score: float | None, cutoff: float,
     return hi if score >= cutoff else lo
 
 
+def _population_rows(g: GnomadResult | None, online: bool, retrieved: str) -> list[Row]:
+    """gnomAD の照会結果を、記録あり／記録なし／取得できず／未照会で書き分ける。"""
+    if not online:
+        return [Row(t("row.af"), t("af.offline"), t("note.af_offline"))]
+    if g is None or g.status == "error":
+        reason = g.reason if g else "not queried"
+        return [Row(t("row.af"), t("af.failed"), t("note.af_failed", reason=reason))]
+    if g.status == "absent":
+        depth = f"{g.depth_mean:.0f}" if g.depth_mean is not None else t("dash")
+        frac = f"{g.over_20:.0%}" if g.over_20 is not None else t("dash")
+        if g.well_covered is None:
+            key = "note.af_absent_nocov"
+        elif g.well_covered:
+            key = "note.af_absent"
+        else:
+            key = "note.af_absent_lowcov"
+        return [Row(t("row.af"), t("af.absent"),
+                    t(key, retrieved=retrieved, depth=depth, frac=frac))]
+    value = t("af.value", af=f"{g.af:.3e}", ac=f"{g.ac:,}", an=f"{g.an:,}")
+    if g.af > 0.05:
+        value += t("sep.wide") + t("af.ba1")
+    if g.filters:
+        value += t("af.filtered", filters=", ".join(g.filters))
+    return [
+        Row(t("row.af"), value, t("note.af", retrieved=retrieved)),
+        Row(t("row.hom"), f"{g.hom:,}", t("note.hom")),
+    ]
+
+
 def build(res: Resolution, thresholds: dict | None,
           gnomad_af: float | None = None,
           gnomad_hom: int | None = None,
-          threshold_note: str = "") -> Report:
+          threshold_note: str = "",
+          gnomad_results: dict[str, GnomadResult] | None = None,
+          gnomad_online: bool = True) -> Report:
     wide = t("sep.wide")
     seen_terms: set[str] = set()
     rep = Report(
@@ -219,24 +253,23 @@ def build(res: Resolution, thresholds: dict | None,
     else:
         rep.gene_rows = [Row(t("row.gene"), gene_value)]
 
-    # --- 集団頻度（手入力または API） ---
+    # --- 集団頻度（手入力）。gnomAD の自動取得は変異ごとに載せる ---
     if gnomad_af is not None:
-        rep.population_rows.append(
-            Row(t("row.af"), f"{gnomad_af:.3e}", t("note.af"))
-        )
+        value = f"{gnomad_af:.3e}"
+        if gnomad_af > 0.05:
+            value += wide + t("af.ba1")
+        rep.population_rows.append(Row(t("row.af"), value, t("note.af_manual")))
         if gnomad_hom is not None:
             rep.population_rows.append(
                 Row(t("row.hom"), str(gnomad_hom), t("note.hom"))
             )
-    else:
-        rep.population_rows.append(
-            Row(t("row.af"), t("af.not_entered"), t("note.af_not_entered"))
-        )
 
     # --- 変異ごと ---
     for rv in res.variants:
         vr = VariantReport(variant=rv)
         ev = rv.evidence
+        vr.gnomad = (gnomad_results or {}).get(rv.genomic.funcvep_id)
+        vr.population_rows = _population_rows(vr.gnomad, gnomad_online, rep.created)
 
         vr.funcvep_status = ev.funcvep_status
         vr.funcvep_note = missing_note(vr.funcvep_status, ev.train_models)

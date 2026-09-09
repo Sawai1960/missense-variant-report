@@ -173,8 +173,9 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     _h2(doc, t("pdf.gene"))
     _rows(doc, rep.gene_rows)
 
-    _h2(doc, t("pdf.population"))
-    _rows(doc, rep.population_rows)
+    if rep.population_rows:
+        _h2(doc, t("pdf.population"))
+        _rows(doc, rep.population_rows)
 
     for i, vr in enumerate(rep.variants, 1):
         v = vr.variant
@@ -185,6 +186,9 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
             Row(t("row.genomic"), str(v.genomic), "GRCh38"),
             Row(t("row.transcript"), f"{v.refseq_nuc}{wide}{v.enst}", ""),
         ])
+
+        _h2(doc, t("pdf.population_gnomad"))
+        _rows(doc, vr.population_rows)
 
         _h2(doc, t("pdf.funcvep"))
         if i == 1:
