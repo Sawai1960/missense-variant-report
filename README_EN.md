@@ -20,6 +20,10 @@ transcript HGVS string), the tool produces a one-page report combining:
   doi:10.1016/j.gim.2025.101402)
 - AlphaMissense, REVEL, ClinVar (with review status), and gnomAD gene
   constraint
+- gnomAD v4 allele frequency and homozygote count, fetched per variant from
+  the public gnomAD GraphQL API; a variant absent from gnomAD is reported as
+  such (a PM2_supporting candidate, subject to a coverage check at that
+  position), and BA1 is flagged above 0.05
 - A concordance summary and interpretation caveats
 
 Reports can be saved as PDF for clinical records and genetic counselling.
@@ -42,9 +46,13 @@ A Streamlit UI (`app.py`) is the front end.
    so clinicians see *why* a score is unavailable.
 4. **ACMG framing.** Scores enter classification only as PP3/BP4
    (computational evidence), never PS3/BS3.
-5. **Privacy.** Nothing is sent off-site. Population frequencies are typed in
-   manually from the lab report rather than fetched, so patient variants never
-   leave the institution.
+5. **Privacy.** The only off-site request is the gnomAD allele-frequency
+   lookup, which sends the genomic coordinates of the variant (chromosome,
+   position, reference and alternate base) and nothing else; no patient
+   information is transmitted. The lookup can be switched off in the sidebar
+   (or with `gnomad_af_mode: manual` in `config.yaml`), in which case
+   frequencies are typed in from the lab report and the tool runs fully
+   offline.
 
 ## License compliance
 
