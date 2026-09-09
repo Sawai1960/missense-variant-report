@@ -196,16 +196,23 @@ def _japan_rows(j: JapanResult | None, retrieved: str) -> list[Row]:
         return [Row(t("row.japan"), t("af.failed"), t("note.japan_failed", reason=reason))]
     if j.status == "absent":
         return [Row(t("row.japan"), t("japan.absent"), t("note.japan_absent", retrieved=retrieved))]
-    parts = []
-    for s in j.sources:
-        item = t("japan.item", label=s.label, af=f"{s.af:.3e}", ac=f"{s.ac:,}", an=f"{s.an:,}")
+    def item(s) -> str:
+        out = t("japan.item", label=s.label, af=f"{s.af:.3e}", ac=f"{s.ac:,}", an=f"{s.an:,}")
         if s.hom is not None:
-            item += t("japan.hom", hom=f"{s.hom:,}")
-        parts.append(item)
-    value = t("sep.list").join(parts)
-    if (j.max_af or 0) > 0.05:
+            out += t("japan.hom", hom=f"{s.hom:,}")
+        return out
+
+    # 一般集団の参照は ToMMo 54KJPN。患者由来・研究コホートは「参考」として分けて示す
+    ref, extra = j.reference, j.supplementary
+    value = t("sep.list").join(item(s) for s in ref) if ref else t("japan.ref_absent")
+    if extra:
+        value += t("japan.supplementary", items=t("sep.list").join(item(s) for s in extra))
+    if any(s.af > 0.05 for s in ref):
         value += t("sep.wide") + t("af.ba1")
-    return [Row(t("row.japan"), value, t("note.japan", retrieved=retrieved))]
+    note = t("note.japan", retrieved=retrieved)
+    if not ref and extra:
+        note += t("note.japan_supplementary_only")
+    return [Row(t("row.japan"), value, note)]
 
 
 def _population_rows(g: GnomadResult | None, online: bool, retrieved: str,

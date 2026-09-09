@@ -26,6 +26,10 @@ USER_AGENT = "funcvep-report/0.1"
 
 # 日本人集団のデータセット。表示順もこの順（規模の大きいものから）
 JAPANESE_SOURCES = ("tommo", "ncbn", "gem_j_wga", "jga_wgs", "jga_wes", "jga_snp")
+# 一般集団の参照として使うのは ToMMo 54KJPN（健常者中心の住民コホート）だけ。
+# NCBN は国立高度専門医療研究センターの患者由来バイオバンク、JGA は研究データ、
+# GEM-J WGA は複数コホートの寄せ集めで、いずれも疾患群の偏りがありうる
+REFERENCE_SOURCES = ("tommo",)
 SOURCE_LABELS = {
     "tommo": "ToMMo 54KJPN",
     "ncbn": "NCBN",
@@ -52,6 +56,10 @@ class SourceFreq:
     def label(self) -> str:
         return SOURCE_LABELS.get(self.source, self.source)
 
+    @property
+    def is_reference(self) -> bool:
+        return self.source in REFERENCE_SOURCES
+
 
 @dataclass
 class JapanResult:
@@ -67,6 +75,14 @@ class JapanResult:
     @property
     def max_af(self) -> float | None:
         return max((s.af for s in self.sources), default=None)
+
+    @property
+    def reference(self) -> list[SourceFreq]:
+        return [s for s in self.sources if s.is_reference]
+
+    @property
+    def supplementary(self) -> list[SourceFreq]:
+        return [s for s in self.sources if not s.is_reference]
 
 
 def parse_search_payload(payload: dict, chrom: str, pos: int, ref: str, alt: str) -> JapanResult:

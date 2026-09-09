@@ -359,15 +359,26 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "japan.hom": ("、ホモ接合体 {hom}", ", {hom} homozygotes"),
     "japan.absent": ("収録なし（日本人集団のデータに記録なし）",
                      "Absent (no record in the Japanese datasets)"),
+    "japan.ref_absent": ("ToMMo 54KJPN に記録なし", "Not in ToMMo 54KJPN"),
+    "japan.supplementary": ("　参考: {items}", "  Supplementary: {items}"),
+    "note.japan_supplementary_only": (
+        "。健常者中心の集団（ToMMo 54KJPN）には無く、患者由来または研究コホートの"
+        "データにのみ記録がある。疾患群の偏りや解析上の見かけの値の可能性を考慮し、"
+        "一般集団の頻度としては扱わない",
+        ". Absent from the general-population cohort (ToMMo 54KJPN) and present only "
+        "in patient-derived or research cohorts; consider cohort bias or technical "
+        "artefact, and do not treat as a general-population frequency",
+    ),
     "note.japan": (
-        "TogoVar（NBDC/DBCLS、{retrieved} 取得）が集約する日本人集団のデータ。"
-        "ToMMo 54KJPN は東北メディカル・メガバンク機構の約 54,000 人の全ゲノム、"
-        "NCBN はナショナルセンター・バイオバンクネットワーク、GEM-J WGA と JGA は"
-        "日本人ゲノム多様性データ。日本人患者では gnomAD 全体より参照価値が高い",
+        "TogoVar（NBDC/DBCLS、{retrieved} 取得）が集約する日本人集団のデータ。一般集団の"
+        "参照は ToMMo 54KJPN（東北メディカル・メガバンク機構、健常者中心の約 54,000 人の"
+        "全ゲノム）とする。参考として示す NCBN（国立高度専門医療研究センターの患者由来"
+        "バイオバンク）、GEM-J WGA、JGA は疾患群の偏りがありうる",
         "Japanese population datasets aggregated by TogoVar (NBDC/DBCLS, retrieved "
-        "{retrieved}): ToMMo 54KJPN (about 54,000 whole genomes from the Tohoku "
-        "Medical Megabank), NCBN, GEM-J WGA and JGA. More informative than gnomAD "
-        "overall for Japanese patients",
+        "{retrieved}). The general-population reference is ToMMo 54KJPN (about 54,000 "
+        "whole genomes, mostly healthy residents, Tohoku Medical Megabank). NCBN "
+        "(patient-derived biobanks of the national centres), GEM-J WGA and JGA are "
+        "shown as supplementary and may carry cohort bias",
     ),
     "note.japan_absent": (
         "TogoVar（{retrieved} 取得）の日本人集団データ（ToMMo 54KJPN 約 54,000 人、"
