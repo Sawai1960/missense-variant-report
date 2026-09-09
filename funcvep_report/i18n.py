@@ -268,15 +268,21 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'acting through gain of function are not necessarily high',
     ),
     "note.mis_z": (
-        "一般集団で実際にみられたミスセンス変異の数を、変異が無害なら見つかるはずの数"
-        "（予想）と比べた z スコア。0 は予想どおり、正の値ほど実際が少ない。"
-        "3.09 以上で「制約が強い（ミスセンス変異が害になりやすい）遺伝子」とみなす"
-        "（gnomAD）。遺伝子全体の傾向であり、個々の変異の判定は上のスコアで行う",
-        "z-score comparing observed missense variants in the general population "
-        "with the number expected if such variants were neutral. 0 = as expected; "
-        "higher values = fewer observed. 3.09 or above is taken as constrained "
-        "(gnomAD). A gene-level property; the variant itself is judged by the "
-        "scores above",
+        'ミスセンス変異について、一般集団で実際に観察された数（観察数）と、変異が無害であった場合に観察されると見込まれる数（期待'
+        '数）とを比較した z スコア。観察数が期待数と等しければ 0 となり、観察数が期待数より少ないほど正の大きな値となる。観'
+        '察数が少ないのは、ミスセンス変異を持つ人が疾患のため一般集団に現れにくいことを反映する。3.09 以上で「制約が強い（ミ'
+        'スセンス変異が害になりやすい）遺伝子」とみなす（gnomAD）。遺伝子全体の傾向を示す指標であり、個々の変異の判定は上の'
+        'スコアによる',
+        'z-score comparing the number of missense variants observed '
+        'in the general population with the number expected if such '
+        'variants were neutral. It is 0 when observed equals expected'
+        ' and increasingly positive as fewer variants are observed '
+        'than expected. Depletion reflects carriers of missense '
+        'variants being under-represented in the general population '
+        'because of disease. 3.09 or above is taken as constrained, '
+        'i.e. missense variants tend to be damaging (gnomAD). A '
+        'gene-level property; the variant itself is judged by the '
+        'scores above',
     ),
     "note.lof_z": (
         "missense z と同じ考え方で機能喪失変異を数えた z スコア",
