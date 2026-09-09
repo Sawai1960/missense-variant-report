@@ -29,6 +29,7 @@ _VARIANT_QUERY = """
 query($id: String!, $ds: DatasetId!) {
   variant(variantId: $id, dataset: $ds) {
     variant_id
+    rsids
     exome  { ac an af homozygote_count filters populations { id ac an homozygote_count } }
     genome { ac an af homozygote_count filters populations { id ac an homozygote_count } }
     coverage { exome { mean over_20 } genome { mean over_20 } }
@@ -59,6 +60,7 @@ class GnomadResult:
     eas_ac: int | None = None        # 東アジア集団（exome と genome の合算）
     eas_an: int | None = None
     eas_hom: int | None = None
+    rsids: list[str] = field(default_factory=list)
     reason: str = ""                 # error のときの理由
 
     @property
@@ -144,6 +146,7 @@ def parse_variant_payload(payload: dict) -> GnomadResult:
     eas = _sum_subpopulation(variant.get("exome"), variant.get("genome"), "eas")
     if eas:
         result.eas_ac, result.eas_an, result.eas_hom = eas
+    result.rsids = list(variant.get("rsids") or [])
     return result
 
 

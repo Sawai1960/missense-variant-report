@@ -16,10 +16,12 @@ from funcvep_report.acmg import binary_cutoff, describe_thresholds
 from funcvep_report.config import FUNCVEP_MODELS
 from funcvep_report.gnomad import lookup as gnomad_lookup
 from funcvep_report.togovar import lookup as togovar_lookup
+from funcvep_report import clingen, litvar, mavedb, spliceai
 from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
 from funcvep_report.pdfout import render_stream
 from funcvep_report.report import disclaimer, funcvep_intro, missing_label, references
+from funcvep_report.variant import AA1_TO_3
 
 # 言語は他のどの文字列より先に決める。set_page_config はスクリプト先頭でしか
 # 呼べないので、タイトルだけはここで確定させる。
@@ -140,14 +142,42 @@ def _togovar(chrom: str, pos: int, ref: str, alt: str):
     return togovar_lookup(chrom, pos, ref, alt)
 
 
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def _spliceai(chrom: str, pos: int, ref: str, alt: str, enst: str, gene: str):
+    return spliceai.lookup(chrom, pos, ref, alt, enst=enst, gene=gene)
+
+
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def _mavedb(gene: str, hgvs_pro: str, refseq_nuc: str):
+    return mavedb.lookup(gene, hgvs_pro, cfg.paths.index / "external", online=True,
+                         cds=store.cds_for(refseq_nuc))
+
+
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def _litvar(gene: str, pv1: str, rsids: tuple[str, ...]):
+    return litvar.lookup(gene, pv1, list(rsids))
+
+
+@st.cache_resource(ttl=24 * 3600)
+def _clingen_table(online: bool):
+    return clingen.load(cfg.paths.index / "external" / "clingen_gene_validity.csv", online=online)
+
+
 with st.spinner(t("ui.resolving")):
     res = resolve(query, store)
 
 gnomad_results = None
 japan_results = None
+splice_results = None
+mave_result = None
+gene_validity = None
+if not res.error:
+    table = _clingen_table(gnomad_online)
+    if table is not None:
+        gene_validity = table.get(res.gene, [])
 if gnomad_online and not res.error:
     with st.spinner(t("ui.gnomad_querying")):
-        gnomad_results, japan_results = {}, {}
+        gnomad_results, japan_results, splice_results = {}, {}, {}
         for rv in res.variants:
             g = rv.genomic
             r = _gnomad(g.chrom, g.pos, g.ref, g.alt)
@@ -159,6 +189,15 @@ if gnomad_online and not res.error:
             if j.status == "error":
                 _togovar.clear(g.chrom, g.pos, g.ref, g.alt)
             japan_results[g.funcvep_id] = j
+            s = _spliceai(g.chrom, g.pos, g.ref, g.alt, rv.enst, rv.gene)
+            if s.status == "error":
+                _spliceai.clear(g.chrom, g.pos, g.ref, g.alt, rv.enst, rv.gene)
+            splice_results[g.funcvep_id] = s
+        first = res.variants[0]
+        hgvs_pro = "p." + AA1_TO_3[first.aa_ref] + str(first.position) + AA1_TO_3[first.aa_alt]
+        mave_result = _mavedb(first.gene, hgvs_pro, first.refseq_nuc)
+        if mave_result.status == "error":
+            _mavedb.clear(first.gene, hgvs_pro, first.refseq_nuc)
 
 rep = build_report(
     res, thresholds,
@@ -168,6 +207,9 @@ rep = build_report(
     gnomad_results=gnomad_results,
     gnomad_online=gnomad_online,
     japan_results=japan_results,
+    gene_validity=gene_validity,
+    splice_results=splice_results,
+    mave_result=mave_result,
 )
 
 if rep.error:
@@ -254,6 +296,13 @@ for i, vr in enumerate(rep.variants, 1):
         st.write(f"**{r.label}** {r.value}")
         st.caption(r.note)
 
+    if vr.mave_rows:
+        st.subheader(t("ui.mave"))
+        for r in vr.mave_rows:
+            st.write(f"**{r.label}** {r.value}")
+            if r.note:
+                st.caption(r.note)
+
     st.subheader(t("ui.concordance"))
     for r in vr.concordance_rows:
         st.write(f"**{r.label}** {r.value}")
@@ -269,6 +318,23 @@ for i, vr in enumerate(rep.variants, 1):
             st.write(f"**{r.label}** {r.value}")
             if r.note:
                 st.caption(r.note)
+
+    # 文献は画面だけ。報告書には載せない
+    if gnomad_online and i == 1:
+        with st.expander(t("ui.litvar")):
+            rsids = tuple(vr.gnomad.rsids) if vr.gnomad and vr.gnomad.rsids else ()
+            lit = _litvar(v.gene, v.protein_variant, rsids)
+            if lit.status == "error":
+                _litvar.clear(v.gene, v.protein_variant, rsids)
+                st.caption(t("ui.litvar_failed", reason=lit.reason))
+            elif lit.status == "none":
+                st.caption(t("ui.litvar_none"))
+            else:
+                st.write(t("ui.litvar_count", n=f"{lit.count:,}", rsid=lit.rsid or t("dash")))
+                for p in lit.papers:
+                    st.markdown(f"- [{p.title}]({p.url}) — {p.first_author} ら, *{p.journal}* {p.year}, PMID {p.pmid}")
+                if lit.url:
+                    st.markdown(f"[{t('ui.litvar_more')}]({lit.url})")
 
 st.divider()
 with st.expander(t("ui.thresholds")):

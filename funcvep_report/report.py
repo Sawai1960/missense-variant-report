@@ -16,7 +16,10 @@ from datetime import datetime
 from .acmg import Assignment, assign, binary_cutoff
 from .config import FUNCVEP_MODELS
 from .i18n import get_lang, has, join, t
+from .clingen import GeneDisease, moi_label
 from .gnomad import GnomadResult
+from .mavedb import MaveResult
+from .spliceai import SpliceResult
 from .togovar import JapanResult
 from .lookup import ResolvedVariant, Resolution, clinvar_stars
 from .variant import AA1_TO_3
@@ -102,6 +105,8 @@ class VariantReport:
     gnomad: GnomadResult | None = None
     japan: JapanResult | None = None
     residue_rows: list[Row] = field(default_factory=list)
+    splice: SpliceResult | None = None
+    mave_rows: list[Row] = field(default_factory=list)
 
 
 @dataclass
@@ -258,6 +263,60 @@ def _gnomad_rows(g: GnomadResult | None, retrieved: str) -> list[Row]:
     return rows
 
 
+def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str) -> list[Row]:
+    """ClinGen の遺伝子と疾患の関係。一覧そのものが無ければ何も出さない。"""
+    if gene_validity is None:
+        return []
+    if not gene_validity:
+        return [Row(t("row.clingen"), t("clingen.none"), t("note.clingen_none"))]
+    lang = get_lang()
+    items = [t("clingen.item", disease=g.disease, moi=moi_label(g.moi, lang),
+               cls=g.classification, date=g.date) for g in gene_validity]
+    sep = "；" if lang == "ja" else "; "
+    return [Row(t("row.clingen"), sep.join(items), t("note.clingen", retrieved=retrieved))]
+
+
+def _splice_row(s: SpliceResult | None, online: bool) -> Row:
+    if not online:
+        return Row("SpliceAI", t("af.offline"), t("note.spliceai"))
+    if s is None or s.status == "error":
+        reason = s.reason if s else "not queried"
+        return Row("SpliceAI", t("af.failed"), t("note.spliceai_failed", reason=reason))
+    if s.status != "scored":
+        return Row("SpliceAI", t("splice.none"), t("note.spliceai_none"))
+    kind = t(f"splice.kind.{s.max_type}")
+    value = t("splice.value", ds=f"{s.max_ds:.2f}", kind=kind, dp=s.dp[s.max_type])
+    value += t("sep.wide") + t(f"splice.level.{s.level}")
+    return Row("SpliceAI", value, t("note.spliceai"))
+
+
+def _mave_rows(m: MaveResult | None, online: bool) -> list[Row]:
+    """機能実験の実測値。実験データセットの無い遺伝子では節ごと出さない。"""
+    if not online or m is None or m.status == "no_dataset":
+        return []
+    if m.status == "error":
+        return [Row(t("row.mave"), t("af.failed"), t("note.mave_failed", reason=m.reason))]
+    if m.status == "no_match":
+        return [Row(t("row.mave"), t("mave.no_match", n=m.n_score_sets), t("note.mave_no_match"))]
+    rows = []
+    for h in m.hits:
+        ss = h.score_set
+        if h.functional_class is not None:
+            fc = h.functional_class
+            label = t(f"mave.class.{fc.classification}") if fc.classification in ("normal", "abnormal") else fc.label
+            value = f"{h.score:.3f}{t('sep.wide')}{label}"
+        else:
+            value = f"{h.score:.3f}{t('sep.wide')}{t('mave.class.uncalibrated')}"
+        note = t("note.mave", urn=ss.urn, citation=ss.citation or t("dash"),
+                 n=f"{ss.num_variants:,}" if ss.num_variants else t("dash"))
+        if ss.calibration_title:
+            note += t("note.mave_calibration", title=ss.calibration_title)
+        if not ss.full_length_numbering:
+            note += t("note.mave_numbering")
+        rows.append(Row(ss.title[:80], value, note))
+    return rows
+
+
 def _is_plp(sig: str | None) -> bool:
     s = (sig or "").lower()
     return "pathogenic" in s and "conflicting" not in s and "benign" not in s
@@ -335,7 +394,10 @@ def build(res: Resolution, thresholds: dict | None,
           threshold_note: str = "",
           gnomad_results: dict[str, GnomadResult] | None = None,
           gnomad_online: bool = True,
-          japan_results: dict[str, JapanResult] | None = None) -> Report:
+          japan_results: dict[str, JapanResult] | None = None,
+          gene_validity: list[GeneDisease] | None = None,
+          splice_results: dict[str, SpliceResult] | None = None,
+          mave_result: MaveResult | None = None) -> Report:
     wide = t("sep.wide")
     seen_terms: set[str] = set()
     rep = Report(
@@ -369,6 +431,7 @@ def build(res: Resolution, thresholds: dict | None,
         ]
     else:
         rep.gene_rows = [Row(t("row.gene"), gene_value)]
+    rep.gene_rows += _clingen_rows(gene_validity, rep.created)
 
     # --- 集団頻度（手入力）。gnomAD の自動取得は変異ごとに載せる ---
     if gnomad_af is not None:
@@ -385,6 +448,12 @@ def build(res: Resolution, thresholds: dict | None,
     for rv in res.variants:
         vr = VariantReport(variant=rv)
         ev = rv.evidence
+        vr.splice = (splice_results or {}).get(rv.genomic.funcvep_id)
+        vr.mave_rows = _mave_rows(mave_result, gnomad_online)
+        if gnomad_online and vr.splice and vr.splice.level in ("moderate", "high"):
+            rep.warnings.append(t("warn.spliceai", ds=f"{vr.splice.max_ds:.2f}",
+                                  kind=t(f"splice.kind.{vr.splice.max_type}"),
+                                  hgvs=f"{rv.gene} {rv.hgvs_p}", genomic=str(rv.genomic)))
         vr.gnomad = (gnomad_results or {}).get(rv.genomic.funcvep_id)
         vr.japan = (japan_results or {}).get(rv.genomic.funcvep_id)
         vr.population_rows = _population_rows(vr.gnomad, gnomad_online, rep.created, vr.japan)
@@ -441,6 +510,7 @@ def build(res: Resolution, thresholds: dict | None,
                 if ev.revel is not None else t("dash"),
                 t("note.revel", cutoff=REVEL_CUTOFF))
         )
+        vr.others.append(_splice_row(vr.splice, gnomad_online))
 
         # --- ClinVar ---
         if ev.clinvar:

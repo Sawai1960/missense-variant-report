@@ -428,6 +428,92 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "tolerance at the residue but is not direct evidence, as the substituted amino "
         "acid differs",
     ),
+    "row.clingen": ("ClinGen の評価（遺伝子と疾患）", "ClinGen gene-disease validity"),
+    "clingen.item": ("{disease}（{moi}、{cls}、{date}）", "{disease} ({moi}, {cls}, {date})"),
+    "clingen.none": ("未登録（ClinGen が評価した遺伝子と疾患の組み合わせに含まれていない）",
+                     "Not curated (no ClinGen gene-disease assertion)"),
+    "note.clingen": (
+        "ClinGen の専門家パネルによる、遺伝子と疾患の関係の確立度（一覧を {retrieved} に取得）。"
+        "Definitive / Strong / Moderate / Limited / Disputed / Refuted の順に弱くなる。"
+        "遺伝形式は pLI の読み方、BS2（ホモ接合体の扱い）、PM2 の重みづけの前提になる",
+        "Strength of the gene-disease relationship as curated by ClinGen expert panels "
+        "(list retrieved {retrieved}), from Definitive down through Strong, Moderate, "
+        "Limited, Disputed and Refuted. The mode of inheritance frames pLI, BS2 and PM2",
+    ),
+    "note.clingen_none": (
+        "ClinGen が未評価であることは、疾患との関係が無いことを意味しない。OMIM や文献で確認する",
+        "Absence of a ClinGen curation does not imply absence of a disease relationship; "
+        "consult OMIM and the literature",
+    ),
+    "splice.value": ("Δ {ds}（{kind}、変異から {dp:+d} 塩基）", "Δ {ds} ({kind}, {dp:+d} nt from the variant)"),
+    "splice.kind.AG": ("アクセプター獲得", "acceptor gain"),
+    "splice.kind.AL": ("アクセプター喪失", "acceptor loss"),
+    "splice.kind.DG": ("ドナー獲得", "donor gain"),
+    "splice.kind.DL": ("ドナー喪失", "donor loss"),
+    "splice.level.low": ("スプライシングへの影響は低い", "Low splicing impact"),
+    "splice.level.moderate": ("スプライシングに影響する可能性（要確認）",
+                              "Possible splicing impact (review)"),
+    "splice.level.high": ("スプライシングを損なう可能性が高い", "Likely splicing disruption"),
+    "splice.none": ("スコアなし", "No score"),
+    "note.spliceai": (
+        "塩基置換がスプライス部位を新設・消失させる確率（Jaganathan ら 2019, Cell。"
+        "Ensembl VEP 経由）。4 種類のうち最大の Δ スコアを示す。0.2 以上で感度重視、"
+        "0.5 以上が推奨、0.8 以上で精度重視の閾値。0.5 以上ならミスセンスではなく"
+        "スプライシング異常として評価し直す必要があり、FuncVEP の予測の前提が崩れる",
+        "Probability that the nucleotide change creates or removes a splice site "
+        "(Jaganathan et al. 2019, Cell; via Ensembl VEP). The largest of the four delta "
+        "scores is shown. Thresholds: 0.2 high recall, 0.5 recommended, 0.8 high "
+        "precision. At 0.5 or above the variant should be re-evaluated as a splicing "
+        "variant, which invalidates the missense-based FuncVEP prediction",
+    ),
+    "note.spliceai_none": (
+        "この転写産物について SpliceAI のスコアが返らなかった",
+        "No SpliceAI score was returned for this transcript",
+    ),
+    "note.spliceai_failed": (
+        "Ensembl VEP への接続に失敗した（{reason}）",
+        "The Ensembl VEP query failed ({reason})",
+    ),
+    "warn.spliceai": (
+        "{hgvs}（{genomic}）は SpliceAI の Δ スコアが {ds}（{kind}）で、スプライシングへの"
+        "影響が示唆される。ミスセンスとしての予測だけで判断しないこと。",
+        "{hgvs} ({genomic}) has a SpliceAI delta score of {ds} ({kind}), suggesting a "
+        "splicing effect. Do not rely on the missense prediction alone.",
+    ),
+    "pdf.mave": ("機能実験の実測値（MaveDB）", "Functional assay data (MaveDB)"),
+    "ui.mave": ("機能実験の実測値（MaveDB）", "Functional assay data (MaveDB)"),
+    "row.mave": ("実測値", "Measured effect"),
+    "mave.no_match": ("この遺伝子の実験データセット {n} 件に、この置換の測定値なし",
+                      "Not measured in the {n} dataset(s) available for this gene"),
+    "note.mave_no_match": (
+        "MaveDB に登録された大規模機能実験のうち、この置換を含むものが無い。"
+        "実験の対象領域外か、測定から漏れた置換である",
+        "None of the multiplexed functional assays in MaveDB for this gene covers this "
+        "substitution (outside the assayed region, or dropped from the measurement)",
+    ),
+    "note.mave_failed": ("MaveDB への接続に失敗した（{reason}）", "The MaveDB query failed ({reason})"),
+    "mave.class.normal": ("正常（機能は保たれる）", "Normal (function retained)"),
+    "mave.class.abnormal": ("異常（機能が損なわれる）", "Abnormal (function lost)"),
+    "mave.class.uncalibrated": ("区分なし（生の値）", "Uncalibrated (raw score)"),
+    "note.mave": (
+        "MaveDB {urn}（{citation}、測定 {n} 変異）。大規模機能実験の実測値で、ACMG の "
+        "PS3/BS3（機能実験による証拠）の材料になる。スコアの尺度はデータセットごとに異なる",
+        "MaveDB {urn} ({citation}; {n} variants measured). Experimental measurement that "
+        "can support PS3/BS3. Score scales differ between datasets",
+    ),
+    "note.mave_calibration": ("。区分は「{title}」による", ". Classes follow \"{title}\""),
+    "note.mave_numbering": (
+        "。対象配列が全長の転写産物でないため、残基番号の基準が本レポートと一致しない可能性がある",
+        ". The target sequence is not a full-length transcript, so residue numbering "
+        "may not match this report",
+    ),
+    "ui.litvar": ("文献（LitVar2）", "Literature (LitVar2)"),
+    "ui.litvar_count": ("この変異（{rsid}）に言及した論文: {n} 件。新しい順に最大 10 件を示す。",
+                        "Publications mentioning this variant ({rsid}): {n}. Up to 10 most recent shown."),
+    "ui.litvar_none": ("LitVar2 にこの変異の記載は見つからなかった。",
+                       "No LitVar2 record was found for this variant."),
+    "ui.litvar_failed": ("LitVar2 への接続に失敗した（{reason}）", "The LitVar2 query failed ({reason})"),
+    "ui.litvar_more": ("LitVar2 で全件を見る", "See all in LitVar2"),
     "uncalibrated": ("PP3/BP4 の判定基準なし", "No PP3/BP4 thresholds"),
 
     "row.clinvep": ("ClinVEP（比較用）", "ClinVEP (control)"),

@@ -199,6 +199,9 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
 
         _h2(doc, t("pdf.others"))
         _rows(doc, vr.others)
+        if vr.mave_rows:
+            _h2(doc, t("pdf.mave"))
+            _rows(doc, vr.mave_rows)
 
         _h2(doc, t("pdf.concordance"))
         _rows(doc, vr.concordance_rows)
