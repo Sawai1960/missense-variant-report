@@ -20,6 +20,7 @@ AA3_TO_1 = {
     "Ter": "*", "Sec": "U", "Xaa": "X",
 }
 AA1 = set(AA3_TO_1.values())
+AA1_TO_3 = {v: k for k, v in AA3_TO_1.items()}
 
 CODON_TABLE = {
     "TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",

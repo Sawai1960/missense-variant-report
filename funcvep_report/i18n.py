@@ -347,6 +347,76 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "Enable online gnomAD lookup in the sidebar, or enter the gnomAD value from "
         "the laboratory report or the gnomAD website",
     ),
+    "af.zero": ("観察されず（0 / {an} アレル）", "Not observed (0 / {an} alleles)"),
+    "row.eas": ("東アジア集団（gnomAD）", "East Asian (gnomAD)"),
+    "note.eas": (
+        "gnomAD v4 の東アジア集団（中国・日本・韓国などを含む）の頻度。エクソームとゲノムの合算",
+        "gnomAD v4 East Asian population (includes Chinese, Japanese and Korean "
+        "samples), exomes and genomes combined",
+    ),
+    "row.japan": ("日本人集団（TogoVar）", "Japanese (TogoVar)"),
+    "japan.item": ("{label} {af}（{ac} / {an} アレル）", "{label} {af} ({ac} / {an} alleles)"),
+    "japan.hom": ("、ホモ接合体 {hom}", ", {hom} homozygotes"),
+    "japan.absent": ("収録なし（日本人集団のデータに記録なし）",
+                     "Absent (no record in the Japanese datasets)"),
+    "note.japan": (
+        "TogoVar（NBDC/DBCLS、{retrieved} 取得）が集約する日本人集団のデータ。"
+        "ToMMo 54KJPN は東北メディカル・メガバンク機構の約 54,000 人の全ゲノム、"
+        "NCBN はナショナルセンター・バイオバンクネットワーク、GEM-J WGA と JGA は"
+        "日本人ゲノム多様性データ。日本人患者では gnomAD 全体より参照価値が高い",
+        "Japanese population datasets aggregated by TogoVar (NBDC/DBCLS, retrieved "
+        "{retrieved}): ToMMo 54KJPN (about 54,000 whole genomes from the Tohoku "
+        "Medical Megabank), NCBN, GEM-J WGA and JGA. More informative than gnomAD "
+        "overall for Japanese patients",
+    ),
+    "note.japan_absent": (
+        "TogoVar（{retrieved} 取得）の日本人集団データ（ToMMo 54KJPN 約 54,000 人、"
+        "NCBN、GEM-J WGA、JGA）に記録が無い。読み取り深度は確認できないため、"
+        "gnomAD の収録状況と併せて判断する",
+        "No record in the Japanese datasets aggregated by TogoVar (retrieved "
+        "{retrieved}): ToMMo 54KJPN (about 54,000 individuals), NCBN, GEM-J WGA, "
+        "JGA. Coverage cannot be verified here; weigh together with gnomAD",
+    ),
+    "note.japan_failed": (
+        "TogoVar への接続に失敗した（{reason}）",
+        "The TogoVar query failed ({reason})",
+    ),
+    "pdf.residue": ("同じ残基の既知判定（ClinVar）",
+                    "Known classifications at the same residue (ClinVar)"),
+    "ui.residue": ("同じ残基の既知判定（ClinVar）",
+                   "Known classifications at the same residue (ClinVar)"),
+    "row.same_change": ("同じアミノ酸置換（別の塩基置換）",
+                        "Same amino-acid change, other nucleotide"),
+    "row.other_change": ("同じ残基の別の置換", "Other substitutions at this residue"),
+    "residue.item": ("{cdna} {pdot} {sig}（{stars} 星）", "{cdna} {pdot} {sig} ({stars}-star)"),
+    "residue.none": ("なし", "None"),
+    "note.ps1": (
+        "同じアミノ酸置換を生じる別の塩基置換が病的と判定されているため、PS1（病的方向の"
+        "強い根拠）の候補となる。ただしスプライシングへの影響は塩基置換ごとに異なりうる"
+        "ため、その点を確認する",
+        "A different nucleotide change producing the same amino-acid substitution is "
+        "classified pathogenic, so PS1 (strong) is a candidate. Splicing effects can "
+        "differ between nucleotide changes and should be checked",
+    ),
+    "note.pm5": (
+        "同じ残基の別のミスセンス変異 {n} 件が病的と判定されているため、PM5（病的方向の"
+        "中等度の根拠）の候補となる",
+        "{n} other missense change(s) at this residue are classified pathogenic, so "
+        "PM5 (moderate) is a candidate",
+    ),
+    "note.pm5_benign_too": (
+        "。一方で良性と判定された置換も {n} 件あり、置換後のアミノ酸の性質によって"
+        "影響が異なる残基である",
+        ". However, {n} substitution(s) at this residue are classified benign, so the "
+        "effect depends on the substituted amino acid",
+    ),
+    "note.residue_benign": (
+        "同じ残基の別の置換 {n} 件が良性と判定されている。この残基が置換に寛容である"
+        "可能性を示すが、置換後のアミノ酸が異なるため直接の根拠にはならない",
+        "{n} substitution(s) at this residue are classified benign. This suggests "
+        "tolerance at the residue but is not direct evidence, as the substituted amino "
+        "acid differs",
+    ),
     "uncalibrated": ("PP3/BP4 の判定基準なし", "No PP3/BP4 thresholds"),
 
     "row.clinvep": ("ClinVEP（比較用）", "ClinVEP (control)"),

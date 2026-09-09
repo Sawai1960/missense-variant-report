@@ -205,6 +205,9 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
 
         _h2(doc, t("pdf.clinvar"))
         _rows(doc, vr.clinvar_rows)
+        if vr.residue_rows:
+            _h2(doc, t("pdf.residue"))
+            _rows(doc, vr.residue_rows)
 
     if rep.threshold_note:
         _h2(doc, t("pdf.thresholds"))

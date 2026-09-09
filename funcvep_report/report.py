@@ -10,13 +10,16 @@ i18n.use_lang() / set_lang() で決め、Report.lang に記録される。
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from datetime import datetime
 
 from .acmg import Assignment, assign, binary_cutoff
 from .config import FUNCVEP_MODELS
 from .i18n import get_lang, has, join, t
 from .gnomad import GnomadResult
+from .togovar import JapanResult
 from .lookup import ResolvedVariant, Resolution, clinvar_stars
+from .variant import AA1_TO_3
 
 # FuncVEP のスコアを二値にするときの境。論文はモデルごとに異なる値を与えており
 # （Supplementary Table 13 の binary 列）、0.5 ではない。公表値が無いときの保険。
@@ -97,6 +100,8 @@ class VariantReport:
     concordance_rows: list[Row] = field(default_factory=list)
     population_rows: list[Row] = field(default_factory=list)
     gnomad: GnomadResult | None = None
+    japan: JapanResult | None = None
+    residue_rows: list[Row] = field(default_factory=list)
 
 
 @dataclass
@@ -184,10 +189,34 @@ def _call(score: float | None, cutoff: float,
     return hi if score >= cutoff else lo
 
 
-def _population_rows(g: GnomadResult | None, online: bool, retrieved: str) -> list[Row]:
+def _japan_rows(j: JapanResult | None, retrieved: str) -> list[Row]:
+    """TogoVar 経由の日本人集団の頻度。"""
+    if j is None or j.status == "error":
+        reason = j.reason if j else "not queried"
+        return [Row(t("row.japan"), t("af.failed"), t("note.japan_failed", reason=reason))]
+    if j.status == "absent":
+        return [Row(t("row.japan"), t("japan.absent"), t("note.japan_absent", retrieved=retrieved))]
+    parts = []
+    for s in j.sources:
+        item = t("japan.item", label=s.label, af=f"{s.af:.3e}", ac=f"{s.ac:,}", an=f"{s.an:,}")
+        if s.hom is not None:
+            item += t("japan.hom", hom=f"{s.hom:,}")
+        parts.append(item)
+    value = t("sep.list").join(parts)
+    if (j.max_af or 0) > 0.05:
+        value += t("sep.wide") + t("af.ba1")
+    return [Row(t("row.japan"), value, t("note.japan", retrieved=retrieved))]
+
+
+def _population_rows(g: GnomadResult | None, online: bool, retrieved: str,
+                     j: JapanResult | None = None) -> list[Row]:
     """gnomAD の照会結果を、記録あり／記録なし／取得できず／未照会で書き分ける。"""
     if not online:
         return [Row(t("row.af"), t("af.offline"), t("note.af_offline"))]
+    return _gnomad_rows(g, retrieved) + _japan_rows(j, retrieved)
+
+
+def _gnomad_rows(g: GnomadResult | None, retrieved: str) -> list[Row]:
     if g is None or g.status == "error":
         reason = g.reason if g else "not queried"
         return [Row(t("row.af"), t("af.failed"), t("note.af_failed", reason=reason))]
@@ -207,10 +236,90 @@ def _population_rows(g: GnomadResult | None, online: bool, retrieved: str) -> li
         value += t("sep.wide") + t("af.ba1")
     if g.filters:
         value += t("af.filtered", filters=", ".join(g.filters))
-    return [
+    rows = [
         Row(t("row.af"), value, t("note.af", retrieved=retrieved)),
         Row(t("row.hom"), f"{g.hom:,}", t("note.hom")),
     ]
+    if g.eas_an:
+        if g.eas_ac:
+            eas = t("af.value", af=f"{g.eas_af:.3e}", ac=f"{g.eas_ac:,}", an=f"{g.eas_an:,}")
+            if g.eas_hom:
+                eas += t("japan.hom", hom=f"{g.eas_hom:,}")
+        else:
+            eas = t("af.zero", an=f"{g.eas_an:,}")
+        rows.append(Row(t("row.eas"), eas, t("note.eas")))
+    return rows
+
+
+def _is_plp(sig: str | None) -> bool:
+    s = (sig or "").lower()
+    return "pathogenic" in s and "conflicting" not in s and "benign" not in s
+
+
+def _is_blb(sig: str | None) -> bool:
+    s = (sig or "").lower()
+    return "benign" in s and "conflicting" not in s and "pathogenic" not in s
+
+
+def _short_name(name: str | None) -> tuple[str, str]:
+    """ClinVar の name から c. 表記と p. 表記を取り出す。"""
+    name = name or ""
+    c = re.search(r"(c\.[^ ()]+)", name)
+    pm = re.search(r"\((p\.[^)]+)\)", name)
+    return (c.group(1) if c else t("dash")), (pm.group(1) if pm else t("dash"))
+
+
+def residue_rows(same_residue: list[dict], genomic, aa_alt1: str) -> list[Row]:
+    """同じ残基の ClinVar 判定を PS1 / PM5 の観点で並べる。
+
+    same_residue は同じ遺伝子・同じ残基番号の ClinVar 行（aa_alt3 を含む）。
+    この変異自身（座標と塩基が同じ行）は除く。同義置換とナンセンスは対象外。
+    """
+    aa_alt3 = AA1_TO_3.get(aa_alt1, aa_alt1)
+    same_change: list[dict] = []
+    other_change: list[dict] = []
+    for r in same_residue:
+        if (str(r.get("chrom")) == str(genomic.chrom) and int(r.get("pos")) == genomic.pos
+                and r.get("ref") == genomic.ref and r.get("alt") == genomic.alt):
+            continue
+        alt3 = r.get("aa_alt3")
+        if alt3 in ("=", "Ter", "", None):
+            continue
+        if not (r.get("significance") or "").strip("- "):
+            continue    # 判定の無い行（"-"）は根拠にならないので載せない
+        (same_change if alt3 == aa_alt3 else other_change).append(r)
+
+    def item(r: dict) -> str:
+        c, pv = _short_name(r.get("name"))
+        return t("residue.item", cdna=c, pdot=pv, sig=r.get("significance") or t("dash"),
+                 stars=clinvar_stars(r.get("review_status")))
+
+    def order(rs: list[dict]) -> list[dict]:
+        return sorted(rs, key=lambda r: (not _is_plp(r.get("significance")),
+                                         -clinvar_stars(r.get("review_status"))))
+
+    rows: list[Row] = []
+    plp_same = [r for r in same_change if _is_plp(r.get("significance"))]
+    rows.append(Row(
+        t("row.same_change"),
+        t("sep.list").join(item(r) for r in order(same_change)) or t("residue.none"),
+        t("note.ps1") if plp_same else "",
+    ))
+    plp_other = [r for r in other_change if _is_plp(r.get("significance"))]
+    blb_other = [r for r in other_change if _is_blb(r.get("significance"))]
+    note = ""
+    if plp_other:
+        note = t("note.pm5", n=len(plp_other))
+        if blb_other:
+            note += t("note.pm5_benign_too", n=len(blb_other))
+    elif blb_other:
+        note = t("note.residue_benign", n=len(blb_other))
+    rows.append(Row(
+        t("row.other_change"),
+        t("sep.list").join(item(r) for r in order(other_change)) or t("residue.none"),
+        note,
+    ))
+    return rows
 
 
 def build(res: Resolution, thresholds: dict | None,
@@ -218,7 +327,8 @@ def build(res: Resolution, thresholds: dict | None,
           gnomad_hom: int | None = None,
           threshold_note: str = "",
           gnomad_results: dict[str, GnomadResult] | None = None,
-          gnomad_online: bool = True) -> Report:
+          gnomad_online: bool = True,
+          japan_results: dict[str, JapanResult] | None = None) -> Report:
     wide = t("sep.wide")
     seen_terms: set[str] = set()
     rep = Report(
@@ -269,7 +379,8 @@ def build(res: Resolution, thresholds: dict | None,
         vr = VariantReport(variant=rv)
         ev = rv.evidence
         vr.gnomad = (gnomad_results or {}).get(rv.genomic.funcvep_id)
-        vr.population_rows = _population_rows(vr.gnomad, gnomad_online, rep.created)
+        vr.japan = (japan_results or {}).get(rv.genomic.funcvep_id)
+        vr.population_rows = _population_rows(vr.gnomad, gnomad_online, rep.created, vr.japan)
 
         vr.funcvep_status = ev.funcvep_status
         vr.funcvep_note = missing_note(vr.funcvep_status, ev.train_models)
@@ -341,6 +452,10 @@ def build(res: Resolution, thresholds: dict | None,
             vr.clinvar_rows = [
                 Row(t("row.significance"), t("clinvar.none"), t("note.clinvar_none"))
             ]
+
+        # --- 同じ残基の既知判定（PS1 / PM5） ---
+        if ev.same_residue is not None:
+            vr.residue_rows = residue_rows(ev.same_residue, rv.genomic, rv.aa_alt)
 
         # --- 指標同士の一致 ---
         calls: dict[str, bool | None] = {}

@@ -20,6 +20,7 @@ import duckdb
 from .config import FUNCVEP_MODELS, MODELS, Config
 from .i18n import join, t
 from .variant import (
+    AA1_TO_3,
     CodingInput,
     ParseError,
     ProteinInput,
@@ -55,6 +56,8 @@ class Evidence:
     clinvar: dict | None = None
     # 予測表にその変異の行があったか。None は FuncVEP の索引自体が無い場合。
     in_funcvep_table: bool | None = None
+    # 同じ残基の ClinVar 行（この変異自身も含む）。索引が無いときは None。
+    same_residue: list[dict] | None = None
     # この変異を学習に使ったモデル名。学習セットの索引が無いときは None。
     train_models: list[str] | None = None
 
@@ -411,6 +414,25 @@ class Store:
             for r in df.to_dict("records")
         }
 
+    def clinvar_same_residue(self, gene: str, aa_ref3: str, position: int) -> list[dict]:
+        """同じ遺伝子・同じ残基番号を持つ ClinVar の全行。
+
+        ClinVar の name 欄（例 NM_006158.5(NEFL):c.23C>T (p.Pro8Leu)）から
+        p. 表記を正規表現で切り出す。LIKE では p.Pro8 が p.Pro80 にも当たるので、
+        番号は切り出した値で厳密に比べる。
+        """
+        if not self._ready(self.p.clinvar):
+            return []
+        pat = r"p\.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2}|=|Ter)"
+        df = self.con.execute(
+            f"SELECT *, regexp_extract(name, ?, 1) AS aa_ref3, "
+            f"regexp_extract(name, ?, 2) AS aa_pos, regexp_extract(name, ?, 3) AS aa_alt3 "
+            f"FROM {self._glob(self.p.clinvar)} WHERE gene = ? AND name LIKE ?",
+            [pat, pat, pat, gene, f"%p.{aa_ref3}{position}%"],
+        ).df()
+        return [r for r in df.to_dict("records")
+                if r["aa_ref3"] == aa_ref3 and str(r["aa_pos"]) == str(position)]
+
     def clinvar_for(self, variants: list[GenomicVariant]) -> dict[str, dict]:
         if not variants or not self._ready(self.p.clinvar):
             return {}
@@ -690,6 +712,8 @@ def resolve(text: str, store: Store) -> Resolution:
     fv = store.funcvep_for(variants)
     rv = store.revel_for(variants)
     cv = store.clinvar_for(variants)
+    same_residue = (store.clinvar_same_residue(row["gene"], AA1_TO_3[aa_ref], position)
+                    if store._ready(store.p.clinvar) else None)
     ts = store.training_for(variants)
     ts_ready = store._ready(store.p.training_sets)
 
@@ -700,6 +724,7 @@ def resolve(text: str, store: Store) -> Resolution:
             am_class=h.get("am_class"),
             revel=_clean(rv.get(key)),
             clinvar=cv.get(key),
+            same_residue=same_residue,
         )
         if store._ready(store.p.funcvep):
             ev.in_funcvep_table = key in fv

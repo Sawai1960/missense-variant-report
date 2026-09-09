@@ -29,8 +29,8 @@ _VARIANT_QUERY = """
 query($id: String!, $ds: DatasetId!) {
   variant(variantId: $id, dataset: $ds) {
     variant_id
-    exome  { ac an af homozygote_count filters }
-    genome { ac an af homozygote_count filters }
+    exome  { ac an af homozygote_count filters populations { id ac an homozygote_count } }
+    genome { ac an af homozygote_count filters populations { id ac an homozygote_count } }
     coverage { exome { mean over_20 } genome { mean over_20 } }
   }
 }"""
@@ -56,6 +56,9 @@ class GnomadResult:
     filters: list[str] = field(default_factory=list)
     depth_mean: float | None = None  # その位置の平均読み取り深度（exome/genome の良い方）
     over_20: float | None = None     # 20 リード以上で読めている割合（同上）
+    eas_ac: int | None = None        # 東アジア集団（exome と genome の合算）
+    eas_an: int | None = None
+    eas_hom: int | None = None
     reason: str = ""                 # error のときの理由
 
     @property
@@ -64,6 +67,12 @@ class GnomadResult:
         if self.over_20 is None:
             return None
         return self.over_20 >= WELL_COVERED_FRACTION
+
+    @property
+    def eas_af(self) -> float | None:
+        if not self.eas_an:
+            return None
+        return (self.eas_ac or 0) / self.eas_an
 
 
 def _sum_populations(exome: dict | None, genome: dict | None) -> tuple[int, int, int, list[str]]:
@@ -79,6 +88,20 @@ def _sum_populations(exome: dict | None, genome: dict | None) -> tuple[int, int,
             if f not in filters:
                 filters.append(f)
     return ac, an, hom, filters
+
+
+def _sum_subpopulation(exome: dict | None, genome: dict | None, pop_id: str) -> tuple[int, int, int] | None:
+    """指定した集団（eas など）のアレル数を exome と genome で合算する。無ければ None。"""
+    ac = an = hom = 0
+    seen = False
+    for part in (exome, genome):
+        for p in (part or {}).get("populations") or []:
+            if p.get("id") == pop_id:
+                seen = True
+                ac += int(p.get("ac") or 0)
+                an += int(p.get("an") or 0)
+                hom += int(p.get("homozygote_count") or 0)
+    return (ac, an, hom) if seen else None
 
 
 def _best_coverage(cov: dict | None) -> tuple[float | None, float | None]:
@@ -116,8 +139,12 @@ def parse_variant_payload(payload: dict) -> GnomadResult:
         # 行はあるがアレルが数えられていない。品質フィルタ（AC0 など）で落ちた
         # 観察は「観察されず」と同じ扱いにする。gnomAD のサイトも同じ見せ方をする
         return GnomadResult(status="absent", filters=filters, depth_mean=depth, over_20=over)
-    return GnomadResult(status="found", af=ac / an, ac=ac, an=an, hom=hom,
-                        filters=filters, depth_mean=depth, over_20=over)
+    result = GnomadResult(status="found", af=ac / an, ac=ac, an=an, hom=hom,
+                          filters=filters, depth_mean=depth, over_20=over)
+    eas = _sum_subpopulation(variant.get("exome"), variant.get("genome"), "eas")
+    if eas:
+        result.eas_ac, result.eas_an, result.eas_hom = eas
+    return result
 
 
 def parse_coverage_payload(payload: dict, pos: int) -> tuple[float | None, float | None]:

@@ -15,6 +15,7 @@ from funcvep_report import build_report, load_config
 from funcvep_report.acmg import binary_cutoff, describe_thresholds
 from funcvep_report.config import FUNCVEP_MODELS
 from funcvep_report.gnomad import lookup as gnomad_lookup
+from funcvep_report.togovar import lookup as togovar_lookup
 from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
 from funcvep_report.pdfout import render_stream
@@ -134,13 +135,19 @@ def _gnomad(chrom: str, pos: int, ref: str, alt: str):
     return gnomad_lookup(chrom, pos, ref, alt)
 
 
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
+def _togovar(chrom: str, pos: int, ref: str, alt: str):
+    return togovar_lookup(chrom, pos, ref, alt)
+
+
 with st.spinner(t("ui.resolving")):
     res = resolve(query, store)
 
 gnomad_results = None
+japan_results = None
 if gnomad_online and not res.error:
     with st.spinner(t("ui.gnomad_querying")):
-        gnomad_results = {}
+        gnomad_results, japan_results = {}, {}
         for rv in res.variants:
             g = rv.genomic
             r = _gnomad(g.chrom, g.pos, g.ref, g.alt)
@@ -148,6 +155,10 @@ if gnomad_online and not res.error:
                 # 失敗をキャッシュに残さない。次の照会で再試行できるようにする
                 _gnomad.clear(g.chrom, g.pos, g.ref, g.alt)
             gnomad_results[g.funcvep_id] = r
+            j = _togovar(g.chrom, g.pos, g.ref, g.alt)
+            if j.status == "error":
+                _togovar.clear(g.chrom, g.pos, g.ref, g.alt)
+            japan_results[g.funcvep_id] = j
 
 rep = build_report(
     res, thresholds,
@@ -156,6 +167,7 @@ rep = build_report(
     threshold_note=describe_thresholds(cfg.primary_model, thresholds),
     gnomad_results=gnomad_results,
     gnomad_online=gnomad_online,
+    japan_results=japan_results,
 )
 
 if rep.error:
@@ -251,6 +263,12 @@ for i, vr in enumerate(rep.variants, 1):
         st.write(f"**{r.label}** {r.value}")
         if r.note:
             st.caption(r.note)
+    if vr.residue_rows:
+        st.subheader(t("ui.residue"))
+        for r in vr.residue_rows:
+            st.write(f"**{r.label}** {r.value}")
+            if r.note:
+                st.caption(r.note)
 
 st.divider()
 with st.expander(t("ui.thresholds")):
