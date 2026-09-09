@@ -127,6 +127,19 @@ def _fmt(x, digits: int = 3) -> str:
     return f"{f:.{digits}f}"
 
 
+def _constraint(x, digits: int, cutoff: float, high_key: str, low_key: str) -> str:
+    """制約指標の値に、閾値で分けた一言を添える。数値でなければ値だけ。"""
+    shown = _fmt(x, digits)
+    try:
+        f = float(x)
+    except (TypeError, ValueError):
+        return shown
+    if f != f:
+        return shown
+    label = t(high_key) if f >= cutoff else t(low_key)
+    return f"{shown}{t('sep.wide')}{label}"
+
+
 def _phenotypes(raw: str | None, limit: int = 6) -> str:
     """ClinVar の表現型欄を読みやすく整える。
 
@@ -193,9 +206,15 @@ def build(res: Resolution, thresholds: dict | None,
         c = res.constraint
         rep.gene_rows = [
             Row(t("row.gene"), gene_value),
-            Row("pLI", _fmt(c.get("pLI"), 3), t("note.pli")),
-            Row("missense z", _fmt(c.get("mis_z"), 2), t("note.mis_z")),
-            Row("LoF z", _fmt(c.get("lof_z"), 2), t("note.lof_z")),
+            Row("pLI", _constraint(c.get("pLI"), 3, 0.9,
+                                   "constraint.pli_high", "constraint.pli_low"),
+                t("note.pli")),
+            Row("missense z", _constraint(c.get("mis_z"), 2, 3.09,
+                                          "constraint.mis_high", "constraint.mis_low"),
+                t("note.mis_z")),
+            Row("LoF z", _constraint(c.get("lof_z"), 2, 3.09,
+                                     "constraint.lof_high", "constraint.lof_low"),
+                t("note.lof_z")),
         ]
     else:
         rep.gene_rows = [Row(t("row.gene"), gene_value)]

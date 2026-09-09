@@ -149,20 +149,30 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "missing_label.default": ("スコアなし", "No score"),
 
     "missing_note.blank": (
-        "この変異は一部のモデルの学習に使用されている。正解が既知の変異で、"
-        "スコアを公開しても予測としての意味がないため、著者らはそのモデルの"
-        "スコアを公開していない。「予測できなかった」のではない。" + _NO_INFO_JA,
-        "This variant is in the training set of one or more models. Scores for "
-        "training variants are withheld by the authors, as they would not "
-        "represent out-of-sample predictions; this is not a failure to predict. "
+        'この変異は、FuncVEP の一部のモデルの学習データ（既知の判定を持つ変異の集合）に含まれていた。学習に用いた変異に対'
+        'する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは該当モデルのスコアを公開していない。予測'
+        'に失敗したのではない。'
+        + _NO_INFO_JA,
+        'This variant was part of the training data (variants with '
+        'known classifications) for some of the FuncVEP models. A '
+        'prediction for a training variant would merely reproduce a '
+        'known classification and carries no predictive value, so the'
+        " authors withhold those models' scores. This is not a "
+        'failure to predict. '
         + _NO_INFO_EN,
     ),
     "missing_note.absent": (
-        "この変異は 6 つのモデルすべての学習に使用されているため、"
-        "どのモデルの予測からも除かれ、公開された予測表に行そのものが無い。"
+        'この変異は、FuncVEP の 6 つのモデルの学習データ（既知の判定を持つ変異の集合）にすべて含まれていた。学習に用い'
+        'た変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは各モデルの予測対象から学習デー'
+        'タの変異を除外している。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しない。'
         + _NO_INFO_JA,
-        "This variant is in the training sets of all six models and was therefore"
-        " excluded from inference for each; it has no row in the released table. "
+        'This variant was part of the training data (variants with '
+        'known classifications) for all six FuncVEP models. A '
+        'prediction for a training variant would merely reproduce a '
+        'known classification and carries no predictive value, so the'
+        " authors exclude training variants from each model's "
+        'predictions. Excluded from all six, this variant has no row '
+        'in the released table. '
         + _NO_INFO_EN,
     ),
     "missing_note.absent_unexplained": (
@@ -222,31 +232,54 @@ _STRINGS: dict[str, tuple[str, str]] = {
 
     "row.gene": ("遺伝子", "Gene"),
     "gene_value": ("{gene}（{ensg}）", "{gene} ({ensg})"),
+    # 値の横に添える一言。pLI は 0.9、z は 3.09（gnomAD の慣例）で 2 段階に分ける
+    "constraint.pli_high": (
+        "片方のアレルの機能喪失で発症しうる（ハプロ不全）遺伝子",
+        "Loss of one copy can cause disease (haploinsufficient gene)"),
+    "constraint.pli_low": (
+        "片方のアレルが機能喪失しても健常な人が一般集団に多くみられる遺伝子",
+        "Healthy people commonly carry one broken copy of this gene"),
+    "constraint.mis_high": ("制約が強く、ミスセンス変異が害になりやすい遺伝子",
+                            "Constrained: missense variants tend to be damaging"),
+    "constraint.mis_low": ("制約は弱く、ミスセンス変異の大半は害がない遺伝子",
+                           "Unconstrained: most missense variants are tolerated"),
+    "constraint.lof_high": ("制約が強く、機能喪失変異が害になりやすい遺伝子",
+                            "Constrained: LoF variants tend to be damaging"),
+    "constraint.lof_low": ("制約は弱く、機能喪失変異の大半は害がない遺伝子",
+                           "Unconstrained: most LoF variants are tolerated"),
     "note.pli": (
-        "この遺伝子の機能喪失変異が、一般にはあまりみられないという指標（gnomAD）。"
-        "1 に近いほど「壊れると影響が大きい遺伝子」",
-        "Probability of loss-of-function intolerance (gnomAD). Values near 1 "
-        "indicate strong depletion of LoF variants",
+        '0〜1 の確率で、0.9 以上を「機能喪失変異に耐えられない（制約が強い）遺伝子」とみなす（gnomAD）。片方のアレル'
+        'の機能喪失を対象とする指標であり、両アレルの機能喪失で発症する潜性遺伝（劣性遺伝）の疾患の原因遺伝子では低値となる',
+        'Probability of loss-of-function intolerance, 0 to 1; 0.9 or '
+        'above is taken as LoF-intolerant (gnomAD). It concerns loss '
+        'of a single copy, so recessive disease genes score low',
     ),
     "note.mis_z": (
-        "この遺伝子のミスセンス変異が、一般には予想より少ないという指標（gnomAD）。"
-        "値が大きいほど「ミスセンス変異の影響が出やすい遺伝子」",
-        "Depletion of missense variation relative to expectation (gnomAD); higher"
-        " values indicate greater constraint",
+        "一般集団で実際にみられたミスセンス変異の数を、変異が無害なら見つかるはずの数"
+        "（予想）と比べた z スコア。0 は予想どおり、正の値ほど実際が少ない。"
+        "3.09 以上で「制約が強い（ミスセンス変異が害になりやすい）遺伝子」とみなす"
+        "（gnomAD）。遺伝子全体の傾向であり、個々の変異の判定は上のスコアで行う",
+        "z-score comparing observed missense variants in the general population "
+        "with the number expected if such variants were neutral. 0 = as expected; "
+        "higher values = fewer observed. 3.09 or above is taken as constrained "
+        "(gnomAD). A gene-level property; the variant itself is judged by the "
+        "scores above",
     ),
     "note.lof_z": (
-        "機能喪失変異について、missense z と同じ考え方の指標",
-        "Corresponding z-score for loss-of-function variation",
+        "missense z と同じ考え方で機能喪失変異を数えた z スコア",
+        "The corresponding z-score for loss-of-function variants",
     ),
     "row.af": ("gnomAD アレル頻度", "gnomAD allele frequency"),
     "note.af": ("0.01 を超えるなら BA1、疾患の頻度に照らして高いなら BS1 を検討",
                 "Consider BA1 above 0.01, or BS1 if high relative to disease prevalence"),
     "row.hom": ("ホモ接合体数", "Homozygotes"),
-    "note.hom": ("常染色体劣性疾患で 0 でないなら BS2 を検討",
+    "note.hom": ("常染色体潜性（劣性）遺伝の疾患で 0 でないなら BS2 を検討",
                  "For autosomal recessive disorders, consider BS2 if non-zero"),
     "af.not_entered": ("未入力", "Not entered"),
-    "note.af_not_entered": ("検査報告書の値を画面で入力すると表示されます",
-                            "Enter the value from the laboratory report to include it"),
+    "note.af_not_entered": (
+        '検査報告書の値を画面で入力すると表示される',
+        'Enter the value from the laboratory report to include it',
+    ),
     "uncalibrated": ("PP3/BP4 の判定基準なし", "No PP3/BP4 thresholds"),
 
     "row.clinvep": ("ClinVEP（比較用）", "ClinVEP (control)"),
@@ -301,7 +334,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "row.damaging_side": ("damaging 側", "damaging"),
     "row.neutral_side": ("neutral 側", "neutral"),
     "conc.no_tool": ("なし", "none"),
-    "conc.none": ("判定できる予測ツールがありません", "No predictor yielded a call"),
+    "conc.none": (
+        '判定できる予測ツールがない',
+        'No predictor yielded a call',
+    ),
     "conc.single_damaging": ("判定できた予測ツールは 1 つで、damaging 側",
                              "Only one predictor yielded a call: damaging"),
     "conc.single_neutral": ("判定できた予測ツールは 1 つで、neutral 側",
@@ -374,10 +410,11 @@ _STRINGS: dict[str, tuple[str, str]] = {
         " applied as evidence.",
     ),
     "thr.uncalibrated": (
-        "PP3/BP4 の判定基準が設定されていません。scripts/03_calibrate_acmg.py を"
-        "実行すると、お手元の ClinVar から算出します。",
-        "PP3/BP4 thresholds are not configured. Run scripts/03_calibrate_acmg.py "
-        "to derive them from local ClinVar data.",
+        'PP3/BP4 の判定基準が設定されていない。scripts/03_calibrate_acmg.py '
+        'を実行すると、手元の ClinVar から算出される。',
+        'PP3/BP4 thresholds are not configured. Run '
+        'scripts/03_calibrate_acmg.py to derive them from local '
+        'ClinVar data.',
     ),
     "thr.published_source": ("判定基準の由来: {citation}。", "Threshold source: {citation}."),
     "thr.published_default": ("論文の公表値", "published values from the paper"),
@@ -401,8 +438,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "replicates.",
     ),
     "thr.local_warn": (
-        "論文の公表値ではないため、論文の判定とは一致しません。",
-        "These are not the published values; calls will differ from the paper.",
+        '論文の公表値ではないため、論文の判定とは一致しない。',
+        'These are not the published values; calls will differ from '
+        'the paper.',
     ),
     "thr.pp3_line": ("PP3: {parts} 以上", "PP3: {parts} or above"),
     "thr.bp4_line": ("BP4: {parts} 以下", "BP4: {parts} or below"),
@@ -413,7 +451,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
 
     # ------------------------------------------------------------ pdfout.py
     "pdf.title": ("ミスセンス変異 統合レポート", "Missense Variant Report"),
-    "pdf.meta": ("入力: {query}　　作成: {created}", "Query: {query}    Created: {created}"),
+    "pdf.query": ("入力: {query}", "Query: {query}"),
+    "pdf.created": ("作成: {created}", "Created: {created}"),
     "pdf.unresolved": ("解決できませんでした", "Could not resolve"),
     "pdf.warnings": ("注意", "Notes"),
     "pdf.gene": ("遺伝子", "Gene"),
@@ -517,10 +556,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "FuncVEP covers missense variants only.",
     ),
     "lk.gene_mismatch": (
-        "入力の遺伝子名 {input_gene} と転写産物の遺伝子 {tx_gene} が"
-        "一致しません。転写産物側を採用しました。",
-        "The gene entered ({input_gene}) does not match the transcript's gene "
-        "({tx_gene}). The transcript's gene was used.",
+        '入力の遺伝子名 {input_gene} と転写産物の遺伝子 {tx_gene} が一致しない。転写産物側を採用した。',
+        'The gene entered ({input_gene}) does not match the '
+        "transcript's gene ({tx_gene}). The transcript's gene was "
+        'used.',
     ),
     "lk.gene_not_found": (
         "遺伝子 {gene} が MANE に見つかりません。正式な HGNC 記号で入力してください。",
@@ -548,17 +587,18 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "Try HGVS notation with the transcript from the report.",
     ),
     "lk.multi_mane": (
-        "{gene} には複数の MANE 転写産物があります。"
-        "参照アミノ酸が一致した {refseq}（{status}）を使いました。他: {others}",
-        "{gene} has more than one MANE transcript. {refseq} ({status}), whose "
-        "reference amino acid matched, was used. Others: {others}",
+        '{gene} には複数の MANE 転写産物がある。参照アミノ酸が一致した '
+        '{refseq}（{status}）を使った。他: {others}',
+        '{gene} has more than one MANE transcript. {refseq} '
+        '({status}), whose reference amino acid matched, was used. '
+        'Others: {others}',
     ),
     "lk.offset_warn": (
-        "AlphaMissense は別のアイソフォームを使っており、"
-        "残基番号が {offset:+d} ずれています。"
-        "{gene} p.{pv} を p.{am_pv} として照会しました。",
-        "AlphaMissense uses a different isoform with residue numbering shifted by "
-        "{offset:+d}. {gene} p.{pv} was looked up as p.{am_pv}.",
+        'AlphaMissense は別のアイソフォームを使っており、残基番号が {offset:+d} '
+        'ずれている。{gene} p.{pv} を p.{am_pv} として照会した。',
+        'AlphaMissense uses a different isoform with residue '
+        'numbering shifted by {offset:+d}. {gene} p.{pv} was looked '
+        'up as p.{am_pv}.',
     ),
     "lk.region_warn": (
         "転写産物 ID が AlphaMissense と一致しなかったため、"
@@ -574,46 +614,58 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "change to genomic coordinates. Run scripts/02_build_index.py alphamissense.",
     ),
     "lk.multi_nuc": (
-        "同じアミノ酸置換を生じる塩基置換が {n} 通りあります。"
-        "すべて表示します。検査報告書の塩基座標と照合してください。",
-        "{n} different nucleotide substitutions produce this amino-acid change. "
-        "All are shown; match them against the coordinate in the laboratory report.",
+        '同じアミノ酸置換を生じる塩基置換が {n} 通りある。すべて表示する。検査報告書の塩基座標と照合すること。',
+        '{n} different nucleotide substitutions produce this '
+        'amino-acid change. All are shown; match them against the '
+        'coordinate in the laboratory report.',
     ),
     "lk.ensg_mismatch": (
-        "FuncVEP 側の遺伝子 {fv_ensg} が {ensg} と一致しません。"
-        "重複遺伝子領域の可能性があります。",
-        "The gene in FuncVEP ({fv_ensg}) does not match {ensg}. "
-        "This may be an overlapping-gene region.",
+        'FuncVEP 側の遺伝子 {fv_ensg} が {ensg} と一致しない。重複遺伝子領域の可能性がある。',
+        'The gene in FuncVEP ({fv_ensg}) does not match {ensg}. This '
+        'may be an overlapping-gene region.',
     ),
     "lk.warn_blank": (
-        "FuncVEP のスコアは空欄です。モデルの学習に使用された変異は"
-        "スコアが公開されていません。AlphaMissense・REVEL・ClinVar を見てください。",
-        "FuncVEP scores are blank: this is a training variant, and scores for "
-        "training variants are withheld. See AlphaMissense, REVEL and ClinVar.",
+        'FuncVEP のスコアは空欄である。この変異は一部のモデルの学習データ（既知の判定を持つ変異の集合）に含まれており、学'
+        '習に用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは該当モデルのスコアを公'
+        '開していない。予測に失敗したのではない。AlphaMissense・REVEL・ClinVar により判断すること。',
+        'FuncVEP scores are blank. This variant was part of the '
+        'training data (variants with known classifications) for some'
+        ' of the models. A prediction for a training variant would '
+        'merely reproduce a known classification and carries no '
+        "predictive value, so the authors withhold those models' "
+        'scores. This is not a failure to predict. Interpretation '
+        'should rely on AlphaMissense, REVEL and ClinVar.',
     ),
     "lk.warn_absent": (
-        "この変異は 6 つのモデルすべての学習に使用されているため、"
-        "公開された予測表から行ごと除かれています。収録が無いこと自体は病気との"
-        "関係について何の情報も持ちません。AlphaMissense・REVEL・ClinVar を見てください。",
-        "This variant is in the training sets of all six models and has no row in"
-        " the released table. Its absence carries no information about "
-        "pathogenicity. See AlphaMissense, REVEL and ClinVar.",
+        'この変異は、FuncVEP の 6 つのモデルすべての学習データ（既知の判定を持つ変異の集合）に含まれていた。学習に用い'
+        'た変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、各モデルの予測対象から学習データの変異'
+        'は除外されている。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しない。収録が無いこと自体は病気'
+        'との関係について何の情報も持たない。AlphaMissense・REVEL・ClinVar により判断すること。',
+        'This variant was part of the training data (variants with '
+        'known classifications) for all six FuncVEP models. A '
+        'prediction for a training variant would merely reproduce a '
+        'known classification and carries no predictive value, so '
+        "training variants are excluded from each model's "
+        'predictions; excluded from all six, this variant has no row '
+        'in the released table. Its absence carries no information '
+        'about pathogenicity. Interpretation should rely on '
+        'AlphaMissense, REVEL and ClinVar.',
     ),
     "lk.warn_absent_unexplained": (
-        "この変異は公開された予測表になく、公開されている学習データの"
-        "一覧にも見当たりません。著者らの照合によれば予測表を作る工程の都合で"
-        "生じた未収録で、収録が無いこと自体は病気との関係について何の情報も"
-        "持ちません。AlphaMissense・REVEL・ClinVar を見てください。",
-        "This variant has no row in the released table and is not in any "
-        "published training set. According to the authors, such absences arose "
-        "during assembly of the released table and carry no information about "
-        "pathogenicity. See AlphaMissense, REVEL and ClinVar.",
+        'この変異は公開された予測表になく、公開されている学習データの一覧にも見当たらない。著者らの照合によれば予測表を作る工程の'
+        '都合で生じた未収録であり、収録が無いこと自体は病気との関係について何の情報も持たない。AlphaMissense・REV'
+        'EL・ClinVar で判断すること。',
+        'This variant has no row in the released table and is not in '
+        'any published training set. According to the authors, such '
+        'absences arose during assembly of the released table and '
+        'carry no information about pathogenicity. See AlphaMissense,'
+        ' REVEL and ClinVar.',
     ),
     "lk.warn_mixed": (
-        "FuncVEP のスコアが得られません（候補ごとに理由が異なります）。"
-        "AlphaMissense・REVEL・ClinVar を見てください。",
-        "No FuncVEP score is available (the reason differs between candidates). "
-        "See AlphaMissense, REVEL and ClinVar.",
+        'FuncVEP のスコアが得られない（候補ごとに理由が異なる）。AlphaMissense・REVEL・ClinVar '
+        'で判断すること。',
+        'No FuncVEP score is available (the reason differs between '
+        'candidates). See AlphaMissense, REVEL and ClinVar.',
     ),
 
     # ----------------------------------------------------------- variant.py

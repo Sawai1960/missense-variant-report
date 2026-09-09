@@ -150,9 +150,14 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     doc.add_page()
 
     _h1(doc, t("pdf.title"))
+    # 評価対象の変異は見出しに準じて大きく黒で。作成日時は控えめに
+    doc.set_font("jp", "B", size=13)
+    doc.set_text_color(0, 0, 0)
+    doc.mc(0, 7, t("pdf.query", query=rep.query))
+    doc.ln(0.5)   # 全幅 multi_cell の直後は x が右端に残り、次の幅が 0 になって無限ループする
     doc.set_font("jp", size=8.5)
     doc.set_text_color(*MUTED)
-    doc.mc(0, 4.6, t("pdf.meta", query=rep.query, created=rep.created))
+    doc.mc(0, 4.6, t("pdf.created", created=rep.created))
     doc.ln(1)
 
     if rep.error:
