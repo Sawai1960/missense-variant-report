@@ -248,11 +248,24 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "constraint.lof_low": ("制約は弱く、機能喪失変異の大半は害がない遺伝子",
                            "Unconstrained: most LoF variants are tolerated"),
     "note.pli": (
-        '0〜1 の確率で、0.9 以上を「機能喪失変異に耐えられない（制約が強い）遺伝子」とみなす（gnomAD）。片方のアレル'
-        'の機能喪失を対象とする指標であり、両アレルの機能喪失で発症する潜性遺伝（劣性遺伝）の疾患の原因遺伝子では低値となる',
-        'Probability of loss-of-function intolerance, 0 to 1; 0.9 or '
-        'above is taken as LoF-intolerant (gnomAD). It concerns loss '
-        'of a single copy, so recessive disease genes score low',
+        '機能喪失変異とは、ナンセンス変異・フレームシフト変異・スプライス部位変異など、遺伝子産物が作られなくなるか働かなくなる変'
+        '異を指す（ミスセンス変異は含まない）。pLI は 0〜1 の確率で、0.9 以上を「機能喪失変異に耐えられない（制約が強'
+        'い）遺伝子」とみなす（gnomAD）。これは、片方のアレルの機能喪失だけで発症し、その人が一般集団に現れにくい程度に重い'
+        '影響を持つことを意味する。片方のアレルの機能喪失を対象とする指標であるため、片方のアレルの機能喪失（ハプロ不全）で発症す'
+        'る顕性遺伝（優性遺伝）の疾患の原因遺伝子では高値となり、両アレルの機能喪失で発症する潜性遺伝（劣性遺伝）の疾患の原因遺伝'
+        '子では低値となる。機能獲得型の変異で発症する顕性遺伝の疾患では、必ずしも高値とはならない',
+        'Loss-of-function (LoF) variants are those that abolish the '
+        'gene product or its function, such as nonsense, frameshift '
+        'and essential splice-site variants (missense variants are '
+        'not included). pLI is a probability from 0 to 1; 0.9 or '
+        'above is taken as LoF-intolerant, i.e. constrained (gnomAD).'
+        ' This means that loss of a single copy causes a condition '
+        'severe enough that carriers are under-represented in the '
+        'general population. Because the metric concerns a single '
+        'copy, it is high for dominant disease genes acting through '
+        'haploinsufficiency and low for recessive disease genes, '
+        'which require loss of both copies. Dominant disease genes '
+        'acting through gain of function are not necessarily high',
     ),
     "note.mis_z": (
         "一般集団で実際にみられたミスセンス変異の数を、変異が無害なら見つかるはずの数"
