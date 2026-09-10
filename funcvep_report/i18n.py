@@ -244,14 +244,18 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "健常な人が一般集団に多く検出される遺伝子",
         "Loss of a single copy has little effect on the phenotype, and healthy carriers "
         "of loss-of-function variants are common in the general population"),
-    "constraint.mis_high": ("制約が強く、ミスセンス変異が害になりやすい遺伝子",
-                            "Constrained: missense variants tend to be damaging"),
-    "constraint.mis_low": ("制約は弱く、ミスセンス変異の大半は害がない遺伝子",
-                           "Unconstrained: most missense variants are tolerated"),
-    "constraint.lof_high": ("制約が強く、機能喪失変異が害になりやすい遺伝子",
-                            "Constrained: LoF variants tend to be damaging"),
-    "constraint.lof_low": ("制約は弱く、機能喪失変異の大半は害がない遺伝子",
-                           "Unconstrained: most LoF variants are tolerated"),
+    "constraint.mis_high": (
+        "制約が強く、ミスセンス変異が表現型に大きな影響を及ぼすと推定される遺伝子",
+        "Constrained: missense variants are expected to have a large effect on the phenotype"),
+    "constraint.mis_low": (
+        "制約は弱く、ミスセンス変異の大半は表現型に影響がないと推定される遺伝子",
+        "Unconstrained: most missense variants are expected to have no effect on the phenotype"),
+    "constraint.lof_high": (
+        "制約が強く、機能喪失変異が表現型に大きな影響を及ぼすと推定される遺伝子",
+        "Constrained: loss-of-function variants are expected to have a large effect on the phenotype"),
+    "constraint.lof_low": (
+        "制約は弱く、機能喪失変異の大半は表現型に影響がないと推定される遺伝子",
+        "Unconstrained: most loss-of-function variants are expected to have no effect on the phenotype"),
     "note.pli": (
         '機能喪失変異とは、ナンセンス変異・フレームシフト変異・スプライス部位変異など、遺伝子産物が作られなくなるか働かなくなる変'
         '異を指します（ミスセンス変異は含みません）。pLI は 0〜1 の確率で、0.9 以上を「機能喪失変異に耐えられない（制'
@@ -276,7 +280,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'ミスセンス変異について、一般集団で実際に観察された数（観察数）と、変異が無害であった場合に観察されると見込まれる数（期待'
         '数）とを比較した z スコアです。観察数が期待数と等しければ 0 となり、観察数が期待数より少ないほど正の大きな値となり'
         'ます。観察数が少ないのは、ミスセンス変異を持つ人が疾患のため一般集団に現れにくいことを反映しています。3.09 以上で「'
-        '制約が強い（ミスセンス変異が害になりやすい）遺伝子」とみなします（gnomAD）。遺伝子全体の傾向を示す指標であり、個々'
+        '制約が強い（ミスセンス変異が表現型に大きな影響を及ぼしやすい）遺伝子」とみなします（gnomAD）。遺伝子全体の傾向を示す指標であり、個々'
         'の変異の判定は上のスコアによります',
         'z-score comparing the number of missense variants observed '
         'in the general population with the number expected if such '
@@ -285,7 +289,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'than expected. Depletion reflects carriers of missense '
         'variants being under-represented in the general population '
         'because of disease. 3.09 or above is taken as constrained, '
-        'i.e. missense variants tend to be damaging (gnomAD). A '
+        'i.e. missense variants tend to have a large effect on the phenotype (gnomAD). A '
         'gene-level property; the variant itself is judged by the '
         'scores above',
     ),
