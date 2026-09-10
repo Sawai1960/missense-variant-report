@@ -827,6 +827,38 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "note.review": ("レビュー {stars} 星（{status}）", "Review status: {stars} star(s) ({status})"),
     "row.submitters": ("提出者数", "Submitters"),
     "row.last_evaluated": ("最終評価", "Last evaluated"),
+    "row.moi": (
+        '提出者が記入した遺伝形式',
+        'Mode of inheritance entered by submitters',
+    ),
+    "moi.item": (
+        '{code} {n} 件',
+        '{code} {n}',
+    ),
+    "moi.summary": (
+        '（提出 {total} 件中 {filled} 件が記入。参考）',
+        ' (entered in {filled} of {total} submissions; for reference)',
+    ),
+    "moi.unknown": (
+        '不明',
+        'unknown',
+    ),
+    "moi.somatic": (
+        '体細胞',
+        'somatic',
+    ),
+    "note.moi": (
+        'ClinVar の各提出者が任意で記入した遺伝形式の件数です。記入率は低く、ClinVar '
+        'が検証したものではありません。遺伝形式の根拠は ClinGen の欄を参照してください。略号: AD '
+        '顕性遺伝（優性遺伝）、AR 潜性遺伝（劣性遺伝）、XL X 連鎖（XLD 顕性、XLR 潜性）、MT '
+        'ミトコンドリア、SD 半顕性',
+        'Counts of the mode of inheritance optionally entered by each'
+        ' ClinVar submitter. Entry rates are low and ClinVar does not'
+        ' verify them; refer to the ClinGen entry for the mode of '
+        'inheritance. Abbreviations: AD autosomal dominant, AR '
+        'autosomal recessive, XL X-linked (XLD dominant, XLR '
+        'recessive), MT mitochondrial, SD semidominant',
+    ),
     "row.phenotypes": ("表現型", "Phenotypes"),
     "row.conditions": ("疾患名（提出件数順）", "Conditions (by submissions)"),
     "cond.item": ("{name}（{cls}、{n} 件、{stars} 星）", "{name} ({cls}, {n} submissions, {stars}-star)"),

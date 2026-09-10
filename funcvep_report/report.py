@@ -351,6 +351,18 @@ def _condition_row(c: ConditionResult, fallback_raw: str | None, limit: int = 6)
     return Row(t("row.conditions"), value, t("note.conditions"))
 
 
+def _moi_row(c: ConditionResult | None) -> list[Row]:
+    """提出者が記入した遺伝形式の集計（参考）。記入が無ければ出さない。"""
+    if not c or c.status != "found" or not c.moi:
+        return []
+    items = [t("moi.item", code=t("moi.unknown") if code == "unknown" else
+               t("moi.somatic") if code == "somatic" else code, n=n)
+             for code, n in c.moi.items()]
+    filled = sum(c.moi.values())
+    return [Row(t("row.moi"), t("sep.list").join(items) + t("moi.summary", filled=filled, total=c.n_scv),
+                t("note.moi"))]
+
+
 def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str,
                   phenotypes: list[str] | None = None) -> list[Row]:
     """ClinGen の遺伝子と疾患の関係（遺伝子単位）。一覧そのものが無ければ何も出さない。
@@ -728,6 +740,7 @@ def build(res: Resolution, thresholds: dict | None,
                 Row(t("row.last_evaluated"), str(cv.get("last_evaluated") or t("dash")), ""),
                 _condition_row((condition_results or {}).get(rv.genomic.funcvep_id),
                                cv.get("phenotypes")),
+                *_moi_row((condition_results or {}).get(rv.genomic.funcvep_id)),
                 Row(t("row.clinvar_name"), str(cv.get("name") or t("dash"))[:200],
                     t("note.variation_id", id=cv.get("variation_id"))),
             ]

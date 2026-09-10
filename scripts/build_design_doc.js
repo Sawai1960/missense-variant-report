@@ -138,7 +138,7 @@ function contentJA() {
     ["Ensembl VEP（REST、SpliceAI プラグイン）", "SpliceAI の Δ スコア 4 種と位置", "染色体・位置・塩基", "24 時間"],
     ["ClinGen Gene-Disease Validity", "遺伝子と疾患の関係の確立度、遺伝形式", "なし（一覧 CSV を丸ごと取得）", "30 日"],
     ["MaveDB（API）", "大規模機能実験の実測スコアと、研究者が定めた正常／異常の区分", "遺伝子記号（検索）", "検索 30 日、データは永続"],
-    ["ClinVar（NCBI E-utilities）", "疾患名ごとの判定・提出件数・レビュー段階", "VariationID", "24 時間"],
+    ["ClinVar（NCBI E-utilities）", "疾患名ごとの判定・提出件数・レビュー段階。提出者が任意で記入した遺伝形式の件数（AD／AR などの略号で集計、参考）", "VariationID", "24 時間"],
     ["LitVar2（NCBI）+ PubMed", "変異に言及した論文（画面のみ、PDF には載せない）", "遺伝子記号と置換、rsID", "24 時間"],
   ], [26, 38, 20, 16]));
   B.push(spacer());
@@ -166,7 +166,7 @@ function contentJA() {
     ["機能実験の実測値", "MaveDB", "PS3 / BS3 の材料", "実測スコアと、研究者が定めた正常／異常の区分。塩基が一致した実測値と、アミノ酸置換で照合した実測値（塩基は不明）を区別する。対象転写産物・測定変異数・区分の名称・出典を示し、PS3/BS3 の適用には実験内容の確認が必要と明記"],
     ["スプライシングへの影響", "SpliceAI", "ミスセンスとしての評価の前提", "Δ 0.5 以上は BP4 を保留し、判定のまとめの箱を橙にする。0.2 以上 0.5 未満は BP4 に要確認と添える。未取得なら未評価と明記（7.1 節）"],
     ["遺伝子と疾患の関係、遺伝形式", "ClinGen", "pLI・BS2・PM2 の読み方の前提", "遺伝子単位の関連疾患を一覧し、ClinVar で提出件数が最多の疾患名と名称が一致するものに印（参考）"],
-    ["この変異の臨床判定", "ClinVar", "既知の判定", "臨床的意義（生殖細胞系列）、レビュー段階、疾患名を提出件数順に。3 星以上は専門家パネルの判定と強調。疾患名は提出者の登録で検証済みでなく、件数は提出数で症例数ではない旨を注記"],
+    ["この変異の臨床判定", "ClinVar", "既知の判定", "臨床的意義（生殖細胞系列）、レビュー段階、疾患名を提出件数順に。3 星以上は専門家パネルの判定と強調。疾患名は提出者の登録で検証済みでなく、件数は提出数で症例数ではない旨を注記。提出者が記入した遺伝形式は AD／AR などの略号で件数のみ一行に集計（参考。根拠は ClinGen の欄）"],
   ], [24, 16, 20, 40]));
   B.push(spacer());
   B.push(p("報告書は基準の「候補」を示すにとどめ、適用の可否と強さの判断は解釈者に委ねます。"));
@@ -372,7 +372,7 @@ function contentEN() {
     ["Ensembl VEP (REST, SpliceAI plugin)", "Four SpliceAI delta scores and positions", "Chromosome, position, alleles", "24 h"],
     ["ClinGen Gene-Disease Validity", "Strength of gene–disease relationships, mode of inheritance", "None (whole CSV downloaded)", "30 days"],
     ["MaveDB (API)", "Measured scores of multiplexed functional assays and investigator-defined functional classes", "Gene symbol (search)", "Search 30 days; data permanent"],
-    ["ClinVar (NCBI E-utilities)", "Per-condition classification, submission count and review status", "VariationID", "24 h"],
+    ["ClinVar (NCBI E-utilities)", "Per-condition classification, submission count and review status; counts of the mode of inheritance optionally entered by submitters (AD/AR abbreviations, for reference)", "VariationID", "24 h"],
     ["LitVar2 (NCBI) + PubMed", "Publications mentioning the variant (screen only, not in the PDF)", "Gene symbol and substitution, rsID", "24 h"],
   ], [26, 38, 20, 16]));
   B.push(spacer());
@@ -400,7 +400,7 @@ function contentEN() {
     ["Measured functional-assay results", "MaveDB", "Material for PS3 / BS3", "Measured score and investigator-defined class. Nucleotide-matched measurements are distinguished from measurements matched by amino-acid substitution only. Target transcript, number of variants, class names and citation are shown; applying PS3/BS3 requires checking the assay"],
     ["Effect on splicing", "SpliceAI", "Premise of the missense evaluation", "Delta 0.5 or above: BP4 withheld and the summary box turns amber. 0.2 to 0.5: BP4 marked for review. Not retrieved: stated as not assessed (section 7.1)"],
     ["Gene–disease relationship, inheritance", "ClinGen", "Context for pLI, BS2 and PM2", "Gene-level associated diseases; the entry whose name matches the ClinVar condition with the most submissions is marked (for reference)"],
-    ["Clinical classification of this variant", "ClinVar", "Existing classification", "Germline significance, review stars (three stars or more emphasised as an expert-panel classification), conditions ordered by submission count, with a note that conditions are submitter-entered and unverified and that counts are submissions, not cases"],
+    ["Clinical classification of this variant", "ClinVar", "Existing classification", "Germline significance, review stars (three stars or more emphasised as an expert-panel classification), conditions ordered by submission count, with a note that conditions are submitter-entered and unverified and that counts are submissions, not cases. The mode of inheritance entered by submitters is summarised in one line as AD/AR counts (for reference; ClinGen remains the basis)"],
   ], [24, 16, 20, 40]));
   B.push(spacer());
   B.push(p("The report only indicates candidate criteria; whether to apply a criterion and at what strength is left to the interpreter."));

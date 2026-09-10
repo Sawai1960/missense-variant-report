@@ -47,11 +47,37 @@ class ConditionRow:
         return is_generic_condition(self.condition)
 
 
+# 提出者が記入する遺伝形式（ClinicalAssertion の ModeOfInheritance 属性）の略号。
+# 任意項目で記入率は低く、ClinVar が検証したものではない。報告書では参考として件数だけ示す
+_MOI_CODES = {
+    "autosomal dominant inheritance": "AD",
+    "autosomal recessive inheritance": "AR",
+    "x-linked inheritance": "XL",
+    "x-linked dominant inheritance": "XLD",
+    "x-linked recessive inheritance": "XLR",
+    "y-linked inheritance": "YL",
+    "mitochondrial inheritance": "MT",
+    "semidominant inheritance": "SD",
+    "codominant": "CD",
+    "autosomal unknown": "AD/AR",
+    "somatic mutation": "somatic",
+    "unknown mechanism": "unknown",
+}
+
+
+def moi_code(raw: str) -> str:
+    """ClinVar の遺伝形式の記述を略号にする。対応表に無いものは原文のまま。"""
+    return _MOI_CODES.get((raw or "").strip().lower(), (raw or "").strip())
+
+
 @dataclass
 class ConditionResult:
     status: str                             # found / absent / error
     rows: list[ConditionRow] = field(default_factory=list)
     reason: str = ""
+    # 提出（SCV）の総数と、提出者が記入した遺伝形式の略号ごとの件数（記入順に多い順）
+    n_scv: int = 0
+    moi: dict[str, int] = field(default_factory=dict)
 
     @property
     def specific(self) -> list[ConditionRow]:
@@ -86,7 +112,17 @@ def parse_vcv_xml(xml_text: str) -> ConditionResult:
     if not rows:
         return ConditionResult(status="absent")
     rows.sort(key=lambda r: -r.submissions)
-    return ConditionResult(status="found", rows=rows)
+    # 提出ごとの遺伝形式。1 つの提出に複数あれば全部数える
+    n_scv = 0
+    counts: dict[str, int] = {}
+    for scv in root.iter("ClinicalAssertion"):
+        n_scv += 1
+        for a in scv.iter("Attribute"):
+            if a.get("Type") == "ModeOfInheritance" and (a.text or "").strip():
+                code = moi_code(a.text)
+                counts[code] = counts.get(code, 0) + 1
+    moi = dict(sorted(counts.items(), key=lambda kv: -kv[1]))
+    return ConditionResult(status="found", rows=rows, n_scv=n_scv, moi=moi)
 
 
 def _get(url: str, timeout: float) -> str:
