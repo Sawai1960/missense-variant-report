@@ -50,3 +50,8 @@ organization:
 pdf_font: "C:/Windows/Fonts/BIZ-UDGothicR.ttc"
 pdf_font_bold: "C:/Windows/Fonts/BIZ-UDGothicB.ttc"
 pdf_font_face: "BIZ UDPGothic"
+
+# 英語版レポートの本文フォント（Windows 同梱の Arial）。日本語版では、日本語フォントに
+# 無い字形（著者名のトルコ語文字など）を補うのにも使う
+pdf_font_en: "C:/Windows/Fonts/arial.ttf"
+pdf_font_en_bold: "C:/Windows/Fonts/arialbd.ttf"

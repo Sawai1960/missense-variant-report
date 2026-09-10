@@ -19,7 +19,7 @@ from funcvep_report.togovar import lookup as togovar_lookup
 from funcvep_report import clingen, litvar, mavedb, spliceai
 from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
-from funcvep_report.pdfout import FontSpec, render_stream
+from funcvep_report.pdfout import fonts_for, render_stream
 from funcvep_report.report import acknowledgement, disclaimer, funcvep_intro, missing_label, references
 from funcvep_report.variant import AA1_TO_3
 
@@ -375,7 +375,7 @@ with st.expander(t("ui.references")):
 
 st.divider()
 try:
-    pdf = render_stream(rep, FontSpec(cfg.pdf_font, cfg.pdf_font_bold, cfg.pdf_font_face),
+    pdf = render_stream(rep, fonts_for(cfg, rep.lang),
                         cache_dir=cfg.paths.index / "fonts")
     safe = "".join(ch if ch.isalnum() else "_" for ch in rep.query)[:60]
     st.download_button(

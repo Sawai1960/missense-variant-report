@@ -79,6 +79,8 @@ class Config:
         self.pdf_font = Path(raw.get("pdf_font", ""))
         self.pdf_font_bold = Path(raw["pdf_font_bold"]) if raw.get("pdf_font_bold") else None
         self.pdf_font_face: str | None = raw.get("pdf_font_face") or None
+        self.pdf_font_en = Path(raw["pdf_font_en"]) if raw.get("pdf_font_en") else None
+        self.pdf_font_en_bold = Path(raw["pdf_font_en_bold"]) if raw.get("pdf_font_en_bold") else None
         self._organization = raw.get("organization") or {}
         self._acmg = raw.get("acmg", {})
 

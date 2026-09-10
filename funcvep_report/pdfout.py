@@ -36,6 +36,21 @@ class FontSpec:
     regular: Path
     bold: Path | None = None
     face: str | None = None
+    # 本文フォントに無い字形を補う書体（日本語版なら英文フォント、英語版なら日本語フォント）
+    fallback: "FontSpec | None" = None
+
+
+def fonts_for(cfg, lang: str) -> FontSpec:
+    """設定から、言語に応じた本文フォントと補助フォントの組を作る。
+
+    日本語版は日本語フォントを本文にし、無い字形（トルコ語の ı ş など）を英文フォントで補う。
+    英語版は英文フォントを本文にし、日本語が混じったときだけ日本語フォントで補う。
+    """
+    jp = FontSpec(cfg.pdf_font, cfg.pdf_font_bold, cfg.pdf_font_face)
+    en = FontSpec(cfg.pdf_font_en, cfg.pdf_font_en_bold) if cfg.pdf_font_en else None
+    if lang == "en" and en is not None and en.regular.exists():
+        return FontSpec(en.regular, en.bold, None, fallback=jp)
+    return FontSpec(jp.regular, jp.bold, jp.face, fallback=en)
 
 
 def _extract_from_ttc(src: Path, face: str | None, dest: Path) -> Path:
@@ -96,7 +111,7 @@ def prepare_fonts(src: Path | FontSpec, cache_dir: Path) -> dict[str, Path]:
 
 class _Doc(FPDF):
     def __init__(self, fonts: dict[str, Path], title: str, wrap: str = "CHAR",
-                 organization: str = ""):
+                 organization: str = "", fallback: dict[str, Path] | None = None):
         super().__init__(orientation="P", unit="mm", format="A4")
         self.title_text = title
         self.organization = organization
@@ -105,15 +120,13 @@ class _Doc(FPDF):
         # 折り返す。英語は単語単位のまま。両端揃えは日本語で間延びするので使わない。
         self.wrap = wrap
         self.set_auto_page_break(auto=True, margin=18)
+        # 家族名 "jp" は歴史的な名残で、実際には言語に応じた本文フォントが入る
         self.add_font("jp", "", str(fonts["regular"]))
         self.add_font("jp", "B", str(fonts["bold"]))
-        # 日本語フォントに無いラテン文字（トルコ語の ı ş など、著者名に出る）は
-        # Windows 同梱の Arial で補う。無ければ補わない
-        latin = {"": Path("C:/Windows/Fonts/arial.ttf"), "B": Path("C:/Windows/Fonts/arialbd.ttf")}
-        if all(p.exists() for p in latin.values()):
-            for style, path in latin.items():
-                self.add_font("latin", style, str(path))
-            self.set_fallback_fonts(["latin"])
+        if fallback:
+            self.add_font("fb", "", str(fallback["regular"]))
+            self.add_font("fb", "B", str(fallback["bold"]))
+            self.set_fallback_fonts(["fb"])
         self.set_margins(16, 16, 16)
 
     def mc(self, w: float, h: float, text: str, align: str = "L",
@@ -218,15 +231,16 @@ def _render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None) -> 
     regular = font_path.regular if isinstance(font_path, FontSpec) else font_path
     if not regular.exists():
         raise FileNotFoundError(t("pdf.font_missing", path=regular))
-    fonts = prepare_fonts(
-        font_path,
-        cache_dir or (Path.home() / ".cache" / "funcvep_report" / "fonts"),
-    )
+    cache = cache_dir or (Path.home() / ".cache" / "funcvep_report" / "fonts")
+    fonts = prepare_fonts(font_path, cache)
+    fallback = None
+    if isinstance(font_path, FontSpec) and font_path.fallback and font_path.fallback.regular.exists():
+        fallback = prepare_fonts(font_path.fallback, cache)
     bullet = "・" if rep.lang == "ja" else "- "
     wide = t("sep.wide")
 
     doc = _Doc(fonts, t("pdf.title"), wrap="CHAR" if rep.lang == "ja" else "WORD",
-               organization=rep.organization)
+               organization=rep.organization, fallback=fallback)
     doc.alias_nb_pages()
     doc.add_page()
 
