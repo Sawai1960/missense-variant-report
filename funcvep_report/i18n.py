@@ -993,52 +993,6 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'The gene in FuncVEP ({fv_ensg}) does not match {ensg}. This '
         'may be an overlapping-gene region.',
     ),
-    "lk.warn_blank": (
-        'FuncVEP のスコアは空欄です。この変異は一部のモデルの学習データ（既知の判定を持つ変異の集合）に含まれており、学習'
-        'に用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは該当モデルのスコアを公開'
-        'していません。予測に失敗したのではありません。AlphaMissense・REVEL・ClinVar '
-        'により判断してください。',
-        'FuncVEP scores are blank. This variant was part of the '
-        'training data (variants with known classifications) for some'
-        ' of the models. A prediction for a training variant would '
-        'merely reproduce a known classification and carries no '
-        "predictive value, so the authors withhold those models' "
-        'scores. This is not a failure to predict. Interpretation '
-        'should rely on AlphaMissense, REVEL and ClinVar.',
-    ),
-    "lk.warn_absent": (
-        'この変異は、FuncVEP の 6 つのモデルすべての学習データ（既知の判定を持つ変異の集合）に含まれていました。学習に'
-        '用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、各モデルの予測対象から学習データの'
-        '変異は除外されています。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しません。収録が無いこと自'
-        '体は病気との関係について何の情報も持ちません。AlphaMissense・REVEL・ClinVar '
-        'により判断してください。',
-        'This variant was part of the training data (variants with '
-        'known classifications) for all six FuncVEP models. A '
-        'prediction for a training variant would merely reproduce a '
-        'known classification and carries no predictive value, so '
-        "training variants are excluded from each model's "
-        'predictions; excluded from all six, this variant has no row '
-        'in the released table. Its absence carries no information '
-        'about pathogenicity. Interpretation should rely on '
-        'AlphaMissense, REVEL and ClinVar.',
-    ),
-    "lk.warn_absent_unexplained": (
-        'この変異は公開された予測表になく、公開されている学習データの一覧にも見当たりません。著者らの照合によれば予測表を作る工程'
-        'の都合で生じた未収録であり、収録が無いこと自体は病気との関係について何の情報も持ちません。AlphaMissense・R'
-        'EVEL・ClinVar で判断してください。',
-        'This variant has no row in the released table and is not in '
-        'any published training set. According to the authors, such '
-        'absences arose during assembly of the released table and '
-        'carry no information about pathogenicity. See AlphaMissense,'
-        ' REVEL and ClinVar.',
-    ),
-    "lk.warn_mixed": (
-        'FuncVEP '
-        'のスコアが得られません（候補ごとに理由が異なります）。AlphaMissense・REVEL・ClinVar '
-        'で判断してください。',
-        'No FuncVEP score is available (the reason differs between '
-        'candidates). See AlphaMissense, REVEL and ClinVar.',
-    ),
 
     # ----------------------------------------------------------- variant.py
     "vp.bad_aa": ("アミノ酸として解釈できません: {token}",

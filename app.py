@@ -243,8 +243,8 @@ if rep.error:
     st.error(rep.error)
     st.stop()
 
-for w in rep.warnings:
-    st.warning(w)
+if rep.warnings:
+    st.warning("\n\n".join("・" + w for w in rep.warnings))
 
 # 集団頻度が取れていないときは、手入力の場所を案内する
 if _num(af_text, float) is None:

@@ -788,16 +788,8 @@ def resolve(text: str, store: Store) -> Resolution:
             )
         )
 
-    if store._ready(store.p.funcvep):
-        # スコアが出ない理由は 2 つあり、利用者の受け取り方が変わるので分けて伝える。
-        statuses = {v.evidence.funcvep_status for v in res.variants}
-        if statuses == {"blank"}:
-            res.warnings.append(t("lk.warn_blank"))
-        elif statuses == {"absent"}:
-            res.warnings.append(t("lk.warn_absent"))
-        elif statuses == {"absent_unexplained"}:
-            res.warnings.append(t("lk.warn_absent_unexplained"))
-        elif statuses and "scored" not in statuses:
-            res.warnings.append(t("lk.warn_mixed"))
+    # FuncVEP のスコアが無い理由は、報告書冒頭の注意には出さない。FuncVEP の節に
+    # 同じ説明（missing_note）が出るので重複になる。冒頭は入力の解釈に関わる
+    # 注意（候補が複数、転写産物の当てはめ、p. の食い違い、スプライシング）だけにする。
 
     return res
