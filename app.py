@@ -255,12 +255,17 @@ if rep.population_rows:
 
 for i, vr in enumerate(rep.variants, 1):
     v = vr.variant
-    st.divider()
     head = f"{v.gene} {v.hgvs_p3}"
     if len(rep.variants) > 1:
         head += t("ui.candidate", i=i, n=len(rep.variants))
-    st.header(head)
-    st.caption(f"{v.genomic}（GRCh38）" if st.session_state["lang"] == "ja" else f"{v.genomic} (GRCh38)")
+    genomic = f"{v.genomic}（GRCh38）" if st.session_state["lang"] == "ja" else f"{v.genomic} (GRCh38)"
+    # 変異ごとの区切りは青い帯にして、節の見出しと見分けられるようにする
+    st.markdown(
+        f"<div style='background:#1c4e80;color:#fff;padding:0.6rem 1rem;margin:1.5rem 0 0.8rem;"
+        f"border-radius:4px;font-size:1.4rem;font-weight:700'>{head}"
+        f"<span style='font-size:0.95rem;font-weight:400;margin-left:1rem'>{genomic}</span></div>",
+        unsafe_allow_html=True,
+    )
 
     st.subheader(t("ui.population_gnomad"))
     for r in vr.population_rows:

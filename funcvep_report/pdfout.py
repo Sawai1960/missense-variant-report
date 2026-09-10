@@ -89,6 +89,17 @@ def _h2(doc: _Doc, text: str) -> None:
     doc.ln(1.5)
 
 
+def _band(doc: _Doc, text: str) -> None:
+    """変異ごとの区切り。青地に白文字の帯にして、他の節見出しと見分けられるようにする。"""
+    doc.ln(3)
+    doc.set_font("jp", "B", size=12)
+    doc.set_fill_color(*ACCENT)
+    doc.set_text_color(255, 255, 255)
+    doc.cell(0, 9, "  " + text, fill=True, new_x="LMARGIN", new_y="NEXT")
+    doc.set_text_color(*INK)
+    doc.ln(1.5)
+
+
 def _rows(doc: _Doc, rows: list[Row], label_w: float = 42.0) -> None:
     avail = doc.w - doc.l_margin - doc.r_margin
     value_w = avail - label_w
@@ -184,7 +195,9 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
         v = vr.variant
         head = (t("pdf.variant_n", i=i, n=len(rep.variants))
                 if len(rep.variants) > 1 else t("pdf.variant"))
-        _h2(doc, f"{head}{wide}{v.gene} {v.hgvs_p3}{wide}{v.genomic}")
+        if i > 1:
+            doc.add_page()   # 候補が複数あるときは 2 つ目以降を改ページして始める
+        _band(doc, f"{head}{wide}{v.gene} {v.hgvs_p3}{wide}{v.genomic}")
 
         _h2(doc, t("pdf.population_gnomad"))
         _rows(doc, vr.population_rows)
