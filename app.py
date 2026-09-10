@@ -53,25 +53,36 @@ with st.sidebar:
         format_func=lambda code: LANG_NAMES[code],
         horizontal=True,
     )
+    st.caption(t("ui.language_help"))
     if chosen != st.session_state["lang"]:
         st.session_state["lang"] = chosen
         st.query_params["lang"] = chosen
         st.rerun()
 
     st.divider()
+    st.caption(t("ui.sidebar_intro"))
+
     st.subheader(t("ui.data_status"))
-    for key in STEPS:
-        st.write(("✅ " if avail.get(key) else "⬜ ") + t(f"ui.step.{key}"))
-    if not all(avail.values()):
+    if all(avail.values()):
+        # 揃っていれば一行で済ませ、内訳は畳んでおく
+        st.success(t("ui.data_ready"))
+        with st.expander(t("ui.data_detail")):
+            for key in STEPS:
+                st.write("✅ " + t(f"ui.step.{key}"))
+    else:
+        for key in STEPS:
+            st.write(("✅ " if avail.get(key) else "⬜ ") + t(f"ui.step.{key}"))
         st.caption(t("ui.missing_data"))
 
     st.divider()
+    st.subheader(t("ui.online"))
     gnomad_online = st.checkbox(
         t("ui.gnomad_online"),
         value=st.session_state.get("gnomad_online", cfg.gnomad_af_mode == "api"),
         help=t("ui.gnomad_online_help"),
     )
     st.session_state["gnomad_online"] = gnomad_online
+    st.caption(t("ui.online_help"))
 
     st.divider()
     thresholds = cfg.load_thresholds()

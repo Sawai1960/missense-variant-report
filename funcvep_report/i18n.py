@@ -943,6 +943,22 @@ _STRINGS: dict[str, tuple[str, str]] = {
     # --------------------------------------------------------------- app.py
     "ui.page_title": ("ミスセンス変異 統合レポート", "Missense Variant Report"),
     "ui.language": ("言語 / Language", "言語 / Language"),
+    "ui.language_help": ("画面と PDF の言語。切り替えるとすぐに反映されます。",
+                         "Language of the screen and the PDF. Takes effect immediately."),
+    "ui.sidebar_intro": ("この欄は設定と状態の確認用です。通常は操作の必要はありません。",
+                         "This panel shows settings and status. Normally nothing needs to be done here."),
+    "ui.data_ready": ("参照データはすべて揃っています（準備完了）",
+                      "All reference data are in place (ready)"),
+    "ui.data_detail": ("内訳を見る", "Show details"),
+    "ui.online": ("オンライン照会", "Online lookups"),
+    "ui.online_help": (
+        "gnomAD・TogoVar・SpliceAI・MaveDB・LitVar に変異の座標だけを送って情報を取得します。"
+        "通常はオンのままにしてください。院外ネットワークが使えないときはオフにすると、"
+        "手元のデータと手入力だけで動きます。",
+        "Sends only the variant coordinates to gnomAD, TogoVar, SpliceAI, MaveDB and "
+        "LitVar. Leave this on normally. Turn it off when the network is unavailable; "
+        "the tool then runs on local data and manual entry only.",
+    ),
     "ui.data_status": ("データの状態", "Data status"),
     "ui.step.mane": ("MANE（遺伝子・転写産物）", "MANE (gene / transcript)"),
     "ui.step.cds": ("MANE CDS（HGVS 変換）", "MANE CDS (HGVS conversion)"),
@@ -970,7 +986,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "Normally retrieved from gnomAD automatically. Enter values here if the lookup "
         "fails or to include the values printed on the laboratory report.",
     ),
-    "ui.gnomad_online": ("gnomAD をオンラインで照会", "Query gnomAD online"),
+    "ui.gnomad_online": ("外部データベースに照会する", "Query external databases"),
     "ui.gnomad_online_help": (
         "変異のゲノム座標だけを gnomAD の公開 API に送り、アレル頻度とホモ接合体数を"
         "取得します。患者情報は送りません。",
@@ -1000,8 +1016,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
                                  "Run `python scripts/03_calibrate_acmg.py` to derive them."),
     "ui.thr.published": ("論文の公表値（Supplementary Table 13）",
                          "Published values (Supplementary Table 13)"),
-    "ui.thr.published_help": ("著者から提供された判定基準をそのまま使用しています。",
-                              "Calibration thresholds provided by the authors."),
+    "ui.thr.published_help": ("設定は不要です。著者から提供された判定基準をそのまま使用しています。",
+                              "No setup needed. Calibration thresholds provided by the authors are used as is."),
     "ui.thr.local": (
         "当方で算出した判定基準（病的 {n_p} / 良性 {n_b} 件）",
         "Locally derived thresholds ({n_p} pathogenic / {n_b} benign)",
