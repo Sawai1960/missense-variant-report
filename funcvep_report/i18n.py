@@ -444,7 +444,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'This suggests tolerance at the residue but is not direct '
         'evidence, as the substituted amino acid differs',
     ),
-    "row.clingen": ("ClinGen の評価（遺伝子と疾患）", "ClinGen gene-disease validity"),
+    "row.clingen": ("ClinGen の評価（遺伝子単位）", "ClinGen gene-disease validity (gene level)"),
+    "clingen.match": ("　◆ この変異の ClinVar 表現型と一致", "  ◆ matches the ClinVar phenotype of this variant"),
     "clingen.item": ("{disease}（{moi}、{cls}、{date}）", "{disease} ({moi}, {cls}, {date})"),
     "clingen.none": (
         '未登録（ClinGen が評価した遺伝子と疾患の組み合わせに含まれていません）',
@@ -452,12 +453,16 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "note.clingen": (
         'ClinGen の専門家パネルによる、遺伝子と疾患の関係の確立度です（一覧を {retrieved} '
-        'に取得）。Definitive / Strong / Moderate / Limited / Disputed / '
+        'に取得）。遺伝子単位の評価であり、この変異がどの疾患を起こすかを示すものでは'
+        'ありません。この変異の疾患は ClinVar の表現型欄を参照してください。'
+        'Definitive / Strong / Moderate / Limited / Disputed / '
         'Refuted の順に弱くなります。遺伝形式は pLI の読み方、BS2（ホモ接合体の扱い）、PM2 '
         'の重みづけの前提になります。遺伝形式の略号: AD 顕性遺伝（優性遺伝）、AR 潜性遺伝'
         '（劣性遺伝）、XL X 連鎖、SD 半顕性（semidominant）、MT ミトコンドリア',
         'Strength of the gene-disease relationship as curated by '
-        'ClinGen expert panels (list retrieved {retrieved}), from '
+        'ClinGen expert panels (list retrieved {retrieved}). This is a gene-level '
+        'assessment and does not indicate which disease this variant causes; see the '
+        'ClinVar phenotype field for that. Classifications run from '
         'Definitive down through Strong, Moderate, Limited, Disputed '
         'and Refuted. The mode of inheritance frames pLI, BS2 and PM2. Abbreviations: '
         'AD autosomal dominant, AR autosomal recessive, XL X-linked, SD semidominant, '

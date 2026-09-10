@@ -269,15 +269,47 @@ def _gnomad_rows(g: GnomadResult | None, retrieved: str) -> list[Row]:
     return rows
 
 
-def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str) -> list[Row]:
-    """ClinGen の遺伝子と疾患の関係。一覧そのものが無ければ何も出さない。"""
+def _norm_disease(s: str) -> str:
+    s = re.sub(r"^obsolete\s+", "", (s or "").strip(), flags=re.I)
+    return re.sub(r"[^a-z0-9]", "", s.lower())
+
+
+def matches_phenotype(disease: str, phenotypes: list[str]) -> bool:
+    """ClinGen の疾患名が、この変異の ClinVar 表現型のどれかと一致するか。
+
+    表記ゆれ（大文字小文字、記号、"obsolete" の接頭辞）を除いたうえで、
+    どちらかがもう一方を含めば一致とみなす。短すぎる語の偶然の一致は除く。
+    """
+    d = _norm_disease(disease)
+    if len(d) < 5:
+        return False
+    for ph in phenotypes:
+        p = _norm_disease(ph)
+        if len(p) < 5:
+            continue
+        if d in p or p in d:
+            return True
+    return False
+
+
+def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str,
+                  phenotypes: list[str] | None = None) -> list[Row]:
+    """ClinGen の遺伝子と疾患の関係（遺伝子単位）。一覧そのものが無ければ何も出さない。
+
+    この変異の ClinVar 表現型と一致する疾患は先頭に置いて印を付ける。
+    """
     if gene_validity is None:
         return []
     if not gene_validity:
         return [Row(t("row.clingen"), t("clingen.none"), t("note.clingen_none"))]
     lang = get_lang()
-    items = [t("clingen.item", disease=g.disease, moi=g.moi,
-               cls=g.classification, date=g.date) for g in gene_validity]
+    phenotypes = phenotypes or []
+    matched = [g for g in gene_validity if matches_phenotype(g.disease, phenotypes)]
+    others = [g for g in gene_validity if g not in matched]
+    items = [t("clingen.item", disease=g.disease, moi=g.moi, cls=g.classification, date=g.date)
+             + t("clingen.match") for g in matched]
+    items += [t("clingen.item", disease=g.disease, moi=g.moi, cls=g.classification, date=g.date)
+              for g in others]
     sep = "；" if lang == "ja" else "; "
     return [Row(t("row.clingen"), sep.join(items), t("note.clingen", retrieved=retrieved))]
 
@@ -449,7 +481,11 @@ def build(res: Resolution, thresholds: dict | None,
         ]
     else:
         rep.gene_rows = [Row(t("row.gene"), gene_value)]
-    rep.gene_rows += _clingen_rows(gene_validity, rep.created)
+    phenotypes: list[str] = []
+    for rv in res.variants:
+        raw = (rv.evidence.clinvar or {}).get("phenotypes") or ""
+        phenotypes += [p.strip() for p in str(raw).split("|") if p.strip()]
+    rep.gene_rows += _clingen_rows(gene_validity, rep.created, phenotypes)
 
     # --- 集団頻度（手入力）。gnomAD の自動取得は変異ごとに載せる ---
     if gnomad_af is not None:
