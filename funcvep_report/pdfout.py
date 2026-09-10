@@ -208,6 +208,67 @@ def _rows(doc: _Doc, rows: list[Row], label_w: float = 42.0) -> None:
         doc.set_y(max(after_label, after_value) + 1.2)
 
 
+# まとめの箱の色。背景（薄い色）と要約の文字色。病原性の判定ではなく、
+# 予測ツールの判定が揃っているかを示す色なので、文言はそのまま残す
+_SUMMARY_COLORS = {
+    "damaging": ((253, 236, 234), (179, 38, 30)),
+    "neutral": ((233, 246, 236), (30, 107, 52)),
+    "mixed": ((255, 244, 222), (160, 90, 0)),
+    "none": ((240, 240, 240), (90, 90, 90)),
+}
+
+
+def _summary_box(doc: _Doc, rows: list[Row], kind: str, label_w: float = 42.0) -> None:
+    """予測ツールの判定のまとめを、色付きの箱で目立たせて描く。
+
+    高さは中身次第で決まるので、一度描いて高さを測り、背景を描いてから描き直す。
+    箱の途中で改ページしないよう、余白が足りなければ先に改ページする。
+    """
+    bg, fg = _SUMMARY_COLORS.get(kind, _SUMMARY_COLORS["none"])
+    avail = doc.w - doc.l_margin - doc.r_margin
+    pad = 3.0
+
+    def draw(measure_only: bool) -> float:
+        y0 = doc.get_y()
+        doc.set_y(y0 + pad)
+        for r in rows:
+            is_summary = r.label == t("row.summary")
+            top = doc.get_y()
+            doc.set_x(doc.l_margin + pad)
+            doc.set_font("jp", size=8.5)
+            doc.set_text_color(*MUTED)
+            doc.mc(label_w - pad, 5, r.label)
+            after_label = doc.get_y()
+            doc.set_xy(doc.l_margin + label_w, top)
+            if is_summary:
+                doc.set_font("jp", "B", size=11)
+                doc.set_text_color(*fg)
+            else:
+                doc.set_font("jp", size=9.5)
+                doc.set_text_color(*INK)
+            doc.mc(avail - label_w - pad, 5.5 if is_summary else 5, r.value)
+            doc.set_y(max(after_label, doc.get_y()) + 1.2)
+        return doc.get_y() + pad - y0
+
+    # 高さを測る（描いた内容は捨てる）
+    start_page = doc.page
+    y_start = doc.get_y()
+    with doc._disable_writing():
+        height = draw(True)
+    if doc.page != start_page:
+        # 測定中に改ページが起きた: 箱ごと次のページへ
+        doc.page = start_page
+        doc.set_y(y_start)
+    if y_start + height > doc.h - doc.b_margin:
+        doc.add_page()
+        y_start = doc.get_y()
+    doc.set_fill_color(*bg)
+    doc.rect(doc.l_margin, y_start, avail, height, style="F")
+    doc.set_y(y_start)
+    draw(False)
+    doc.ln(1.5)
+
+
 def _para(doc: _Doc, text: str, size: float = 8.5,
           color: tuple[int, int, int] = MUTED, wrap: str | None = None) -> None:
     doc.set_font("jp", size=size)
@@ -306,7 +367,7 @@ def _render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None) -> 
             _rows(doc, vr.mave_rows)
 
         _h2(doc, t("pdf.concordance"))
-        _rows(doc, vr.concordance_rows)
+        _summary_box(doc, vr.concordance_rows, vr.concordance_kind)
 
         _h2(doc, t("pdf.clinvar"))
         _rows(doc, vr.clinvar_rows)

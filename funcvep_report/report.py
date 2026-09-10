@@ -106,6 +106,8 @@ class VariantReport:
     clinvar_rows: list[Row] = field(default_factory=list)
     concordance: str = ""
     concordance_rows: list[Row] = field(default_factory=list)
+    # damaging / neutral / mixed / none。まとめの箱の色分けに使う
+    concordance_kind: str = "none"
     population_rows: list[Row] = field(default_factory=list)
     gnomad: GnomadResult | None = None
     japan: JapanResult | None = None
@@ -663,6 +665,8 @@ def build(res: Resolution, thresholds: dict | None,
         decided = {k: v for k, v in calls.items() if v is not None}
         n_dmg = sum(1 for v in decided.values() if v)
         n_tot = len(decided)
+        vr.concordance_kind = ("none" if n_tot == 0 else "damaging" if n_dmg == n_tot
+                               else "neutral" if n_dmg == 0 else "mixed")
         if n_tot == 0:
             vr.concordance = t("conc.none")
         elif n_tot == 1:

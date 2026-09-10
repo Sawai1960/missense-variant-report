@@ -340,8 +340,15 @@ for i, vr in enumerate(rep.variants, 1):
                 st.caption(r.note)
 
     st.subheader(t("ui.concordance"))
+    # 判定が揃っているかを色で示す（病原性の判定ではないので文言はそのまま）
+    _box = {"damaging": st.error, "neutral": st.success, "mixed": st.warning}.get(vr.concordance_kind, st.info)
+    _lines = []
     for r in vr.concordance_rows:
-        st.write(f"**{r.label}** {r.value}")
+        if r.label == t("row.summary"):
+            _lines.append(f"### {r.value}")
+        else:
+            _lines.append(f"**{r.label}** {r.value}")
+    _box("\n\n".join(_lines))
 
     st.subheader(t("ui.clinvar"))
     for r in vr.clinvar_rows:
