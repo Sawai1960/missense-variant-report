@@ -58,6 +58,13 @@ class _Doc(FPDF):
         self.set_auto_page_break(auto=True, margin=18)
         self.add_font("jp", "", str(fonts["regular"]))
         self.add_font("jp", "B", str(fonts["bold"]))
+        # 日本語フォントに無いラテン文字（トルコ語の ı ş など、著者名に出る）は
+        # Windows 同梱の Arial で補う。無ければ補わない
+        latin = {"": Path("C:/Windows/Fonts/arial.ttf"), "B": Path("C:/Windows/Fonts/arialbd.ttf")}
+        if all(p.exists() for p in latin.values()):
+            for style, path in latin.items():
+                self.add_font("latin", style, str(path))
+            self.set_fallback_fonts(["latin"])
         self.set_margins(16, 16, 16)
 
     def mc(self, w: float, h: float, text: str, align: str = "L",

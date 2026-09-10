@@ -759,11 +759,12 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "pdf.acknowledgement": ("謝辞", "Acknowledgements"),
     "ui.acknowledgement": ("謝辞", "Acknowledgements"),
     "ack.text": (
-        "本レポートの FuncVEP に関する部分は、著者である Kerem Çil、Barış Kayaalp、"
+        "本レポートの FuncVEP に関する部分は、参考文献 1) 2) の著者である Kerem Çil、Barış Kayaalp、"
         "Tayfun Özçelik の各氏（Bilkent 大学）から、PP3/BP4 の判定基準の公表値の提供と、"
         "予測表に未収録の変異についての説明をいただいて完成しました。深く感謝申し上げます。",
         "The FuncVEP components of this report were completed with the generous help of "
-        "the authors, Kerem Çil, Barış Kayaalp and Tayfun Özçelik (Bilkent University), "
+        "the authors of references 1 and 2, Kerem Çil, Barış Kayaalp and Tayfun Özçelik "
+        "(Bilkent University), "
         "who provided the published PP3/BP4 calibration values and clarified variants "
         "absent from the released table. We are grateful for their support.",
     ),
