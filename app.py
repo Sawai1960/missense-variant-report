@@ -120,12 +120,14 @@ def _clear_query() -> None:
         del st.query_params["q"]
 
 
-col_query, col_clear = st.columns([6, 1], vertical_alignment="bottom")
+# 「評価する」を押すと入力欄の内容が確定して再実行される。エンターキーでも同じ
+col_query, col_run, col_clear = st.columns([6, 1, 1], vertical_alignment="bottom")
 query = col_query.text_input(
     t("ui.query"),
     key="query_input",
     placeholder=t("ui.query_placeholder"),
 )
+col_run.button(t("ui.run"), type="primary", use_container_width=True)
 col_clear.button(t("ui.clear"), on_click=_clear_query, use_container_width=True)
 if query and st.query_params.get("q") != query:
     st.query_params["q"] = query
