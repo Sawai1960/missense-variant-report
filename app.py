@@ -400,8 +400,8 @@ with st.expander(t("ui.thresholds")):
     st.text(rep.threshold_note)
 
 st.subheader(t("ui.disclaimer"))
-for d in disclaimer():
-    st.markdown("- " + d)
+# 報告書全体に掛かる注意なので枠で囲んで目立たせる
+st.warning("・" + "\n\n・".join(disclaimer()))
 
 with st.expander(t("ui.acknowledgement")):
     st.write(acknowledgement())

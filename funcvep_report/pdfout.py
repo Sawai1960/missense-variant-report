@@ -384,9 +384,10 @@ def _render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None) -> 
         _h2(doc, t("pdf.thresholds"))
         _para(doc, rep.threshold_note)
 
-    _h2(doc, t("pdf.disclaimer"))
+    # 報告書全体に掛かる注意なので、変異の見出しと同じ帯にして本文も本文色で大きめに
+    _band(doc, t("pdf.disclaimer"))
     for d in disclaimer():
-        _para(doc, bullet + d)
+        _para(doc, bullet + d, size=9.5, color=INK)
 
     _h2(doc, t("pdf.acknowledgement"))
     _para(doc, acknowledgement())
