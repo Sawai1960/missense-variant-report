@@ -1,4 +1,4 @@
-# Missense Variant Report — a local FuncVEP/ClinVEP lookup tool
+# Missense Variant Evaluation Report — a local FuncVEP/ClinVEP lookup tool
 
 *English overview for the FuncVEP authors. The interface and the PDF reports
 can be shown in either Japanese or English (sidebar switch, or `?lang=en`);

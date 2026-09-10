@@ -1,4 +1,4 @@
-"""ミスセンス変異 統合レポート — Streamlit 画面。
+"""遺伝子ミスセンス変異 統合評価レポート — Streamlit 画面。
 
     streamlit run app.py
 

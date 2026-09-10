@@ -6,7 +6,7 @@
 
     from .i18n import t, use_lang
     with use_lang("en"):
-        t("pdf.title")            # -> "Missense Variant Report"
+        t("pdf.title")            # -> "Missense Variant Evaluation Report"
     t("lk.multi_nuc", n=2)        # 書式は str.format と同じ
 
 文体の方針（2026-09-08）: 読み手は遺伝の専門でない医師も含む。医学用語は使うが、
@@ -684,7 +684,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
 
     # ------------------------------------------------------------ pdfout.py
-    "pdf.title": ("ミスセンス変異 統合レポート", "Missense Variant Report"),
+    "pdf.title": ("遺伝子ミスセンス変異 統合評価レポート", "Missense Variant Evaluation Report"),
     "pdf.query": ("入力: {query}", "Query: {query}"),
     "pdf.created": ("作成: {created}", "Created: {created}"),
     "pdf.unresolved": ("解決できませんでした", "Could not resolve"),
@@ -941,7 +941,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
                            "The codon is truncated at the end of the sequence."),
 
     # --------------------------------------------------------------- app.py
-    "ui.page_title": ("ミスセンス変異 統合レポート", "Missense Variant Report"),
+    "ui.page_title": ("遺伝子ミスセンス変異 統合評価レポート", "Missense Variant Evaluation Report"),
     "ui.language": ("言語 / Language", "言語 / Language"),
     "ui.language_help": ("画面と PDF の言語。切り替えるとすぐに反映されます。",
                          "Language of the screen and the PDF. Takes effect immediately."),
@@ -1024,7 +1024,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "ui.thr.local_help": ("論文の公表値ではありません。判定は論文と一致しません。",
                           "Not the published values; calls will differ from the paper."),
-    "ui.title": ("ミスセンス変異 統合レポート", "Missense Variant Report"),
+    "ui.title": ("遺伝子ミスセンス変異 統合評価レポート", "Missense Variant Evaluation Report"),
     "ui.caption": (
         "FuncVEP（Kayaalp ら, Nature Genetics 2026）の予測を軸に、AlphaMissense・"
         "REVEL・ClinVar・gnomAD の情報をまとめます。予測はタンパク質の働きへの"
