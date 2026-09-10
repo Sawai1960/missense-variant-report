@@ -77,7 +77,14 @@ class Config:
         self.primary_model: str = raw.get("primary_model", "FuncVEP_CTI")
         self.gnomad_af_mode: str = raw.get("gnomad_af_mode", "manual")
         self.pdf_font = Path(raw.get("pdf_font", ""))
+        self._organization = raw.get("organization") or {}
         self._acmg = raw.get("acmg", {})
+
+    def organization(self, lang: str = "ja") -> str:
+        """発行元の名称。設定が無ければ空文字。"""
+        if isinstance(self._organization, str):
+            return self._organization
+        return str(self._organization.get(lang) or self._organization.get("ja") or "")
 
     @property
     def prior_pathogenic(self) -> float:

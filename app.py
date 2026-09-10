@@ -20,7 +20,7 @@ from funcvep_report import clingen, litvar, mavedb, spliceai
 from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
 from funcvep_report.pdfout import render_stream
-from funcvep_report.report import disclaimer, funcvep_intro, missing_label, references
+from funcvep_report.report import acknowledgement, disclaimer, funcvep_intro, missing_label, references
 from funcvep_report.variant import AA1_TO_3
 
 # 言語は他のどの文字列より先に決める。set_page_config はスクリプト先頭でしか
@@ -103,6 +103,8 @@ with st.sidebar:
             st.caption(t("ui.thr.local_help"))
 
 # ------------------------------------------------------------------ 本体
+if cfg.organization(st.session_state["lang"]):
+    st.caption(cfg.organization(st.session_state["lang"]))
 st.title(t("ui.title"))
 st.caption(t("ui.caption"))
 
@@ -220,6 +222,7 @@ rep = build_report(
     gene_validity=gene_validity,
     splice_results=splice_results,
     mave_result=mave_result,
+    organization=cfg.organization(st.session_state["lang"]),
 )
 
 if rep.error:
@@ -362,6 +365,9 @@ with st.expander(t("ui.thresholds")):
 st.subheader(t("ui.disclaimer"))
 for d in disclaimer():
     st.markdown("- " + d)
+
+with st.expander(t("ui.acknowledgement")):
+    st.write(acknowledgement())
 
 with st.expander(t("ui.references")):
     for n, ref in enumerate(references(), 1):

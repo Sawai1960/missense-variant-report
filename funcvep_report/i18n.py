@@ -756,6 +756,17 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.target": ("評価対象の変異", "Variant under evaluation"),
     "target.value": ("{gene} {hgvs}　{genomic}（GRCh38）", "{gene} {hgvs}  {genomic} (GRCh38)"),
     "target.note": ("転写産物 {refseq}　{enst}", "Transcript {refseq}  {enst}"),
+    "pdf.acknowledgement": ("謝辞", "Acknowledgements"),
+    "ui.acknowledgement": ("謝辞", "Acknowledgements"),
+    "ack.text": (
+        "本レポートの FuncVEP に関する部分は、著者である Kerem Çil、Barış Kayaalp、"
+        "Tayfun Özçelik の各氏（Bilkent 大学）から、PP3/BP4 の判定基準の公表値の提供と、"
+        "予測表に未収録の変異についての説明をいただいて完成しました。深く感謝申し上げます。",
+        "The FuncVEP components of this report were completed with the generous help of "
+        "the authors, Kerem Çil, Barış Kayaalp and Tayfun Özçelik (Bilkent University), "
+        "who provided the published PP3/BP4 calibration values and clarified variants "
+        "absent from the released table. We are grateful for their support.",
+    ),
     "pdf.variant": ("変異", "Variant"),
     "pdf.variant_n": ("変異 {i} / {n}", "Variant {i} / {n}"),
     "row.genomic": ("ゲノム座標", "Genomic coordinate"),

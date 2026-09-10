@@ -63,6 +63,10 @@ def model_note(model: str) -> str:
     return t(f"model_note.{model}")
 
 
+def acknowledgement() -> str:
+    return t("ack.text")
+
+
 def disclaimer() -> list[str]:
     return [t(f"disclaimer.{i}") for i in (1, 2, 3, 4)]
 
@@ -116,6 +120,7 @@ class Report:
     gene: str | None
     ensg: str | None
     lang: str = "ja"
+    organization: str = ""
     variants: list[VariantReport] = field(default_factory=list)
     gene_rows: list[Row] = field(default_factory=list)
     target_rows: list[Row] = field(default_factory=list)
@@ -398,7 +403,8 @@ def build(res: Resolution, thresholds: dict | None,
           japan_results: dict[str, JapanResult] | None = None,
           gene_validity: list[GeneDisease] | None = None,
           splice_results: dict[str, SpliceResult] | None = None,
-          mave_result: MaveResult | None = None) -> Report:
+          mave_result: MaveResult | None = None,
+          organization: str = "") -> Report:
     wide = t("sep.wide")
     seen_terms: set[str] = set()
     rep = Report(
@@ -407,6 +413,7 @@ def build(res: Resolution, thresholds: dict | None,
         gene=res.gene,
         ensg=res.ensg,
         lang=get_lang(),
+        organization=organization,
         warnings=list(res.warnings),
         error=res.error,
         threshold_note=threshold_note,

@@ -13,7 +13,7 @@ from pathlib import Path
 from fpdf import FPDF
 
 from .i18n import t, use_lang
-from .report import Report, Row, disclaimer, funcvep_intro, references
+from .report import acknowledgement, Report, Row, disclaimer, funcvep_intro, references
 
 INK = (26, 26, 26)
 MUTED = (110, 110, 110)
@@ -46,9 +46,11 @@ def prepare_fonts(src: Path, cache_dir: Path) -> dict[str, Path]:
 
 
 class _Doc(FPDF):
-    def __init__(self, fonts: dict[str, Path], title: str, wrap: str = "CHAR"):
+    def __init__(self, fonts: dict[str, Path], title: str, wrap: str = "CHAR",
+                 organization: str = ""):
         super().__init__(orientation="P", unit="mm", format="A4")
         self.title_text = title
+        self.organization = organization
         # 日本語は単語間に空白が無いので、fpdf 既定の「空白で折り返す」だと
         # 途中の半角空白（数字や英単語の前後）で不自然に改行される。文字単位で
         # 折り返す。英語は単語単位のまま。両端揃えは日本語で間延びするので使わない。
@@ -66,8 +68,9 @@ class _Doc(FPDF):
         self.set_y(-14)
         self.set_font("jp", size=7.5)
         self.set_text_color(*MUTED)
-        self.cell(0, 5, f"{self.title_text}{t('sep.wide')}—{t('sep.wide')}{self.page_no()} / {{nb}}",
-                  align="C")
+        wide = t("sep.wide")
+        left = f"{self.organization}{wide}{self.title_text}" if self.organization else self.title_text
+        self.cell(0, 5, f"{left}{wide}—{wide}{self.page_no()} / {{nb}}", align="C")
 
 
 def _h1(doc: _Doc, text: str) -> None:
@@ -156,10 +159,17 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     bullet = "・" if rep.lang == "ja" else "- "
     wide = t("sep.wide")
 
-    doc = _Doc(fonts, t("pdf.title"), wrap="CHAR" if rep.lang == "ja" else "WORD")
+    doc = _Doc(fonts, t("pdf.title"), wrap="CHAR" if rep.lang == "ja" else "WORD",
+               organization=rep.organization)
     doc.alias_nb_pages()
     doc.add_page()
 
+    if rep.organization:
+        # 発行元は表題の上に小さく置く
+        doc.set_font("jp", size=9)
+        doc.set_text_color(*MUTED)
+        doc.cell(0, 5, rep.organization, new_x="LMARGIN", new_y="NEXT")
+        doc.ln(0.5)
     _h1(doc, t("pdf.title"))
     # 評価対象の変異は見出しに準じて大きく黒で。作成日時は控えめに
     doc.set_font("jp", "B", size=13)
@@ -231,6 +241,9 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     _h2(doc, t("pdf.disclaimer"))
     for d in disclaimer():
         _para(doc, bullet + d)
+
+    _h2(doc, t("pdf.acknowledgement"))
+    _para(doc, acknowledgement())
 
     _h2(doc, t("pdf.references"))
     for n, ref in enumerate(references(), 1):

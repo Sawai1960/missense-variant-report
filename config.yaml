@@ -39,5 +39,10 @@ acmg:
   # 1 遺伝子あたりの偏りを避けるため、遺伝子ごとの上限件数
   max_variants_per_gene: 50
 
+# 発行元。表紙の表題の上と各ページのフッターに出す。他施設で使うときはここを書き換える
+organization:
+  ja: "兵庫医科大学病院 遺伝子医療部"
+  en: "Department of Clinical Genetics, Hyogo Medical University Hospital"
+
 # レポート PDF に使う日本語フォント（Windows 同梱）
 pdf_font: "C:/Windows/Fonts/NotoSansJP-VF.ttf"
