@@ -456,10 +456,11 @@ def residue_rows(same_residue: list[dict], genomic, aa_alt1: str) -> list[Row]:
 
     rows: list[Row] = []
     plp_same = [r for r in same_change if _is_plp(r.get("significance"))]
+    intro = t("note.residue_intro")
     rows.append(Row(
         t("row.same_change"),
         t("sep.list").join(item(r) for r in order(same_change)) or t("residue.none"),
-        t("note.ps1") if plp_same else "",
+        intro + ("。" if get_lang() == "ja" else ". ") + t("note.ps1") if plp_same else intro,
     ))
     plp_other = [r for r in other_change if _is_plp(r.get("significance"))]
     blb_other = [r for r in other_change if _is_blb(r.get("significance"))]
