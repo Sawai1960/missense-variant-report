@@ -644,14 +644,14 @@ _STRINGS: dict[str, tuple[str, str]] = {
                    "{d} of {n} predictors damaging (discordant)"),
 
     "disclaimer.1": (
-        'FuncVEP が予測するのはタンパク質の働きへの影響（damaging / '
-        'neutral）であり、病気を起こすかどうか（臨床的病原性）そのものではありません。両者を混同しないでください。',
+        'FuncVEP が予測するのはタンパク質の働きへの影響（damaging / neutral）であり、病気を起こすかどう'
+        'か（臨床的病原性）そのものではありません。両者を混同しないようにご注意ください。',
         'FuncVEP predicts functional impact (damaging / neutral), not'
         ' clinical pathogenicity; the two must not be conflated.',
     ),
     "disclaimer.2": (
         'ACMG/AMP 基準では、コンピュータ予測による証拠 PP3/BP4 として扱います。実験で機能を確かめた証拠 '
-        'PS3/BS3 にはなりません。',
+        'PS3/BS3 ではありません。',
         'Under ACMG/AMP, these scores constitute computational '
         'evidence (PP3/BP4), not functional assay evidence (PS3/BS3).',
     ),
@@ -661,7 +661,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'nonsense variants are not assessed.',
     ),
     "disclaimer.4": (
-        '本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはなりません。家系内での分離、症状との一致、機能実験、専'
+        '本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはいけません。家系内での分離、症状との一致、機能実験、専'
         '門家の検討と併せて評価してください。',
         'This report is an aid to variant interpretation and must not'
         ' serve as the sole basis for clinical decisions. It should '
