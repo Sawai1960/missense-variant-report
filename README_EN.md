@@ -78,6 +78,10 @@ python scripts/07_write_versions.py        # record reference-data versions
 streamlit run app.py
 ```
 
+On Windows, double-clicking `start_report_tool.bat` does the last step and opens
+a browser tab (`レポートツールを起動.bat` is the same launcher with a Japanese
+name for in-house users).
+
 `config.yaml` sets the data directory (`data_root`) and the PDF font.
 `scripts/04_selftest.py` runs a set of known variants end to end.
 
