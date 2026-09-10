@@ -541,7 +541,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         '異常（機能が損なわれます）',
         'Abnormal (function lost)',
     ),
-    "mave.class.uncalibrated": ("区分なし（生の値）", "Uncalibrated (raw score)"),
+    "mave.class.uncalibrated": ("正常／異常の判定基準が未登録（数値のみ）",
+                                "No functional classes registered (score only)"),
     "note.mave": (
         'MaveDB {urn}（{citation}、測定 {n} 変異）。大規模機能実験の実測値で、ACMG の '
         'PS3/BS3（機能実験による証拠）の材料になります。スコアの尺度はデータセットごとに異なります',
