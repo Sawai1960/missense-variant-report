@@ -109,11 +109,24 @@ st.title(t("ui.title"))
 st.caption(t("ui.caption"))
 
 # ?q=BRCA1+R1699W で直接開けるようにしておく。記録に URL を残すときに使える。
-query = st.text_input(
+if "query_input" not in st.session_state:
+    st.session_state["query_input"] = st.query_params.get("q", "")
+
+
+def _clear_query() -> None:
+    """次の変異を入力する前に、前の入力を消す。書き換え忘れの事故を防ぐ。"""
+    st.session_state["query_input"] = ""
+    if "q" in st.query_params:
+        del st.query_params["q"]
+
+
+col_query, col_clear = st.columns([6, 1], vertical_alignment="bottom")
+query = col_query.text_input(
     t("ui.query"),
-    value=st.query_params.get("q", ""),
+    key="query_input",
     placeholder=t("ui.query_placeholder"),
 )
+col_clear.button(t("ui.clear"), on_click=_clear_query, use_container_width=True)
 if query and st.query_params.get("q") != query:
     st.query_params["q"] = query
 

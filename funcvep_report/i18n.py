@@ -1149,6 +1149,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "functional impact, not clinical pathogenicity.",
     ),
     "ui.query": ("変異を入力", "Enter a variant"),
+    "ui.clear": ("クリア", "Clear"),
     "ui.query_placeholder": (
         "BRCA1 p.Arg1699Trp　/　BRCA1 R1699W　/　NM_007294.4:c.5095C>T",
         "BRCA1 p.Arg1699Trp  /  BRCA1 R1699W  /  NM_007294.4:c.5095C>T",
