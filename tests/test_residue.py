@@ -73,9 +73,6 @@ class TestResidueRows(unittest.TestCase):
         self.assertEqual(out[1].note, "")
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class TestClinGenPhenotypeMatch(unittest.TestCase):
     def test_primary_phenotype_skips_generic_entries(self):
@@ -94,3 +91,7 @@ class TestClinGenPhenotypeMatch(unittest.TestCase):
         self.assertTrue(m("beta-thalassemia HBB/LCRB", ["beta Thalassemia"], "HBB"))
         self.assertFalse(m("dominant beta-thalassemia", ["beta Thalassemia"], "HBB"))
         self.assertFalse(m("hemoglobin M disease", ["HEMOGLOBIN S"], "HBB"))
+
+
+if __name__ == "__main__":
+    unittest.main()
