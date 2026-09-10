@@ -65,6 +65,11 @@ class _Doc(FPDF):
         self.multi_cell(w, h, text, align=align, wrapmode=wrap or self.wrap)
 
     def footer(self) -> None:
+        # 本文と見分けられるよう、フッターの上に細い横線を引く
+        self.set_y(-16)
+        self.set_draw_color(*RULE)
+        self.set_line_width(0.25)
+        self.line(self.l_margin, self.get_y(), self.w - self.r_margin, self.get_y())
         self.set_y(-14)
         self.set_font("jp", size=7.5)
         self.set_text_color(*MUTED)
