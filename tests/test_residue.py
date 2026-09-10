@@ -75,3 +75,22 @@ class TestResidueRows(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestClinGenPhenotypeMatch(unittest.TestCase):
+    def test_primary_phenotype_skips_generic_entries(self):
+        from funcvep_report.report import primary_phenotype
+        self.assertEqual(primary_phenotype("not provided|14 conditions|FGFR3-related disorder|Achondroplasia"),
+                         "Achondroplasia")
+        self.assertEqual(primary_phenotype("alpha Thalassemia;Heinz body anemia|Hb SS disease"), "Hb SS disease")
+        self.assertIsNone(primary_phenotype("not provided|See cases"))
+
+    def test_matches_only_specific_disease(self):
+        from funcvep_report.report import matches_phenotype as m
+        self.assertTrue(m("achondroplasia", ["Achondroplasia"]))
+        self.assertFalse(m("hypochondroplasia", ["Achondroplasia"]))
+        self.assertFalse(m("thanatophoric dysplasia", ["Achondroplasia"]))
+        self.assertTrue(m("Charcot-Marie-Tooth disease type 2", ["Charcot-Marie-Tooth disease type 2E"]))
+        self.assertTrue(m("beta-thalassemia HBB/LCRB", ["beta Thalassemia"], "HBB"))
+        self.assertFalse(m("dominant beta-thalassemia", ["beta Thalassemia"], "HBB"))
+        self.assertFalse(m("hemoglobin M disease", ["HEMOGLOBIN S"], "HBB"))

@@ -269,27 +269,66 @@ def _gnomad_rows(g: GnomadResult | None, retrieved: str) -> list[Row]:
     return rows
 
 
-def _norm_disease(s: str) -> str:
+_DISEASE_STOPWORDS = {"and", "of", "the", "with", "disease", "diseases", "disorder",
+                      "disorders", "syndrome", "related", "type", "form", "familial"}
+
+
+def _disease_tokens(s: str, gene: str | None = None) -> list[str]:
+    """疾患名を照合用の語に分ける。
+
+    大文字小文字と記号を無視し、"obsolete" の接頭辞、遺伝子記号、短い大文字の略号
+    （HBB/LCRB のような座位の注記）、一般語（disease, syndrome など）を除く。
+    """
     s = re.sub(r"^obsolete\s+", "", (s or "").strip(), flags=re.I)
-    return re.sub(r"[^a-z0-9]", "", s.lower())
+    out = []
+    for raw in re.split(r"[^A-Za-z0-9]+", s):
+        if not raw:
+            continue
+        if gene and raw.lower() == gene.lower():
+            continue
+        if raw.isalpha() and raw.isupper() and 3 <= len(raw) <= 5:
+            continue
+        w = raw.lower()
+        if w in _DISEASE_STOPWORDS:
+            continue
+        out.append(w)
+    return out
 
 
-def matches_phenotype(disease: str, phenotypes: list[str]) -> bool:
+def matches_phenotype(disease: str, phenotypes: list[str], gene: str | None = None) -> bool:
     """ClinGen の疾患名が、この変異の ClinVar 表現型のどれかと一致するか。
 
-    表記ゆれ（大文字小文字、記号、"obsolete" の接頭辞）を除いたうえで、
-    どちらかがもう一方を含めば一致とみなす。短すぎる語の偶然の一致は除く。
+    疾患名の語がすべて表現型の語に（前方一致で）含まれるときに一致とみなす。
+    "type 2" と "type 2E" のような枝番の違いは前方一致で吸収する。
     """
-    d = _norm_disease(disease)
-    if len(d) < 5:
+    want = _disease_tokens(disease, gene)
+    if not want:
         return False
     for ph in phenotypes:
-        p = _norm_disease(ph)
-        if len(p) < 5:
-            continue
-        if d in p or p in d:
+        have = _disease_tokens(ph, gene)
+        if all(any(h.startswith(w) for h in have) for w in want):
             return True
     return False
+
+
+_GENERIC_PHENOTYPES = {"not provided", "not specified", "see cases", "inborn genetic diseases", "-"}
+
+
+def primary_phenotype(raw: str | None) -> str | None:
+    """ClinVar の表現型欄の筆頭の疾患名。
+
+    欄には各提出者の疾患名がすべて並び、遺伝子パネル由来の疾患も混じる。総称
+    （not provided、N conditions、○○-related disorder、セミコロン区切りの一覧）を
+    除いた最初のものを、この変異の主な疾患とみなす。
+    """
+    for part in str(raw or "").split("|"):
+        p = part.strip()
+        low = p.lower()
+        if (not p or low in _GENERIC_PHENOTYPES or ";" in p or "-related" in low
+                or re.fullmatch(r"\d+ conditions", low)):
+            continue
+        return p
+    return None
 
 
 def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str,
@@ -304,10 +343,11 @@ def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str,
         return [Row(t("row.clingen"), t("clingen.none"), t("note.clingen_none"))]
     lang = get_lang()
     phenotypes = phenotypes or []
-    matched = [g for g in gene_validity if matches_phenotype(g.disease, phenotypes)]
+    gene = gene_validity[0].gene if gene_validity else None
+    matched = [g for g in gene_validity if matches_phenotype(g.disease, phenotypes, gene)]
     others = [g for g in gene_validity if g not in matched]
     items = [t("clingen.item", disease=g.disease, moi=g.moi, cls=g.classification, date=g.date)
-             + t("clingen.match") for g in matched]
+             + t("clingen.match", pheno=phenotypes[0]) for g in matched]
     items += [t("clingen.item", disease=g.disease, moi=g.moi, cls=g.classification, date=g.date)
               for g in others]
     sep = "；" if lang == "ja" else "; "
@@ -481,10 +521,13 @@ def build(res: Resolution, thresholds: dict | None,
         ]
     else:
         rep.gene_rows = [Row(t("row.gene"), gene_value)]
+    # 照合には ClinVar の筆頭の疾患だけを使う（候補が複数なら最初に見つかったもの）
     phenotypes: list[str] = []
     for rv in res.variants:
-        raw = (rv.evidence.clinvar or {}).get("phenotypes") or ""
-        phenotypes += [p.strip() for p in str(raw).split("|") if p.strip()]
+        top = primary_phenotype((rv.evidence.clinvar or {}).get("phenotypes"))
+        if top:
+            phenotypes = [top]
+            break
     rep.gene_rows += _clingen_rows(gene_validity, rep.created, phenotypes)
 
     # --- 集団頻度（手入力）。gnomAD の自動取得は変異ごとに載せる ---
