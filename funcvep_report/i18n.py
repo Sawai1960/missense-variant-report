@@ -454,11 +454,14 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'ClinGen の専門家パネルによる、遺伝子と疾患の関係の確立度です（一覧を {retrieved} '
         'に取得）。Definitive / Strong / Moderate / Limited / Disputed / '
         'Refuted の順に弱くなります。遺伝形式は pLI の読み方、BS2（ホモ接合体の扱い）、PM2 '
-        'の重みづけの前提になります',
+        'の重みづけの前提になります。遺伝形式の略号: AD 顕性遺伝（優性遺伝）、AR 潜性遺伝'
+        '（劣性遺伝）、XL X 連鎖、SD 半顕性（semidominant）、MT ミトコンドリア',
         'Strength of the gene-disease relationship as curated by '
         'ClinGen expert panels (list retrieved {retrieved}), from '
         'Definitive down through Strong, Moderate, Limited, Disputed '
-        'and Refuted. The mode of inheritance frames pLI, BS2 and PM2',
+        'and Refuted. The mode of inheritance frames pLI, BS2 and PM2. Abbreviations: '
+        'AD autosomal dominant, AR autosomal recessive, XL X-linked, SD semidominant, '
+        'MT mitochondrial',
     ),
     "note.clingen_none": (
         'ClinGen が未評価であることは、疾患との関係が無いことを意味しません。OMIM や文献で確認してください',

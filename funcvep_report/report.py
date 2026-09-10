@@ -16,7 +16,7 @@ from datetime import datetime
 from .acmg import Assignment, assign, binary_cutoff
 from .config import FUNCVEP_MODELS
 from .i18n import get_lang, has, join, t
-from .clingen import GeneDisease, moi_label
+from .clingen import GeneDisease
 from .gnomad import GnomadResult
 from .mavedb import MaveResult
 from .spliceai import SpliceResult
@@ -271,7 +271,7 @@ def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str) -> li
     if not gene_validity:
         return [Row(t("row.clingen"), t("clingen.none"), t("note.clingen_none"))]
     lang = get_lang()
-    items = [t("clingen.item", disease=g.disease, moi=moi_label(g.moi, lang),
+    items = [t("clingen.item", disease=g.disease, moi=g.moi,
                cls=g.classification, date=g.date) for g in gene_validity]
     sep = "；" if lang == "ja" else "; "
     return [Row(t("row.clingen"), sep.join(items), t("note.clingen", retrieved=retrieved))]
