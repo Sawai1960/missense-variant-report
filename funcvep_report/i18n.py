@@ -444,7 +444,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'This suggests tolerance at the residue but is not direct '
         'evidence, as the substituted amino acid differs',
     ),
-    "row.clingen": ("ClinGen の評価（遺伝子単位）", "ClinGen gene-disease validity (gene level)"),
+    "row.clingen": ("ClinGen の評価（遺伝子単位の関連疾患）",
+                    "ClinGen gene-disease validity (gene-level associated diseases)"),
     "clingen.match": ("　◆ ClinVar の主な疾患名（{pheno}）と一致",
                       "  ◆ matches the main ClinVar condition ({pheno})"),
     "clingen.item": ("{disease}（{moi}、{cls}、{date}）", "{disease} ({moi}, {cls}, {date})"),
