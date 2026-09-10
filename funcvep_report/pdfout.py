@@ -165,6 +165,9 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
         _para(doc, rep.error, size=9.5, color=INK)
         return bytes(doc.output())
 
+    _h2(doc, t("pdf.target"))
+    _rows(doc, rep.target_rows)
+
     if rep.warnings:
         _h2(doc, t("pdf.warnings"))
         for w in rep.warnings:
@@ -181,11 +184,7 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
         v = vr.variant
         head = (t("pdf.variant_n", i=i, n=len(rep.variants))
                 if len(rep.variants) > 1 else t("pdf.variant"))
-        _h2(doc, f"{head}{wide}{v.gene} {v.hgvs_p}")
-        _rows(doc, [
-            Row(t("row.genomic"), str(v.genomic), "GRCh38"),
-            Row(t("row.transcript"), f"{v.refseq_nuc}{wide}{v.enst}", ""),
-        ])
+        _h2(doc, f"{head}{wide}{v.gene} {v.hgvs_p3}{wide}{v.genomic}")
 
         _h2(doc, t("pdf.population_gnomad"))
         _rows(doc, vr.population_rows)

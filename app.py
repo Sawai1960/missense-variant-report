@@ -236,6 +236,11 @@ if _num(af_text, float) is None:
     elif any(vr.gnomad is None or vr.gnomad.status == "error" for vr in rep.variants):
         st.info(t("ui.af_prompt_failed"))
 
+st.subheader(t("ui.target"))
+for r in rep.target_rows:
+    st.write(f"**{r.label}** {r.value}")
+    st.caption(r.note)
+
 st.subheader(t("ui.gene"))
 for r in rep.gene_rows:
     st.write(f"**{r.label}** {r.value}")
@@ -251,12 +256,11 @@ if rep.population_rows:
 for i, vr in enumerate(rep.variants, 1):
     v = vr.variant
     st.divider()
-    head = f"{v.gene} {v.hgvs_p}"
+    head = f"{v.gene} {v.hgvs_p3}"
     if len(rep.variants) > 1:
         head += t("ui.candidate", i=i, n=len(rep.variants))
     st.header(head)
-    st.caption(t("ui.transcript_line", genomic=v.genomic,
-                 refseq=v.refseq_nuc, enst=v.enst))
+    st.caption(f"{v.genomic}（GRCh38）" if st.session_state["lang"] == "ja" else f"{v.genomic} (GRCh38)")
 
     st.subheader(t("ui.population_gnomad"))
     for r in vr.population_rows:

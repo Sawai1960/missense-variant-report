@@ -118,6 +118,7 @@ class Report:
     lang: str = "ja"
     variants: list[VariantReport] = field(default_factory=list)
     gene_rows: list[Row] = field(default_factory=list)
+    target_rows: list[Row] = field(default_factory=list)
     population_rows: list[Row] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     error: str | None = None
@@ -412,6 +413,16 @@ def build(res: Resolution, thresholds: dict | None,
     )
     if res.error:
         return rep
+
+    # --- 評価対象の変異（冒頭に置く） ---
+    for i, rv in enumerate(res.variants, 1):
+        label = (t("pdf.variant_n", i=i, n=len(res.variants))
+                 if len(res.variants) > 1 else t("pdf.variant"))
+        rep.target_rows.append(Row(
+            label,
+            t("target.value", gene=rv.gene, hgvs=rv.hgvs_p3, genomic=str(rv.genomic)),
+            t("target.note", refseq=rv.refseq_nuc, enst=rv.enst),
+        ))
 
     # --- 遺伝子レベル ---
     gene_value = t("gene_value", gene=res.gene, ensg=res.ensg)

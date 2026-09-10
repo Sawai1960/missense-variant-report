@@ -110,6 +110,11 @@ class ResolvedVariant:
     def hgvs_p(self) -> str:
         return f"p.{self.aa_ref}{self.position}{self.aa_alt}"
 
+    @property
+    def hgvs_p3(self) -> str:
+        """3 文字表記（p.Pro8Leu）。見出しや ClinVar との照合に使う。"""
+        return f"p.{AA1_TO_3.get(self.aa_ref, self.aa_ref)}{self.position}{AA1_TO_3.get(self.aa_alt, self.aa_alt)}"
+
 
 @dataclass
 class Resolution:
