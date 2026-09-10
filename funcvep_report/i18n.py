@@ -953,11 +953,12 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.online": ("オンライン照会", "Online lookups"),
     "ui.online_help": (
         "gnomAD・TogoVar・SpliceAI・MaveDB・LitVar に変異の座標だけを送って情報を取得します。"
-        "通常はオンのままにしてください。院外ネットワークが使えないときはオフにすると、"
-        "手元のデータと手入力だけで動きます。",
+        "患者の情報は送信しません。通常はオンのままにしてください。"
+        "院外ネットワークが使えないときはオフにすると、手元のデータと手入力だけで動きます。",
         "Sends only the variant coordinates to gnomAD, TogoVar, SpliceAI, MaveDB and "
-        "LitVar. Leave this on normally. Turn it off when the network is unavailable; "
-        "the tool then runs on local data and manual entry only.",
+        "LitVar; no patient information is transmitted. Leave this on normally. Turn it "
+        "off when the network is unavailable; the tool then runs on local data and "
+        "manual entry only.",
     ),
     "ui.data_status": ("データの状態", "Data status"),
     "ui.step.mane": ("MANE（遺伝子・転写産物）", "MANE (gene / transcript)"),
