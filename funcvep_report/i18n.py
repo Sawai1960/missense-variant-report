@@ -432,18 +432,18 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'changes and should be checked',
     ),
     "note.pm5": (
-        '同じ残基の別のミスセンス変異 {n} 件が病的と判定されているため、PM5（病的方向の中等度の根拠）の候補となります',
+        '同じアミノ酸の位置で別のアミノ酸への置換 {n} 件が病的と判定されているため、PM5（病的方向の中等度の根拠）の候補となります',
         '{n} other missense change(s) at this residue are classified '
         'pathogenic, so PM5 (moderate) is a candidate',
     ),
     "note.pm5_benign_too": (
-        '。一方で良性と判定された置換も {n} 件あり、置換後のアミノ酸の性質によって影響が異なる残基です',
+        '。一方で良性と判定された置換も {n} 件あり、置換後のアミノ酸の性質によって影響が異なる位置です',
         '. However, {n} substitution(s) at this residue are '
         'classified benign, so the effect depends on the substituted '
         'amino acid',
     ),
     "note.residue_benign": (
-        '同じ残基の別の置換 {n} 件が良性と判定されています。この残基が置換に寛容である可能性を示しますが、置換後のアミノ酸が'
+        '同じアミノ酸の位置で別のアミノ酸への置換 {n} 件が良性と判定されています。この位置が置換に寛容である可能性を示しますが、置換後のアミノ酸が'
         '異なるため直接の根拠にはなりません',
         '{n} substitution(s) at this residue are classified benign. '
         'This suggests tolerance at the residue but is not direct '
