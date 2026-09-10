@@ -1206,13 +1206,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "括弧・コロン・空白・全角文字の違いは吸収します。c. 表記と p. 表記が併記されていれば "
         "c. 表記を使い、p. 表記と食い違えば注意欄に出します。転写産物の指定が無い c. 表記は "
         "MANE Select に当てはめます。対象はミスセンス変異のみです。",
-        "- **Gene symbol + amino-acid substitution** — `BRCA1 p.Arg1699Trp` / `BRCA1 R1699W` / `TP53:p.R175H`
-"
-        "- **Gene symbol + c. notation** — `SDHB c.574T>C` / `SDHB c.574T>C (p.Cys192Arg)`
-"
-        "- **HGVS transcript notation** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`
-
-"
+        "- **Gene symbol + amino-acid substitution** — `BRCA1 p.Arg1699Trp` / `BRCA1 R1699W` / `TP53:p.R175H`\n"
+        "- **Gene symbol + c. notation** — `SDHB c.574T>C` / `SDHB c.574T>C (p.Cys192Arg)`\n"
+        "- **HGVS transcript notation** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`\n\n"
         "Parentheses, colons, spaces and full-width characters are tolerated. When both c. and "
         "p. notations are given, the c. notation is used and any disagreement is flagged. A c. "
         "notation without a transcript is applied to MANE Select. Missense variants only.",
