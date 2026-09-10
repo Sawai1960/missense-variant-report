@@ -687,7 +687,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         ' SpliceAI entry for splicing.',
     ),
     "disclaimer.4": (
-        '本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としては使用できません。家系内での分離、症状との一致、機能実験'
+        '本レポートは変異解釈の補助資料であり、単独では臨床判断の根拠として使用できません。家系内での分離、症状との一致、機能実験'
         '、専門家の検討と併せて評価してください。',
         'This report is an aid to variant interpretation and must not'
         ' serve as the sole basis for clinical decisions. It should '
