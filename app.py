@@ -117,7 +117,8 @@ query = st.text_input(
 if query and st.query_params.get("q") != query:
     st.query_params["q"] = query
 
-with st.expander(t("ui.formats")):
+# 入力できる形式は、変異が未入力のあいだは開いておき、結果が出たら畳む
+with st.expander(t("ui.formats"), expanded=not query):
     st.markdown(t("ui.formats_body"))
 
 with st.expander(t("ui.population_manual")):
