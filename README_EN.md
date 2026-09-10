@@ -21,10 +21,15 @@ transcript HGVS string), the tool produces a one-page report combining:
 - AlphaMissense, REVEL, ClinVar (with review status), and gnomAD gene
   constraint
 - gnomAD v4 allele frequency and homozygote count, fetched per variant from
-  the public gnomAD GraphQL API; a variant absent from gnomAD is reported as
-  such (a PM2_supporting candidate, subject to a coverage check at that
-  position), and BA1 is flagged above 0.05
-- A concordance summary and interpretation caveats
+  the public gnomAD GraphQL API, with the maximum population frequency; a
+  variant absent from gnomAD is reported as such (a PM2_supporting candidate
+  only when coverage at that position is adequate), and BA1 is shown as a
+  candidate above 0.05
+- PP3/BP4 assigned from one pre-fixed model (FuncVEP-CTI by default; CTE and
+  SP shown for reference), withheld for BP4 when SpliceAI suggests a splicing
+  effect
+- A concordance summary, interpretation caveats, and a closing section that
+  records data versions, the code version and the transcript resolution path
 
 Reports can be saved as PDF for clinical records and genetic counselling.
 A Streamlit UI (`app.py`) is the front end.
@@ -69,6 +74,7 @@ python -m pip install -r requirements.txt
 python scripts/01_download.py        # references, ~5.5 GB
 python scripts/02_build_index.py     # builds the local index, ~1 h
 python scripts/05_fetch_training_sets.py   # optional: training-set membership
+python scripts/07_write_versions.py        # record reference-data versions
 streamlit run app.py
 ```
 
@@ -81,7 +87,7 @@ streamlit run app.py
 |---|---|
 | `app.py` | Streamlit UI (Japanese / English) |
 | `funcvep_report/` | Library: variant parsing, index lookup, ACMG tiers, report assembly, PDF output, string catalogue (`i18n.py`) |
-| `scripts/01–06` | Download references, build the index, optional local calibration (kept for comparison only), self-test, fetch training sets, audit absent scores |
+| `scripts/01–07` | Download references, build the index, optional local calibration (kept for comparison only), self-test, fetch training sets, audit absent scores, record reference-data versions |
 | `data/acmg_thresholds_published.json` | Supplementary Table 13 values as provided by the authors |
 | `docs/設計書.md` | Design document (Japanese): architecture, coordinate handling, calibration comparison, verification log |
 | `docs/funcvep_discrepancies.tsv` | The discrepancy table shared with the authors (2026-09-06) |

@@ -69,7 +69,7 @@ class TestResidueRows(unittest.TestCase):
         with use_lang("en"):
             out = residue_rows(rows, self.this, "R")
         self.assertIn("Conflicting", out[1].value)
-        self.assertIn("(1-star)", out[1].value)
+        self.assertIn("(1-star,", out[1].value)
         self.assertEqual(out[1].note, "")
 
 

@@ -29,10 +29,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .variant import AA1_TO_3, ParseError, apply_cds_substitution
 
 API_ROOT = "https://api.mavedb.org/api/v1"
-_CDNA_SNV = re.compile(r"c\.(\d+)([ACGT])>([ACGT])$")
 USER_AGENT = "funcvep-report/0.1"
 SEARCH_MAX_AGE_DAYS = 30
 
@@ -89,6 +87,8 @@ class MaveHit:
     hgvs_pro: str
     score: float
     functional_class: FunctionalClass | None
+    match: str = "aa"                 # "nt"（塩基が一致）または "aa"（アミノ酸置換のみ一致）
+    nt_accession: str | None = None   # 実験側の転写産物番号（塩基照合のとき）
 
 
 @dataclass
@@ -144,31 +144,20 @@ def single_gene_sets(search_payload: dict, gene: str) -> list[dict]:
     return out
 
 
-def _protein_change_from_nt(hgvs_nt: str | None, cds: str) -> str | None:
-    """c. 表記の 1 塩基置換を、手元の CDS で翻訳して p. 表記にする。
-
-    SGE などのデータセットは hgvs_pro 欄が空で、c. 表記しか持たないことがある。
-    参照塩基が CDS と合わない行（転写産物の版の違いなど）は None。
-    """
-    if not hgvs_nt:
-        return None
-    m = _CDNA_SNV.search(hgvs_nt)
-    if not m:
-        return None
-    try:
-        aa_ref, pos, aa_alt = apply_cds_substitution(cds, int(m.group(1)), m.group(2), m.group(3))
-    except ParseError:
-        return None
-    if aa_ref == aa_alt or aa_alt not in AA1_TO_3 or aa_ref not in AA1_TO_3:
-        return None
-    return f"p.{AA1_TO_3[aa_ref]}{pos}{AA1_TO_3[aa_alt]}"
+_NT_RE = re.compile(r"^(?:(?P<acc>[A-Z]{2}_\d+)(?:\.(?P<ver>\d+))?:)?c\.(?P<pos>\d+)(?P<ref>[ACGT])>(?P<alt>[ACGT])$")
 
 
-def find_in_scores(csv_text: str, hgvs_pro: str, cds: str | None = None) -> float | None:
-    """スコア表から、この置換の行を探す。
+def find_in_scores(csv_text: str, hgvs_pro: str,
+                   cds_change: tuple[int, str, str] | None = None,
+                   refseq_base: str | None = None) -> tuple[float, str, str | None] | None:
+    """スコア表から、この変異の行を探す。
 
-    hgvs_pro が一致する行を優先する。無ければ、cds が与えられている場合に限り
-    hgvs_nt（c. 表記の 1 塩基置換）を翻訳して照合する。
+    返り値は (スコア, 照合の種類, 実験側の転写産物番号)。照合の種類は
+      "nt"  塩基表記（hgvs_nt）が、評価対象の変異の c. 表記と位置・塩基とも一致
+      "aa"  アミノ酸表記（hgvs_pro）が一致（塩基は不明）
+    塩基単位の実験（SGE など）では塩基の違いが結果に影響しうるので、塩基の一致を優先し、
+    塩基表記のある行はアミノ酸だけでは照合しない（レビュー対応 6）。
+    転写産物番号の版だけが違う行は塩基照合の対象にし、別の転写産物なら照合しない。
     """
     rows = list(csv.DictReader(io.StringIO(csv_text)))
 
@@ -178,14 +167,27 @@ def find_in_scores(csv_text: str, hgvs_pro: str, cds: str | None = None) -> floa
         except (TypeError, ValueError):
             return None
 
+    if cds_change:
+        pos, ref, alt = cds_change
+        for r in rows:
+            m = _NT_RE.match((r.get("hgvs_nt") or "").strip())
+            if not m:
+                continue
+            acc = m.group("acc")
+            if acc and refseq_base and acc.split(".")[0] != refseq_base.split(".")[0]:
+                continue
+            if int(m.group("pos")) == pos and m.group("ref") == ref and m.group("alt") == alt:
+                sc = score_of(r)
+                if sc is not None:
+                    return sc, "nt", (r.get("hgvs_nt") or "").split(":")[0] if acc else None
     for r in rows:
         if r.get("hgvs_pro") == hgvs_pro:
-            return score_of(r)
-    if cds:
-        for r in rows:
-            if r.get("hgvs_pro") in (None, "", "NA") and \
-                    _protein_change_from_nt(r.get("hgvs_nt"), cds) == hgvs_pro:
-                return score_of(r)
+            nt = (r.get("hgvs_nt") or "").strip()
+            if nt and nt not in ("NA", "-") and _NT_RE.match(nt):
+                continue    # 塩基表記のある行は塩基で照合すべきなので、アミノ酸では拾わない
+            sc = score_of(r)
+            if sc is not None:
+                return sc, "aa", None
     return None
 
 
@@ -220,10 +222,12 @@ def _cached_text(path: Path, fetch, max_age_days: int | None, online: bool) -> s
 
 
 def lookup(gene: str, hgvs_pro: str, cache_dir: Path, online: bool = True,
-           timeout: float = 60.0, cds: str | None = None) -> MaveResult:
+           timeout: float = 60.0, cds_change: tuple[int, str, str] | None = None,
+           refseq_base: str | None = None) -> MaveResult:
     """遺伝子の score set を集め、この置換の実測値を探す。
 
-    cds を渡すと、hgvs_pro を持たないデータセット（c. 表記のみ）も照合できる。
+    cds_change（c. の位置と塩基）と refseq_base（転写産物番号、版なし）を渡すと、
+    塩基表記しか持たないデータセットも塩基で照合できる。
     """
     safe_gene = "".join(ch for ch in gene if ch.isalnum() or ch in "-_")
     try:
@@ -250,11 +254,12 @@ def lookup(gene: str, hgvs_pro: str, cache_dir: Path, online: bool = True,
             if detail_text is None or scores_text is None:
                 continue
             ss = parse_score_set(json.loads(detail_text))
-            score = find_in_scores(scores_text, hgvs_pro, cds)
-            if score is None:
+            found = find_in_scores(scores_text, hgvs_pro, cds_change, refseq_base)
+            if found is None:
                 continue
+            score, kind, acc = found
             hits.append(MaveHit(score_set=ss, hgvs_pro=hgvs_pro, score=score,
-                                functional_class=ss.classify(score)))
+                                functional_class=ss.classify(score), match=kind, nt_accession=acc))
         hits.sort(key=lambda h: h.score_set.published, reverse=True)
         return MaveResult(status="found" if hits else "no_match", n_score_sets=len(sets), hits=hits)
     except urllib.error.HTTPError as exc:

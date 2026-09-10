@@ -102,6 +102,16 @@ class ResolvedVariant:
     aa_alt: str
     genomic: GenomicVariant
     evidence: Evidence
+    # 転写産物上の 1 塩基置換（c. の位置、参照塩基、変異塩基）。求められないときは None
+    cds_change: tuple[int, str, str] | None = None
+    strand: str = "+"
+
+    @property
+    def hgvs_c(self) -> str | None:
+        if not self.cds_change:
+            return None
+        pos, ref, alt = self.cds_change
+        return f"c.{pos}{ref}>{alt}"
 
     @property
     def protein_variant(self) -> str:
@@ -126,6 +136,10 @@ class Resolution:
     constraint: dict | None = None
     warnings: list[str] = field(default_factory=list)
     error: str | None = None
+    # 転写産物をどう決めたか（評価対象の変異の欄に添える）
+    transcript_note: str = ""
+    # 座標をどう決めたか（データの版と解決経路の節に記録する）
+    resolution_path: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -481,6 +495,39 @@ CLINVAR_STARS = {
 }
 
 
+_COMPLEMENT = {"A": "T", "T": "A", "C": "G", "G": "C"}
+
+
+def _to_genomic_base(base: str, strand: str) -> str:
+    """転写産物上の塩基をゲノム（プラス鎖）の塩基に読み替える。"""
+    b = base.upper()
+    return _COMPLEMENT.get(b, b) if strand == "-" else b
+
+
+def _cds_change_for(cds: str | None, position: int, aa_alt: str,
+                    gv: GenomicVariant, strand: str) -> tuple[int, str, str] | None:
+    """ゲノムの 1 塩基置換を、転写産物上の c. 表記（位置、参照塩基、変異塩基）に直す。
+
+    コドンの 3 塩基のうち、参照塩基が一致し、置換後にアミノ酸が変異側になる位置を
+    探す。MaveDB の塩基単位の実験データと照合するために使う（レビュー対応 6）。
+    """
+    if not cds:
+        return None
+    start = (position - 1) * 3
+    codon = cds[start:start + 3].upper()
+    if len(codon) != 3:
+        return None
+    tx_ref = _to_genomic_base(gv.ref, strand)   # 相補は対合なので同じ変換で戻る
+    tx_alt = _to_genomic_base(gv.alt, strand)
+    for i in range(3):
+        if codon[i] != tx_ref:
+            continue
+        mutated = codon[:i] + tx_alt + codon[i + 1:]
+        if translate_codon(mutated) == aa_alt:
+            return (start + i + 1, tx_ref, tx_alt)
+    return None
+
+
 def clinvar_stars(review_status: str | None) -> int:
     if not review_status:
         return 0
@@ -621,18 +668,30 @@ def resolve(text: str, store: Store) -> Resolution:
             res.error = last_error or t("lk.no_cds", refseq=rows[0]["refseq_nuc"])
             return res
         row, (aa_ref, position, aa_alt) = chosen
-        # 遺伝子名・c. 表記・p. 表記が揃い、c. から求めた置換が p. と一致すれば曖昧さは
-        # 無いので注意を出さない。p. が無く確認できないときだけ、当てはめた旨を出す
-        if not parsed.transcript and not (parsed.protein and (aa_ref, position, aa_alt) == parsed.protein):
-            res.warnings.append(t("lk.tx_assumed", refseq=row["refseq_nuc"], status=row.get("mane_status", "")))
+        # c. から求めた置換が併記の p. と食い違えば、どちらが転記ミスか分からないので
+        # 確定報告を止める（レビュー対応 2）
         if parsed.protein and (aa_ref, position, aa_alt) != parsed.protein:
             pr, pp, pa = parsed.protein
-            res.warnings.append(t(
+            res.error = t(
                 "lk.protein_mismatch",
+                cds=f"c.{parsed.cds_position}{parsed.ref_base}>{parsed.alt_base}",
                 from_cds=f"p.{AA1_TO_3.get(aa_ref, aa_ref)}{position}{AA1_TO_3.get(aa_alt, aa_alt)}",
                 given=f"p.{AA1_TO_3.get(pr, pr)}{pp}{AA1_TO_3.get(pa, pa)}",
                 refseq=row["refseq_nuc"],
-            ))
+            )
+            return res
+        status = row.get("mane_status", "")
+        if not parsed.transcript:
+            # 転写産物の推定は、注意欄（p. が一致すれば出さない）とは別に、評価対象の
+            # 変異の欄に常に事実として記す
+            res.transcript_note = t("target.tx_assumed", refseq=row["refseq_nuc"], status=status)
+            res.resolution_path.append(t("path.tx_assumed", gene=row["gene"], refseq=row["refseq_nuc"], status=status))
+            if not (parsed.protein and (aa_ref, position, aa_alt) == parsed.protein):
+                res.warnings.append(t("lk.tx_assumed", refseq=row["refseq_nuc"], status=status))
+        else:
+            res.resolution_path.append(t("path.tx_given", tx=parsed.transcript, refseq=row["refseq_nuc"]))
+            if parsed.transcript.upper().startswith("NM_") and parsed.transcript != row["refseq_nuc"]:
+                res.transcript_note = t("target.tx_version", given=parsed.transcript, used=row["refseq_nuc"])
         if aa_ref == aa_alt:
             res.error = t("lk.synonymous", aa_ref=aa_ref, position=position)
             return res
@@ -640,9 +699,9 @@ def resolve(text: str, store: Store) -> Resolution:
             res.error = t("lk.stop_gain", aa_ref=aa_ref, position=position)
             return res
         if parsed.gene and parsed.gene.upper() != row["gene"].upper():
-            res.warnings.append(
-                t("lk.gene_mismatch", input_gene=parsed.gene, tx_gene=row["gene"])
-            )
+            # 転記ミスの可能性が高いので、どちらが正しいかを利用者に確かめてもらう
+            res.error = t("lk.gene_mismatch", input_gene=parsed.gene, tx_gene=row["gene"])
+            return res
     else:
         rows = store.mane_by_gene(parsed.gene)
         if not rows:
@@ -699,6 +758,10 @@ def resolve(text: str, store: Store) -> Resolution:
     res.ensg = row["ensg"]
     res.constraint = store.constraint_for(row["ensg"])
     protein_variant = f"{aa_ref}{position}{aa_alt}"
+    if not isinstance(parsed, CodingInput):
+        status = row.get("mane_status", "")
+        res.transcript_note = t("target.tx_from_gene", refseq=row["refseq_nuc"], status=status)
+        res.resolution_path.append(t("path.tx_from_gene", gene=row["gene"], refseq=row["refseq_nuc"], status=status))
 
     # --- アミノ酸変化をゲノム座標に変換する ---
     rejected_isoforms: list[tuple[str, float, int]] = []
@@ -726,6 +789,10 @@ def resolve(text: str, store: Store) -> Resolution:
                     t("lk.offset_warn", offset=offset, gene=row["gene"],
                       pv=protein_variant, am_pv=am_pv)
                 )
+            if hits:
+                res.resolution_path.append(
+                    t("path.am_mapped", am_enst=am_enst, offset=offset)
+                    if info is not None else t("path.am_direct", am_enst=am_enst))
         if not hits:
             found = store.am_by_region(
                 row["chrom"], int(row["chr_start"]), int(row["chr_end"]),
@@ -746,6 +813,10 @@ def resolve(text: str, store: Store) -> Resolution:
                     rejected_isoforms.append((str(h["enst"]), agr, compared))
             if hits:
                 res.warnings.append(t("lk.region_warn"))
+                agr, compared = store.transcript_agreement(
+                    row["refseq_nuc"], row["chrom"], str(hits[0]["enst"]))
+                res.resolution_path.append(
+                    t("path.region", enst=str(hits[0]["enst"]), agr=agr, n=compared))
     except MissingIndex:
         res.error = t("lk.no_am_index")
         return res
@@ -759,8 +830,24 @@ def resolve(text: str, store: Store) -> Resolution:
         GenomicVariant(str(h["chrom"]), int(h["pos"]), h["ref"], h["alt"])
         for h in hits
     ]
+    strand = str(row.get("strand") or "+")
+    if isinstance(parsed, CodingInput):
+        # c. 表記は塩基まで決まっているので、入力の塩基をゲノム側に読み替えて、
+        # 一致する候補だけを採る（レビュー対応 1）。マイナス鎖では相補塩基になる
+        g_ref = _to_genomic_base(parsed.ref_base, strand)
+        g_alt = _to_genomic_base(parsed.alt_base, strand)
+        matched = [(h, v) for h, v in zip(hits, variants) if v.ref == g_ref and v.alt == g_alt]
+        if not matched:
+            res.error = t("lk.base_mismatch",
+                          cds=f"c.{parsed.cds_position}{parsed.ref_base}>{parsed.alt_base}",
+                          expected=f"{g_ref}>{g_alt}",
+                          found=join(f"{v.ref}>{v.alt}" for v in variants))
+            return res
+        hits = [h for h, _ in matched]
+        variants = [v for _, v in matched]
     if len(variants) > 1:
         res.warnings.append(t("lk.multi_nuc", n=len(variants)))
+    cds_seq = store.cds_for(row["refseq_nuc"])
 
     # --- 証拠を集める ---
     fv = store.funcvep_for(variants)
@@ -795,12 +882,16 @@ def resolve(text: str, store: Store) -> Resolution:
                 res.warnings.append(
                     t("lk.ensg_mismatch", fv_ensg=fv[key]["ensg"], ensg=row["ensg"])
                 )
+        if isinstance(parsed, CodingInput):
+            cds_change = (parsed.cds_position, parsed.ref_base, parsed.alt_base)
+        else:
+            cds_change = _cds_change_for(cds_seq, position, aa_alt, gv, strand)
         res.variants.append(
             ResolvedVariant(
                 gene=row["gene"], ensg=row["ensg"], enst=row["enst"],
                 refseq_nuc=row["refseq_nuc"],
                 aa_ref=aa_ref, position=position, aa_alt=aa_alt,
-                genomic=gv, evidence=ev,
+                genomic=gv, evidence=ev, cds_change=cds_change, strand=strand,
             )
         )
 

@@ -115,6 +115,8 @@ class VariantReport:
     splice: SpliceResult | None = None
     mave_rows: list[Row] = field(default_factory=list)
     conditions: ConditionResult | None = None
+    adopted_model: str | None = None      # PP3/BP4 に採用したモデル（代替を含む）
+    adoption_note: str = ""
 
 
 @dataclass
@@ -128,6 +130,7 @@ class Report:
     variants: list[VariantReport] = field(default_factory=list)
     gene_rows: list[Row] = field(default_factory=list)
     target_rows: list[Row] = field(default_factory=list)
+    provenance_rows: list[Row] = field(default_factory=list)
     population_rows: list[Row] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     error: str | None = None
@@ -254,14 +257,19 @@ def _gnomad_rows(g: GnomadResult | None, retrieved: str) -> list[Row]:
         return [Row(t("row.af"), t("af.absent"),
                     t(key, retrieved=retrieved, depth=depth, frac=frac))]
     value = t("af.value", af=f"{g.af:.3e}", ac=f"{g.ac:,}", an=f"{g.an:,}")
-    if g.af > 0.05:
-        value += t("sep.wide") + t("af.ba1")
     if g.filters:
         value += t("af.filtered", filters=", ".join(g.filters))
-    rows = [
-        Row(t("row.af"), value, t("note.af", retrieved=retrieved)),
-        Row(t("row.hom"), f"{g.hom:,}", t("note.hom")),
-    ]
+    rows = [Row(t("row.af"), value, t("note.af", retrieved=retrieved))]
+    # BA1/BS1 は集団別の最大頻度で見る。0.05 超は「候補」に留める（疾患別の例外は未確認）
+    if g.grpmax_an:
+        gm = t("af.value", af=f"{g.grpmax_af:.3e}", ac=f"{g.grpmax_ac:,}", an=f"{g.grpmax_an:,}")
+        if g.grpmax_af > 0.05:
+            gm += t("sep.wide") + t("af.ba1")
+        rows.append(Row(t("row.grpmax", pop=t(f"pop.{g.grpmax_id}") if has(f"pop.{g.grpmax_id}") else g.grpmax_id),
+                        gm, t("note.grpmax")))
+    elif g.af > 0.05:
+        rows[0] = Row(t("row.af"), value + t("sep.wide") + t("af.ba1"), t("note.af", retrieved=retrieved))
+    rows.append(Row(t("row.hom"), f"{g.hom:,}", t("note.hom")))
     if g.eas_an:
         if g.eas_ac:
             eas = t("af.value", af=f"{g.eas_af:.3e}", ac=f"{g.eas_ac:,}", an=f"{g.eas_an:,}")
@@ -397,13 +405,62 @@ def _mave_rows(m: MaveResult | None, online: bool) -> list[Row]:
             value = f"{h.score:.3f}{t('sep.wide')}{label}"
         else:
             value = f"{h.score:.3f}{t('sep.wide')}{t('mave.class.uncalibrated')}"
+        value += t("sep.wide") + (t("mave.match_nt", acc=h.nt_accession or ss.target_accession or t("dash"))
+                                  if h.match == "nt" else t("mave.match_aa"))
         note = t("note.mave", urn=ss.urn, citation=ss.citation or t("dash"),
-                 n=f"{ss.num_variants:,}" if ss.num_variants else t("dash"))
+                 n=f"{ss.num_variants:,}" if ss.num_variants else t("dash"),
+                 target=ss.target_accession or t("dash"))
         if ss.calibration_title:
             note += t("note.mave_calibration", title=ss.calibration_title)
         if not ss.full_length_numbering:
             note += t("note.mave_numbering")
+        note += t("note.mave_ps3")
         rows.append(Row(ss.title[:80], value, note))
+    return rows
+
+
+def _qualify_bp4(label: str, splice, online: bool) -> str:
+    """BP4（良性方向の予測）に、スプライシングの評価状況を添える（レビュー対応 5）。
+
+    Δ 0.5 以上: BP4 を保留する。0.2 以上 0.5 未満: 要確認。未取得: 未評価と明記する。
+    """
+    if not online or splice is None or splice.status != "scored":
+        return label + t("acmg.bp4_unassessed")
+    if splice.level == "high":
+        return t("acmg.bp4_held", ds=f"{splice.max_ds:.2f}")
+    if splice.level == "moderate":
+        return label + t("acmg.bp4_check", ds=f"{splice.max_ds:.2f}")
+    return label
+
+
+def provenance_rows(res: Resolution, versions: dict | None, code_version: str,
+                    thresholds: dict | None, created: str,
+                    adopted: list[str | None], primary_model: str) -> list[Row]:
+    """データの版と解決経路（レビュー対応 10）。後日同じ入力で結果が変わったときに理由を追える。"""
+    rows: list[Row] = []
+    if versions:
+        items = []
+        for key, v in versions.items():
+            if key.startswith("_"):
+                continue
+            label = v.get("label") or key
+            ver = v.get("version") or t("dash")
+            date = v.get("date") or ""
+            items.append(f"{label}: {ver}" + (f"（{date}）" if date else ""))
+        built = (versions.get("_index") or {}).get("built") or ""
+        rows.append(Row(t("row.data_versions"), t("sep.list").join(items),
+                        t("note.data_versions", built=built) if built else ""))
+    meta = (thresholds or {}).get("meta") or {}
+    rows.append(Row(t("row.threshold_version"),
+                    t("thr.version_published") if meta.get("source") == "published" else t("thr.version_local"), ""))
+    rows.append(Row(t("row.code_version"), code_version or t("dash"), ""))
+    rows.append(Row(t("row.online_retrieved"), created, t("note.online_retrieved")))
+    if res.resolution_path:
+        rows.append(Row(t("row.resolution_path"), t("sep.list").join(res.resolution_path), ""))
+    pm = primary_model.replace("_", "-")
+    used = [a.replace("_", "-") for a in adopted if a]
+    rows.append(Row(t("row.adopted_model"),
+                    t("adopt.provenance", model=pm, used=t("sep.list").join(sorted(set(used))) or t("dash")), ""))
     return rows
 
 
@@ -447,8 +504,14 @@ def residue_rows(same_residue: list[dict], genomic, aa_alt1: str) -> list[Row]:
 
     def item(r: dict) -> str:
         c, pv = _short_name(r.get("name"))
+        cond = primary_phenotype(r.get("phenotypes")) or t("dash")
         return t("residue.item", cdna=c, pdot=pv, sig=r.get("significance") or t("dash"),
-                 stars=clinvar_stars(r.get("review_status")))
+                 stars=clinvar_stars(r.get("review_status")), cond=cond,
+                 date=str(r.get("last_evaluated") or t("dash")))
+
+    def weak(rs: list[dict]) -> bool:
+        """病的判定がすべて 1 星以下（単一提出者、基準なし）か。"""
+        return bool(rs) and max(clinvar_stars(r.get("review_status")) for r in rs) <= 1
 
     def order(rs: list[dict]) -> list[dict]:
         return sorted(rs, key=lambda r: (not _is_plp(r.get("significance")),
@@ -457,16 +520,20 @@ def residue_rows(same_residue: list[dict], genomic, aa_alt1: str) -> list[Row]:
     rows: list[Row] = []
     plp_same = [r for r in same_change if _is_plp(r.get("significance"))]
     intro = t("note.residue_intro")
+    sep = "。" if get_lang() == "ja" else ". "
+    note1 = intro
+    if plp_same:
+        note1 += sep + t("note.ps1") + (t("note.residue_weak") if weak(plp_same) else "")
     rows.append(Row(
         t("row.same_change"),
         t("sep.list").join(item(r) for r in order(same_change)) or t("residue.none"),
-        intro + ("。" if get_lang() == "ja" else ". ") + t("note.ps1") if plp_same else intro,
+        note1,
     ))
     plp_other = [r for r in other_change if _is_plp(r.get("significance"))]
     blb_other = [r for r in other_change if _is_blb(r.get("significance"))]
     note = ""
     if plp_other:
-        note = t("note.pm5", n=len(plp_other))
+        note = t("note.pm5", n=len(plp_other)) + (t("note.residue_weak") if weak(plp_other) else "")
         if blb_other:
             note += t("note.pm5_benign_too", n=len(blb_other))
     elif blb_other:
@@ -490,7 +557,10 @@ def build(res: Resolution, thresholds: dict | None,
           splice_results: dict[str, SpliceResult] | None = None,
           mave_result: MaveResult | None = None,
           organization: str = "",
-          condition_results: dict[str, ConditionResult] | None = None) -> Report:
+          condition_results: dict[str, ConditionResult] | None = None,
+          primary_model: str = "FuncVEP_CTI",
+          versions: dict | None = None,
+          code_version: str = "") -> Report:
     wide = t("sep.wide")
     seen_terms: set[str] = set()
     rep = Report(
@@ -511,10 +581,15 @@ def build(res: Resolution, thresholds: dict | None,
     for i, rv in enumerate(res.variants, 1):
         label = (t("pdf.variant_n", i=i, n=len(res.variants))
                  if len(res.variants) > 1 else t("pdf.variant"))
+        note = t("target.note", refseq=rv.refseq_nuc, enst=rv.enst)
+        if res.transcript_note:
+            note += wide + res.transcript_note
+        if rv.hgvs_c:
+            note += wide + rv.hgvs_c
         rep.target_rows.append(Row(
             label,
             t("target.value", gene=rv.gene, hgvs=rv.hgvs_p3, genomic=str(rv.genomic)),
-            t("target.note", refseq=rv.refseq_nuc, enst=rv.enst),
+            note,
         ))
 
     # --- 遺伝子レベル ---
@@ -576,6 +651,10 @@ def build(res: Resolution, thresholds: dict | None,
         vr.funcvep_status = ev.funcvep_status
         vr.funcvep_note = missing_note(vr.funcvep_status, ev.train_models)
 
+        # PP3/BP4 に採用するモデルは事前に 1 つ決める（設定 primary_model）。採用モデルの
+        # スコアが無いときだけ、独立性の順（CTE → SP）で代替する。他モデルは参考
+        order = [primary_model] + [m for m in FUNCVEP_MODELS if m != primary_model]
+        vr.adopted_model = next((m for m in order if ev.funcvep.get(m) is not None), None)
         for model in FUNCVEP_MODELS:
             score = ev.funcvep.get(model)
             a = assign(score, model, thresholds)
@@ -587,9 +666,19 @@ def build(res: Resolution, thresholds: dict | None,
                 value = (f"{_fmt(score)}{wide}"
                          f"{_gloss(_call(score, binary_cutoff(model, thresholds)), seen_terms)}")
                 head = a.label if a else t("uncalibrated")
+                if a and a.criterion == "BP4":
+                    head = _qualify_bp4(head, vr.splice, gnomad_online)
+                head += t("acmg.adopted") if model == vr.adopted_model else t("acmg.reference")
             vr.predictions.append(
                 Row(model.replace("_", "-"), value, head + "｜" + model_note(model))
             )
+        pm = primary_model.replace("_", "-")
+        if vr.adopted_model is None:
+            vr.adoption_note = t("adopt.none", model=pm)
+        elif vr.adopted_model == primary_model:
+            vr.adoption_note = t("adopt.note", model=pm)
+        else:
+            vr.adoption_note = t("adopt.fallback", model=pm, used=vr.adopted_model.replace("_", "-"))
 
         clin_scores = {k: v for k, v in ev.funcvep.items() if k.startswith("ClinVEP")}
         clin_trained = [m for m in (ev.train_models or []) if m.startswith("ClinVEP")]
@@ -632,7 +721,8 @@ def build(res: Resolution, thresholds: dict | None,
             cv = ev.clinvar
             stars = clinvar_stars(cv.get("review_status"))
             vr.clinvar_rows = [
-                Row(t("row.significance"), str(cv.get("significance") or t("dash")),
+                Row(t("row.significance"),
+                    str(cv.get("significance") or t("dash")) + (wide + t("clinvar.expert") if stars >= 3 else ""),
                     t("note.review", stars=stars, status=cv.get("review_status"))),
                 Row(t("row.submitters"), str(cv.get("n_submitters") or t("dash")), ""),
                 Row(t("row.last_evaluated"), str(cv.get("last_evaluated") or t("dash")), ""),
@@ -668,6 +758,9 @@ def build(res: Resolution, thresholds: dict | None,
         n_tot = len(decided)
         vr.concordance_kind = ("none" if n_tot == 0 else "damaging" if n_dmg == n_tot
                                else "neutral" if n_dmg == 0 else "mixed")
+        splice_level = vr.splice.level if (gnomad_online and vr.splice and vr.splice.status == "scored") else None
+        if splice_level == "high" and vr.concordance_kind == "neutral":
+            vr.concordance_kind = "mixed"     # タンパク質への影響が低くても、スプライシング異常の可能性がある
         if n_tot == 0:
             vr.concordance = t("conc.none")
         elif n_tot == 1:
@@ -687,7 +780,17 @@ def build(res: Resolution, thresholds: dict | None,
                 Row(t("row.neutral_side"), join(neu) or t("conc.no_tool")),
             ]
         vr.concordance_rows.append(Row(t("row.summary"), vr.concordance))
+        if splice_level == "high":
+            vr.concordance_rows.append(Row(t("row.splice_flag"), t("conc.splice_high", ds=f"{vr.splice.max_ds:.2f}")))
+        elif splice_level == "moderate":
+            vr.concordance_rows.append(Row(t("row.splice_flag"), t("conc.splice_moderate", ds=f"{vr.splice.max_ds:.2f}")))
+        elif splice_level is None and vr.concordance_kind == "neutral":
+            vr.concordance_rows.append(Row(t("row.splice_flag"), t("conc.splice_unassessed")))
 
         rep.variants.append(vr)
+
+    rep.provenance_rows = provenance_rows(
+        res, versions, code_version, thresholds, rep.created,
+        [vr.adopted_model for vr in rep.variants], primary_model)
 
     return rep

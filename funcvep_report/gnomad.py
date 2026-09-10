@@ -60,6 +60,10 @@ class GnomadResult:
     eas_ac: int | None = None        # 東アジア集団（exome と genome の合算）
     eas_an: int | None = None
     eas_hom: int | None = None
+    # 集団別の最大頻度（gnomAD の grpmax に相当。創始者効果の強い集団と "remaining" は除く）
+    grpmax_id: str | None = None
+    grpmax_ac: int | None = None
+    grpmax_an: int | None = None
     rsids: list[str] = field(default_factory=list)
     reason: str = ""                 # error のときの理由
 
@@ -75,6 +79,12 @@ class GnomadResult:
         if not self.eas_an:
             return None
         return (self.eas_ac or 0) / self.eas_an
+
+    @property
+    def grpmax_af(self) -> float | None:
+        if not self.grpmax_an:
+            return None
+        return (self.grpmax_ac or 0) / self.grpmax_an
 
 
 def _sum_populations(exome: dict | None, genome: dict | None) -> tuple[int, int, int, list[str]]:
@@ -104,6 +114,32 @@ def _sum_subpopulation(exome: dict | None, genome: dict | None, pop_id: str) -> 
                 an += int(p.get("an") or 0)
                 hom += int(p.get("homozygote_count") or 0)
     return (ac, an, hom) if seen else None
+
+
+# grpmax の計算から除く集団: 創始者効果が強い集団（asj, fin, ami, mid）と "remaining"。
+# アレル数が少ない集団は偶然の高頻度になりやすいので、下限を置く
+_GRPMAX_EXCLUDE = {"asj", "fin", "ami", "mid", "oth", "remaining"}
+_GRPMAX_MIN_AN = 2000
+
+
+def _grpmax(exome: dict | None, genome: dict | None) -> tuple[str, int, int] | None:
+    """集団別に exome と genome を合算し、頻度が最大の集団を返す。"""
+    totals: dict[str, list[int]] = {}
+    for part in (exome, genome):
+        for p in (part or {}).get("populations") or []:
+            pid = str(p.get("id") or "")
+            if not pid or "_" in pid or pid in _GRPMAX_EXCLUDE:
+                continue        # 下位集団（eas_jpn など）と除外集団は見ない
+            acc = totals.setdefault(pid, [0, 0])
+            acc[0] += int(p.get("ac") or 0)
+            acc[1] += int(p.get("an") or 0)
+    best = None
+    for pid, (ac, an) in totals.items():
+        if an < _GRPMAX_MIN_AN:
+            continue
+        if best is None or ac / an > best[1] / best[2]:
+            best = (pid, ac, an)
+    return best
 
 
 def _best_coverage(cov: dict | None) -> tuple[float | None, float | None]:
@@ -146,6 +182,9 @@ def parse_variant_payload(payload: dict) -> GnomadResult:
     eas = _sum_subpopulation(variant.get("exome"), variant.get("genome"), "eas")
     if eas:
         result.eas_ac, result.eas_an, result.eas_hom = eas
+    gm = _grpmax(variant.get("exome"), variant.get("genome"))
+    if gm:
+        result.grpmax_id, result.grpmax_ac, result.grpmax_an = gm
     result.rsids = list(variant.get("rsids") or [])
     return result
 

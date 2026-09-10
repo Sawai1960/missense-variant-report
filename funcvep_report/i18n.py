@@ -162,30 +162,31 @@ _STRINGS: dict[str, tuple[str, str]] = {
         + _NO_INFO_EN,
     ),
     "missing_note.absent": (
-        'この変異は、FuncVEP の 6 つのモデルの学習データ（既知の判定を持つ変異の集合）にすべて含まれていました。学習に'
-        '用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは各モデルの予測対象から学習'
-        'データの変異を除外しています。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しません。'
+        '公開された予測表にこの変異の行はありません。公開されている学習データを照合したところ、FuncVEP の 6 つのモデル'
+        'すべての学習データ（既知の判定を持つ変異の集合）に含まれていました。学習に用いた変異に対する予測は既知の判定を再現するに'
+        '過ぎず、予測としての意味を持たないため、著者らは各モデルの予測対象から学習データの変異を除外しています。'
         + _NO_INFO_JA,
-        'This variant was part of the training data (variants with '
-        'known classifications) for all six FuncVEP models. A '
-        'prediction for a training variant would merely reproduce a '
-        'known classification and carries no predictive value, so the'
-        " authors exclude training variants from each model's "
-        'predictions. Excluded from all six, this variant has no row '
-        'in the released table. '
+        'The released table has no row for this variant. Checking the'
+        ' published training data shows that it was in the training '
+        'data (variants with known classifications) of all six '
+        'FuncVEP models. A prediction for a training variant would '
+        'merely reproduce a known classification and carries no '
+        'predictive value, so the authors exclude training variants '
+        "from each model's predictions. "
         + _NO_INFO_EN,
     ),
     "missing_note.absent_unexplained": (
-        'この変異は公開された予測表に無く、公開されている学習データの一覧にも見当たりません。著者らの照合（2026-09-07 '
-        '私信）によれば、この種の未収録は予測表を作る工程の都合（注釈の違いによる除外・元データに無い・処理の抜け）で生じたもので'
-        'す。'
+        '公開された予測表にこの変異の行はなく、公開されている学習データの一覧にも見当たりません。原因は手元では確認できません。著'
+        '者らの照合（2026-09-07 私信）では、この種の未収録には元データに無い・注釈の違いによる除外・処理の抜けが原因の'
+        'ものがあると説明されていますが、個々の変異について確定したものではありません。'
         + _NO_INFO_JA,
-        'This variant has no row in the released table and is not in '
-        'any published training set. According to the authors '
-        '(personal communication, 2026-09-07), such absences arose '
-        'during assembly of the released table (transcript-annotation'
-        ' differences, absence from the source variant set, or loss '
-        'during processing). '
+        'The released table has no row for this variant, and it is '
+        'not in any published training set. The cause cannot be '
+        'determined locally. According to the authors (personal '
+        'communication, 2026-09-07), such omissions arise from '
+        'absence from the source data, annotation-dependent filtering'
+        ' or processing gaps, but this has not been established for '
+        'individual variants. '
         + _NO_INFO_EN,
     ),
     "missing_note.unknown": (
@@ -299,24 +300,88 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "row.af": ("gnomAD アレル頻度", "gnomAD allele frequency"),
     "af.value": ("{af}（{ac} / {an} アレル）", "{af} ({ac} / {an} alleles)"),
-    "af.ba1": ("BA1 該当（0.05 超）", "BA1 (above 0.05)"),
+    "af.ba1": (
+        'BA1 の候補（頻度 0.05 超）',
+        'BA1 candidate (frequency above 0.05)',
+    ),
     "af.filtered": ("　品質フィルタ: {filters}", "  quality filters: {filters}"),
     "note.af": (
-        'gnomAD v4（エクソームとゲノムの合算、{retrieved} 取得）。0.05 を超える場合は '
-        'BA1（良性の単独で十分な根拠）に該当します。疾患の頻度に照らして高い場合は BS1 を検討してください',
+        'gnomAD v4（エクソームとゲノムの合算、{retrieved} 取得）。BA1 は集団別の最大頻度が 0.05 '
+        'を超えることが目安ですが、疾患・遺伝子ごとの例外（ClinGen の除外リスト）、対象集団の選び方、アレル数の十分さを確'
+        '認したうえで適用します。本レポートはそれらを確認していません。BS1 は疾患の頻度に照らして判断します',
         'gnomAD v4 (exomes and genomes combined, retrieved '
-        '{retrieved}). Above 0.05 meets BA1 (stand-alone benign); '
-        'consider BS1 if high relative to disease prevalence',
+        '{retrieved}). BA1 is indicated when the maximum population '
+        'frequency exceeds 0.05, subject to disease- and '
+        'gene-specific exceptions (the ClinGen exclusion list), the '
+        'choice of population and adequate allele counts; this report'
+        ' does not verify those conditions. BS1 is judged against '
+        'disease prevalence',
     ),
     "note.af_manual": (
-        '画面で入力された値です。0.05 を超える場合は '
-        'BA1（良性の単独で十分な根拠）に該当します。疾患の頻度に照らして高い場合は BS1 を検討してください',
-        'Entered manually. Above 0.05 meets BA1 (stand-alone benign);'
-        ' consider BS1 if high relative to disease prevalence',
+        '画面で入力された値です。BA1 は頻度 0.05 '
+        '超が目安ですが、疾患・遺伝子ごとの例外、対象集団、アレル数の十分さを確認したうえで適用します。BS1 '
+        'は疾患の頻度に照らして判断します',
+        'Entered manually. BA1 is indicated above 0.05 subject to '
+        'disease- and gene-specific exceptions, the population and '
+        'adequate allele counts. BS1 is judged against disease '
+        'prevalence',
+    ),
+    "row.grpmax": (
+        '集団別の最大頻度（{pop}）',
+        'Maximum population frequency ({pop})',
+    ),
+    "note.grpmax": (
+        'gnomAD v4 の集団のうち頻度が最も高い集団（創始者効果の強い集団と remaining は除く。2,000 '
+        'アレル以上）。BA1/BS1 はこの値で判断します',
+        'The gnomAD v4 population with the highest frequency '
+        "(excluding bottlenecked populations and 'remaining'; at "
+        'least 2,000 alleles). BA1/BS1 are judged on this value',
+    ),
+    "pop.afr": (
+        'アフリカ／アフリカ系アメリカ',
+        'African / African American',
+    ),
+    "pop.amr": (
+        'ラテンアメリカ／混合アメリカ',
+        'Admixed American',
+    ),
+    "pop.eas": (
+        '東アジア',
+        'East Asian',
+    ),
+    "pop.nfe": (
+        '非フィンランド系ヨーロッパ',
+        'Non-Finnish European',
+    ),
+    "pop.sas": (
+        '南アジア',
+        'South Asian',
+    ),
+    "pop.fin": (
+        'フィンランド',
+        'Finnish',
+    ),
+    "pop.asj": (
+        'アシュケナージ系ユダヤ',
+        'Ashkenazi Jewish',
+    ),
+    "pop.mid": (
+        '中東',
+        'Middle Eastern',
+    ),
+    "pop.ami": (
+        'アーミッシュ',
+        'Amish',
     ),
     "row.hom": ("ホモ接合体数", "Homozygotes"),
-    "note.hom": ("常染色体潜性（劣性）遺伝の疾患で 0 でないなら BS2 を検討",
-                 "For autosomal recessive disorders, consider BS2 if non-zero"),
+    "note.hom": (
+        'ホモ接合体が存在することは BS2 '
+        'の材料になりますが、対象疾患の遺伝形式、発症年齢、浸透率、その人の健康状態の確認が必要です。本レポートは確認していません',
+        'Homozygotes can support BS2, but the mode of inheritance, '
+        'age of onset, penetrance and the health status of those '
+        'individuals must be confirmed; this report does not verify '
+        'them',
+    ),
     "af.absent": ("収録なし（約 80 万人で観察されず）",
                   "Absent (not observed in about 800,000 individuals)"),
     "note.af_absent": (
@@ -336,11 +401,12 @@ _STRINGS: dict[str, tuple[str, str]] = {
         '{frac}), so absence is not used as evidence',
     ),
     "note.af_absent_nocov": (
-        'gnomAD v4（{retrieved} 取得）。集団データベースに存在しないことは '
-        'PM2_supporting（病的方向の弱い根拠）の候補となります。この位置の読み取り深度は取得できませんでした',
-        'gnomAD v4 (retrieved {retrieved}). Absence from population '
-        'databases is a candidate for PM2_supporting. Coverage at '
-        'this position could not be retrieved',
+        'gnomAD v4（{retrieved} 取得）。集団データベースに記録がありませんが、この位置の読み取り深度が取得で'
+        'きなかったため、根拠（PM2_supporting）として使えるかは判断できません',
+        'gnomAD v4 (retrieved {retrieved}). Absent from the '
+        'population database, but coverage at this position could not'
+        ' be retrieved, so whether this can serve as evidence '
+        '(PM2_supporting) cannot be determined',
     ),
     "af.failed": (
         '取得できませんでした',
@@ -421,7 +487,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "同じ位置に病的と判定された変異があれば、ACMG の PS1・PM5 の判定材料になります",
         "Pathogenic variants at the same position can support ACMG criteria PS1 and PM5",
     ),
-    "residue.item": ("{cdna} {pdot} {sig}（{stars} 星）", "{cdna} {pdot} {sig} ({stars}-star)"),
+    "residue.item": (
+        '{cdna} {pdot} {sig}（{stars} 星、{cond}、{date}）',
+        '{cdna} {pdot} {sig} ({stars}-star, {cond}, {date})',
+    ),
     "residue.none": ("なし", "None"),
     "note.ps1": (
         '同じアミノ酸置換を生じる別の塩基置換が病的と判定されているため、PS1（病的方向の強い根拠）の候補となります。ただしスプ'
@@ -451,8 +520,11 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "row.clingen": ("ClinGen の評価（遺伝子単位の関連疾患）",
                     "ClinGen gene-disease validity (gene-level associated diseases)"),
-    "clingen.match": ("　◆ ClinVar の主な疾患名（{pheno}）と一致",
-                      "  ◆ matches the main ClinVar condition ({pheno})"),
+    "clingen.match": (
+        '\u3000◆ ClinVar で提出件数が最多の疾患名と名称が一致（参考）',
+        '  ◆ name matches the ClinVar condition with the most '
+        'submissions (for reference)',
+    ),
     "clingen.item": ("{disease}（{moi}、{cls}、{date}）", "{disease} ({moi}, {cls}, {date})"),
     "clingen.none": (
         '未登録（ClinGen が評価した遺伝子と疾患の組み合わせに含まれていません）',
@@ -551,11 +623,12 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "mave.class.uncalibrated": ("正常／異常の判定基準が未登録（数値のみ）",
                                 "No functional classes registered (score only)"),
     "note.mave": (
-        'MaveDB {urn}（{citation}、測定 {n} 変異）。大規模機能実験の実測値で、ACMG の '
+        'MaveDB {urn}（{citation}、対象 {target}、測定 {n} '
+        '変異）。大規模機能実験の実測値で、ACMG の '
         'PS3/BS3（機能実験による証拠）の材料になります。スコアの尺度はデータセットごとに異なります',
-        'MaveDB {urn} ({citation}; {n} variants measured). '
-        'Experimental measurement that can support PS3/BS3. Score '
-        'scales differ between datasets',
+        'MaveDB {urn} ({citation}; target {target}; {n} variants '
+        'measured). Experimental measurement that can support '
+        'PS3/BS3. Score scales differ between datasets',
     ),
     "note.mave_calibration": (
         '。区分は「{title}」によります',
@@ -580,6 +653,140 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.litvar_more": (
         'LitVar2 の全件一覧',
         'See all in LitVar2',
+    ),
+    "acmg.adopted": (
+        '（採用）',
+        ' (adopted)',
+    ),
+    "acmg.reference": (
+        '（参考）',
+        ' (reference)',
+    ),
+    "acmg.bp4_held": (
+        'BP4 保留（SpliceAI Δ {ds}。スプライシングへの影響が示唆されるため適用しない）',
+        'BP4 withheld (SpliceAI delta {ds}; a splicing effect is '
+        'suggested, so BP4 is not applied)',
+    ),
+    "acmg.bp4_check": (
+        '（SpliceAI Δ {ds} のため要確認）',
+        ' (SpliceAI delta {ds}; review splicing)',
+    ),
+    "acmg.bp4_unassessed": (
+        '（スプライシングへの影響は未評価）',
+        ' (splicing effect not assessed)',
+    ),
+    "adopt.note": (
+        'PP3/BP4 に採用するモデル: {model}（事前に固定。他のモデルは参考で、一致数によって強さを上げません）',
+        'Model adopted for PP3/BP4: {model} (fixed in advance; the '
+        'other models are for reference and agreement does not raise '
+        'the strength)',
+    ),
+    "adopt.fallback": (
+        'PP3/BP4 の採用モデル {model} のスコアが無いため、代替として {used} を採用しました（代替の順序は'
+        ' CTE → SP で固定）',
+        'The adopted model {model} has no score, so {used} was used '
+        'instead (fallback order fixed as CTE then SP)',
+    ),
+    "adopt.none": (
+        'PP3/BP4 の採用モデル {model} と代替モデルのいずれもスコアが無いため、PP3/BP4 は判定できません',
+        'Neither the adopted model {model} nor the fallback models '
+        'have a score, so PP3/BP4 cannot be assigned',
+    ),
+    "adopt.provenance": (
+        '{model}（実際に用いたモデル: {used}）',
+        '{model} (model actually used: {used})',
+    ),
+    "row.splice_flag": (
+        'スプライシング',
+        'Splicing',
+    ),
+    "conc.splice_high": (
+        'SpliceAI Δ {ds}。スプライシングへの影響が示唆されるため、タンパク質への影響の予測とは別に評価が必要です',
+        'SpliceAI delta {ds}: a splicing effect is suggested and must'
+        ' be evaluated separately from the effect on the protein',
+    ),
+    "conc.splice_moderate": (
+        'SpliceAI Δ {ds}（0.2 以上）。スプライシングへの影響を確認してください',
+        'SpliceAI delta {ds} (0.2 or above): review the splicing '
+        'effect',
+    ),
+    "conc.splice_unassessed": (
+        'スプライシングへの影響は未評価です（SpliceAI を取得できていません）',
+        'The splicing effect has not been assessed (SpliceAI not '
+        'retrieved)',
+    ),
+    "pdf.provenance": (
+        'データの版と解決経路',
+        'Data versions and resolution path',
+    ),
+    "ui.provenance": (
+        'データの版と解決経路',
+        'Data versions and resolution path',
+    ),
+    "row.data_versions": (
+        '参照データの版',
+        'Reference data versions',
+    ),
+    "note.data_versions": (
+        '索引の作成日: {built}',
+        'Index built: {built}',
+    ),
+    "row.threshold_version": (
+        'PP3/BP4 の閾値',
+        'PP3/BP4 thresholds',
+    ),
+    "thr.version_published": (
+        '著者提供の Supplementary Table 13（2026-09-05 受領）',
+        'Supplementary Table 13 as provided by the authors (received '
+        '2026-09-05)',
+    ),
+    "thr.version_local": (
+        '手元の ClinVar から算出した閾値（scripts/03_calibrate_acmg.py）',
+        'Thresholds calibrated locally (scripts/03_calibrate_acmg.py)',
+    ),
+    "row.code_version": (
+        'コードの版',
+        'Code version',
+    ),
+    "row.online_retrieved": (
+        'オンライン照会の取得日時',
+        'Online lookups retrieved',
+    ),
+    "note.online_retrieved": (
+        'gnomAD・TogoVar・SpliceAI・MaveDB・ClinVar の各欄に取得日時を記載しています',
+        'Retrieval times are given in the gnomAD, TogoVar, SpliceAI, '
+        'MaveDB and ClinVar entries',
+    ),
+    "row.resolution_path": (
+        '転写産物と座標の解決経路',
+        'Transcript and coordinate resolution',
+    ),
+    "row.adopted_model": (
+        'PP3/BP4 の採用モデル',
+        'Model adopted for PP3/BP4',
+    ),
+    "mave.match_nt": (
+        '塩基が一致（実験側 {acc}）',
+        'nucleotide match (assay transcript {acc})',
+    ),
+    "mave.match_aa": (
+        'アミノ酸置換で照合（塩基は不明）',
+        'matched by amino-acid substitution (nucleotide unknown)',
+    ),
+    "note.mave_ps3": (
+        '。PS3/BS3 の適用には、実験の対象領域・対照・反復・疾患機序との適合性の確認が必要です',
+        '. Applying PS3/BS3 requires checking the assayed region, '
+        'controls, replicates and fit with the disease mechanism',
+    ),
+    "clinvar.expert": (
+        '★ 専門家パネルの判定',
+        '★ expert-panel classification',
+    ),
+    "note.residue_weak": (
+        '。ただし判定は単一提出者または基準なし（1 星以下）のみで、根拠としては弱い候補です',
+        '. However, the classifications are from a single submitter '
+        'or without criteria (1 star or less), so this is a weak '
+        'candidate',
     ),
     "uncalibrated": ("PP3/BP4 の判定基準なし", "No PP3/BP4 thresholds"),
 
@@ -613,7 +820,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "{cutoff}",
     ),
 
-    "row.significance": ("臨床的意義", "Clinical significance"),
+    "row.significance": (
+        '臨床的意義（生殖細胞系列）',
+        'Clinical significance (germline)',
+    ),
     "note.review": ("レビュー {stars} 星（{status}）", "Review status: {stars} star(s) ({status})"),
     "row.submitters": ("提出者数", "Submitters"),
     "row.last_evaluated": ("最終評価", "Last evaluated"),
@@ -627,15 +837,20 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "reason for testing (e.g. the conditions on a gene panel) is sometimes entered as is",
     ),
     "note.conditions": (
-        "疾患名は各提出者が登録したもので、ClinVar が正しさを検証したものではありません。"
-        "検査の依頼理由（遺伝子パネルの対象疾患など）がそのまま登録されることもあり、この変異と"
-        "その疾患の因果関係を示すとは限りません。件数は提出数で、件数の少ない疾患名は特に"
-        "この点に注意してください。総称（not provided など）は除いています",
-        "Conditions are as entered by each submitter and are not verified by ClinVar. The "
-        "reason for testing (e.g. the conditions on a gene panel) is sometimes entered as is, "
-        "so a listed condition does not necessarily reflect a causal relationship. Counts are "
-        "numbers of submissions; treat conditions with few submissions with particular "
-        "caution. Generic entries (e.g. not provided) are omitted",
+        '疾患名は各提出者が登録したもので、ClinVar が正しさを検証したものではありません。検査の依頼理由（遺伝子パネルの対'
+        '象疾患など）がそのまま登録されることもあり、この変異とその疾患の因果関係を示すとは限りません。件数は提出数で、独立した症'
+        '例数ではなく、件数が最多の疾患名が評価対象の疾患と一致するとも限りません。件数の少ない疾患名は特に注意してください。総称'
+        '（not provided など）は除いています。生殖細胞系列の分類のみを扱っています',
+        'Conditions are as entered by each submitter and are not '
+        'verified by ClinVar. The reason for testing (e.g. the '
+        'conditions on a gene panel) is sometimes entered as is, so a'
+        ' listed condition does not necessarily reflect a causal '
+        'relationship. Counts are numbers of submissions, not '
+        'independent cases, and the condition with the most '
+        'submissions is not necessarily the disease under evaluation.'
+        ' Treat conditions with few submissions with particular '
+        'caution. Generic entries (e.g. not provided) are omitted. '
+        'Germline classifications only',
     ),
     "row.clinvar_name": ("ClinVar 表記", "ClinVar name"),
     "note.variation_id": ("VariationID {id}", "VariationID {id}"),
@@ -921,20 +1136,77 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "different transcript the coordinates may differ; add the p. notation or the "
         "transcript accession to confirm.",
     ),
+    "lk.base_mismatch": (
+        '入力の {cds} をゲノムの塩基に読み替えると {expected} '
+        'ですが、この位置で同じアミノ酸置換を生じる塩基置換（{found}）と一致しません。転写産物番号と c. '
+        '表記を確認してください。',
+        'The input {cds} corresponds to {expected} on the genome, '
+        'which does not match any nucleotide change producing this '
+        'substitution at the position ({found}). Check the transcript'
+        ' and the c. notation.',
+    ),
+    "target.tx_assumed": (
+        '入力に転写産物番号なし。{status} {refseq} を適用',
+        'No transcript in the input; {status} {refseq} applied',
+    ),
+    "target.tx_version": (
+        '入力の {given} を {used}（MANE の版）として解釈',
+        'Input {given} interpreted as {used} (MANE version)',
+    ),
+    "target.tx_from_gene": (
+        '遺伝子から {status} {refseq} を選択（参照アミノ酸が一致）',
+        '{status} {refseq} chosen from the gene (reference '
+        'residue matches)',
+    ),
+    "path.tx_given": (
+        '入力の転写産物番号 {tx} を使用（{refseq}）',
+        'Input transcript {tx} used ({refseq})',
+    ),
+    "path.tx_assumed": (
+        '遺伝子 {gene} の {status} {refseq} を適用（転写産物番号なし）',
+        '{status} {refseq} of {gene} applied (no transcript '
+        'given)',
+    ),
+    "path.tx_from_gene": (
+        '遺伝子 {gene} の {status} {refseq} を選択（参照アミノ酸が一致）',
+        '{status} {refseq} of {gene} chosen (reference residue '
+        'matches)',
+    ),
+    "path.am_direct": (
+        'AlphaMissense の同じ転写産物 {am_enst} で座標を取得',
+        'Coordinate from AlphaMissense on the same transcript '
+        '{am_enst}',
+    ),
+    "path.am_mapped": (
+        '対応表で AlphaMissense の転写産物 {am_enst} に読み替え（残基番号のずれ '
+        '{offset:+d}）',
+        'Mapped to AlphaMissense transcript {am_enst} via the '
+        'correspondence table (residue offset {offset:+d})',
+    ),
+    "path.region": (
+        '領域探索の予備経路（AlphaMissense の転写産物 {enst}、残基の一致率 {agr:.2f}、比較 {n}'
+        ' 残基）',
+        'Region-search fallback (AlphaMissense transcript {enst}, '
+        'residue agreement {agr:.2f} over {n} residues)',
+    ),
     "lk.protein_mismatch": (
-        "c. 表記から求めたアミノ酸置換は {from_cds} ですが、入力に併記された {given} と一致しません"
-        "（転写産物 {refseq}）。c. 表記を優先しました。報告書の転写産物が MANE と異なる可能性が"
-        "あるので、転写産物番号を確認してください。",
-        "The c. notation translates to {from_cds}, which does not match the accompanying "
-        "{given} (transcript {refseq}). The c. notation was used. The report may be based "
-        "on a different transcript; check the accession.",
+        '{cds} は転写産物 {refseq} 上で {from_cds} に相当し、入力に併記された {given} と一致'
+        'しません。どちらが転記ミスか判断できないため、評価を行いません。検査報告書の転写産物番号と表記を確認し、転写産物番号付き'
+        'で入力し直してください。',
+        '{cds} corresponds to {from_cds} on transcript {refseq}, '
+        'which does not match the accompanying {given}. The '
+        'evaluation is not performed because it cannot be determined '
+        'which notation is wrong. Check the transcript and notation '
+        'on the laboratory report and re-enter with the transcript '
+        'accession.',
     ),
     "lk.gene_mismatch": (
         '入力の遺伝子名 {input_gene} と転写産物の遺伝子 {tx_gene} '
-        'が一致しません。転写産物側を採用しました。',
-        'The gene entered ({input_gene}) does not match the '
-        "transcript's gene ({tx_gene}). The transcript's gene was "
-        'used.',
+        'が一致しません。転記ミスの可能性があるため評価を行いません。どちらが正しいかを確認してください。',
+        'Gene symbol {input_gene} in the input does not match the '
+        'gene of the transcript ({tx_gene}). The evaluation is not '
+        'performed because this may be a transcription error; check '
+        'which is correct.',
     ),
     "lk.gene_not_found": (
         "遺伝子 {gene} が MANE に見つかりません。正式な HGNC 記号で入力してください。",

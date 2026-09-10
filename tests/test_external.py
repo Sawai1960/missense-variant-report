@@ -88,18 +88,26 @@ class TestMaveDB(unittest.TestCase):
         ]}
         self.assertEqual([s["urn"] for s in mavedb.single_gene_sets(payload, "BRCA1")], ["a"])
         csv_text = "accession,hgvs_nt,hgvs_pro,score\nx#1,NA,p.Thr167Cys,0\nx#2,NA,p.Arg1699Trp,-1.9\n"
-        self.assertEqual(mavedb.find_in_scores(csv_text, "p.Arg1699Trp"), -1.9)
+        self.assertEqual(mavedb.find_in_scores(csv_text, "p.Arg1699Trp"), (-1.9, "aa", None))
         self.assertIsNone(mavedb.find_in_scores(csv_text, "p.Arg1699Gln"))
 
-    def test_match_via_cdna_when_hgvs_pro_missing(self):
-        # SGE の表は hgvs_pro が NA で c. 表記だけ。手元の CDS で翻訳して照合する
-        cds = "ATGTGTGGC"          # Met Cys Gly
+    def test_nucleotide_match_is_preferred_and_required_when_present(self):
+        # SGE の表は塩基表記だけ。評価対象の c. と位置・塩基が一致する行だけを採る
         csv_text = ("accession,hgvs_nt,hgvs_splice,hgvs_pro,score\n"
-                    "x#1,NM_1.1:c.4T>G,NA,NA,-2.5\n"       # Cys2Gly
-                    "x#2,NM_1.1:c.6T>C,NA,NA,0.1\n")       # 同義
-        self.assertEqual(mavedb.find_in_scores(csv_text, "p.Cys2Gly", cds), -2.5)
-        self.assertIsNone(mavedb.find_in_scores(csv_text, "p.Cys2Gly"))          # cds 無しでは照合しない
-        self.assertIsNone(mavedb.find_in_scores(csv_text, "p.Cys2Ser", cds))
+                    "x#1,NM_007294.3:c.181T>G,NA,NA,-2.5\n"      # Cys61Gly (T>G)
+                    "x#2,NM_007294.3:c.181T>A,NA,NA,-0.1\n"      # 同じ残基の別の塩基
+                    "x#3,NA,NA,p.Cys61Gly,-1.0\n")               # アミノ酸だけの行
+        # 塩基が一致する行を優先し、版違いの転写産物番号は許す
+        self.assertEqual(mavedb.find_in_scores(csv_text, "p.Cys61Gly", (181, "T", "G"), "NM_007294.4"),
+                         (-2.5, "nt", "NM_007294.3"))
+        # 別の塩基置換なら、塩基表記の行は拾わず、アミノ酸だけの行に落ちる
+        self.assertEqual(mavedb.find_in_scores(csv_text, "p.Cys61Gly", (181, "T", "C"), "NM_007294.4"),
+                         (-1.0, "aa", None))
+        # 別の転写産物の塩基表記は照合しない
+        self.assertEqual(mavedb.find_in_scores(csv_text, "p.Cys61Gly", (181, "T", "G"), "NM_000001.1"),
+                         (-1.0, "aa", None))
+        # c. 表記が無い（p. 入力で求められなかった）ときは、塩基表記の行はアミノ酸では拾わない
+        self.assertEqual(mavedb.find_in_scores(csv_text, "p.Cys61Gly"), (-1.0, "aa", None))
 
 
 class TestLitVar(unittest.TestCase):

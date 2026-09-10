@@ -362,6 +362,8 @@ def _render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None) -> 
         if i == 1:
             _para(doc, funcvep_intro())
         _rows(doc, vr.predictions)
+        if vr.adoption_note:
+            _para(doc, vr.adoption_note)
         if vr.funcvep_note:
             _para(doc, vr.funcvep_note)
 
@@ -388,6 +390,10 @@ def _render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None) -> 
     _band(doc, t("pdf.disclaimer"))
     for d in disclaimer():
         _para(doc, bullet + d, size=9.5, color=INK)
+
+    if rep.provenance_rows:
+        _h2(doc, t("pdf.provenance"))
+        _rows(doc, rep.provenance_rows)
 
     _h2(doc, t("pdf.acknowledgement"))
     _para(doc, acknowledgement())

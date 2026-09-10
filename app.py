@@ -139,8 +139,12 @@ with st.expander(t("ui.formats"), expanded=not query):
 with st.expander(t("ui.population_manual")):
     st.caption(t("ui.population_help"))
     col_af, col_hom = st.columns(2)
-    af_text = col_af.text_input(t("ui.af"), value="", placeholder=t("ui.af_placeholder"))
-    hom_text = col_hom.text_input(t("ui.hom"), value="", placeholder=t("ui.hom_placeholder"))
+    # 手入力の値は変異ごとに持つ。別の変異を続けて照会したとき、前の変異の値が
+    # 残って混入しないように、入力欄の識別子に照会文字列を含める（レビュー対応 10）
+    af_text = col_af.text_input(t("ui.af"), value="", placeholder=t("ui.af_placeholder"),
+                                key=f"af_manual::{query}")
+    hom_text = col_hom.text_input(t("ui.hom"), value="", placeholder=t("ui.hom_placeholder"),
+                                  key=f"hom_manual::{query}")
 
 if not query:
     st.stop()
@@ -181,14 +185,40 @@ def _conditions(variation_id: str):
 
 
 @st.cache_data(ttl=24 * 3600, show_spinner=False)
-def _mavedb(gene: str, hgvs_pro: str, refseq_nuc: str):
+def _mavedb(gene: str, hgvs_pro: str, refseq_nuc: str, cds_change):
     return mavedb.lookup(gene, hgvs_pro, cfg.paths.index / "external", online=True,
-                         cds=store.cds_for(refseq_nuc))
+                         cds_change=cds_change, refseq_base=refseq_nuc)
 
 
 @st.cache_data(ttl=24 * 3600, show_spinner=False)
 def _litvar(gene: str, pv1: str, rsids: tuple[str, ...]):
     return litvar.lookup(gene, pv1, list(rsids))
+
+
+@st.cache_resource
+def _versions():
+    """索引フォルダーの versions.json（参照データの版）。無ければ None。"""
+    import json
+    path = cfg.paths.index / "versions.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+@st.cache_resource
+def _code_version() -> str:
+    """git のコミット識別子と日付。取れなければ空。"""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "log", "-1", "--format=%h %cd", "--date=short"],
+                             capture_output=True, text=True, timeout=5,
+                             cwd=str(Path(__file__).resolve().parent))
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except (OSError, subprocess.SubprocessError):
+        return ""
 
 
 @st.cache_resource(ttl=24 * 3600)
@@ -235,9 +265,9 @@ if gnomad_online and not res.error:
                 condition_results[g.funcvep_id] = c
         first = res.variants[0]
         hgvs_pro = "p." + AA1_TO_3[first.aa_ref] + str(first.position) + AA1_TO_3[first.aa_alt]
-        mave_result = _mavedb(first.gene, hgvs_pro, first.refseq_nuc)
+        mave_result = _mavedb(first.gene, hgvs_pro, first.refseq_nuc, first.cds_change)
         if mave_result.status == "error":
-            _mavedb.clear(first.gene, hgvs_pro, first.refseq_nuc)
+            _mavedb.clear(first.gene, hgvs_pro, first.refseq_nuc, first.cds_change)
 
 rep = build_report(
     res, thresholds,
@@ -252,6 +282,9 @@ rep = build_report(
     mave_result=mave_result,
     organization=cfg.organization(st.session_state["lang"]),
     condition_results=condition_results,
+    primary_model=cfg.primary_model,
+    versions=_versions(),
+    code_version=_code_version(),
 )
 
 if rep.error:
@@ -314,9 +347,8 @@ for i, vr in enumerate(rep.variants, 1):
     )
     st.caption(t("ui.funcvep_caption", cuts=_cuts))
     cols = st.columns(len(FUNCVEP_MODELS))
-    for c, model in zip(cols, FUNCVEP_MODELS):
+    for c, model, prow in zip(cols, FUNCVEP_MODELS, vr.predictions):
         score = vr.variant.evidence.funcvep.get(model)
-        a = vr.acmg.get(model)
         with c:
             st.markdown(f"**{model.replace('_', '-')}**")
             if score is None:
@@ -332,8 +364,11 @@ for i, vr in enumerate(rep.variants, 1):
                 f"{'Damaging' if damaging else 'Neutral'}</div>",
                 unsafe_allow_html=True,
             )
-            st.caption(a.label if a else t("uncalibrated"))
+            # PDF と同じ判定文（採用／参考、BP4 の保留や未評価の注記を含む）
+            st.caption(prow.note.split("｜")[0])
 
+    if vr.adoption_note:
+        st.caption(vr.adoption_note)
     if vr.funcvep_note:
         st.info(vr.funcvep_note)
 
@@ -402,6 +437,13 @@ with st.expander(t("ui.thresholds")):
 st.subheader(t("ui.disclaimer"))
 # 報告書全体に掛かる注意なので枠で囲んで目立たせる
 st.warning("・" + "\n\n・".join(disclaimer()))
+
+if rep.provenance_rows:
+    with st.expander(t("ui.provenance")):
+        for r in rep.provenance_rows:
+            st.write(f"**{r.label}** {r.value}")
+            if r.note:
+                st.caption(r.note)
 
 with st.expander(t("ui.acknowledgement")):
     st.write(acknowledgement())
