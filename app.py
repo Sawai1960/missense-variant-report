@@ -422,5 +422,6 @@ try:
         mime="application/pdf",
         type="primary",
     )
+    st.caption(t("ui.pdf_hint"))
 except FileNotFoundError as exc:
     st.error(str(exc))

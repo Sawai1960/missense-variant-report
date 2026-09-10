@@ -1193,5 +1193,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.thresholds": ("PP3/BP4 の判定基準について", "PP3/BP4 thresholds"),
     "ui.disclaimer": ("解釈上の注意", "Interpretation notes"),
     "ui.references": ("参考文献", "References"),
-    "ui.pdf_button": ("この内容を PDF で保存", "Save as PDF"),
+    "ui.pdf_button": ("この内容を PDF で保存（印刷はこの PDF から）", "Save as PDF (print from the PDF)"),
+    "ui.pdf_hint": ("ブラウザの印刷機能ではなく、保存した PDF を印刷してください。",
+                    "Print the saved PDF rather than using the browser print function."),
 }
