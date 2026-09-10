@@ -656,9 +656,14 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'evidence (PP3/BP4), not functional assay evidence (PS3/BS3).',
     ),
     "disclaimer.3": (
-        '対象はミスセンス変異（アミノ酸置換）のみです。スプライシングへの影響、フレームシフト、ナンセンス変異は評価されません。',
-        'Missense variants only; effects on splicing, frameshift and '
-        'nonsense variants are not assessed.',
+        '本レポートが扱うのはミスセンス変異（アミノ酸置換）のみで、フレームシフトやナンセンス変異は対象外です。FuncVEP '
+        'の予測はアミノ酸置換の影響に限られ、スプライシングへの影響は含まれないため、スプライシングについては SpliceAI '
+        'の欄を参照してください。',
+        'This report covers missense variants (amino-acid '
+        'substitutions) only; frameshift and nonsense variants are '
+        'out of scope. FuncVEP predictions concern the amino-acid '
+        'substitution and do not include effects on splicing; see the'
+        ' SpliceAI entry for splicing.',
     ),
     "disclaimer.4": (
         '本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはいけません。家系内での分離、症状との一致、機能実験、専'
