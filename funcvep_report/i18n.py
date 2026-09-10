@@ -445,8 +445,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'evidence, as the substituted amino acid differs',
     ),
     "row.clingen": ("ClinGen の評価（遺伝子単位）", "ClinGen gene-disease validity (gene level)"),
-    "clingen.match": ("　◆ ClinVar の表現型欄の筆頭（{pheno}）と一致",
-                      "  ◆ matches the first ClinVar phenotype ({pheno})"),
+    "clingen.match": ("　◆ ClinVar の主な疾患名（{pheno}）と一致",
+                      "  ◆ matches the main ClinVar condition ({pheno})"),
     "clingen.item": ("{disease}（{moi}、{cls}、{date}）", "{disease} ({moi}, {cls}, {date})"),
     "clingen.none": (
         '未登録（ClinGen が評価した遺伝子と疾患の組み合わせに含まれていません）',
@@ -455,8 +455,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "note.clingen": (
         'ClinGen の専門家パネルによる、遺伝子と疾患の関係の確立度です（一覧を {retrieved} '
         'に取得）。遺伝子単位の評価であり、この変異がどの疾患を起こすかを示すものでは'
-        'ありません。この変異の疾患は ClinVar の表現型欄を参照してください。◆ は、その'
-        '筆頭の疾患名と一致するものです。'
+        'ありません。この変異の疾患は ClinVar の欄を参照してください。◆ は、ClinVar で'
+        '提出件数が最多の疾患名（件数が取れないときは筆頭）と一致するものです。'
         'Definitive / Strong / Moderate / Limited / Disputed / '
         'Refuted の順に弱くなります。遺伝形式は pLI の読み方、BS2（ホモ接合体の扱い）、PM2 '
         'の重みづけの前提になります。遺伝形式の略号: AD 顕性遺伝（優性遺伝）、AR 潜性遺伝'
@@ -464,8 +464,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'Strength of the gene-disease relationship as curated by '
         'ClinGen expert panels (list retrieved {retrieved}). This is a gene-level '
         'assessment and does not indicate which disease this variant causes; see the '
-        'ClinVar phenotype field for that; ◆ marks the entry matching its first '
-        'phenotype. Classifications run from '
+        'ClinVar section for that; ◆ marks the entry matching the ClinVar condition with '
+        'the most submissions (or the first listed when counts are unavailable). '
+        'Classifications run from '
         'Definitive down through Strong, Moderate, Limited, Disputed '
         'and Refuted. The mode of inheritance frames pLI, BS2 and PM2. Abbreviations: '
         'AD autosomal dominant, AR autosomal recessive, XL X-linked, SD semidominant, '
@@ -611,6 +612,25 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "row.submitters": ("提出者数", "Submitters"),
     "row.last_evaluated": ("最終評価", "Last evaluated"),
     "row.phenotypes": ("表現型", "Phenotypes"),
+    "row.conditions": ("疾患名（提出件数順）", "Conditions (by submissions)"),
+    "cond.item": ("{name}（{cls}、{n} 件、{stars} 星）", "{name} ({cls}, {n} submissions, {stars}-star)"),
+    "note.phenotypes": (
+        "各提出者が登録した疾患名の一覧です。ClinVar が正しさを検証したものではなく、"
+        "検査の依頼理由（遺伝子パネルの対象疾患など）がそのまま登録されることもあります",
+        "Conditions as entered by each submitter. ClinVar does not verify them, and the "
+        "reason for testing (e.g. the conditions on a gene panel) is sometimes entered as is",
+    ),
+    "note.conditions": (
+        "疾患名は各提出者が登録したもので、ClinVar が正しさを検証したものではありません。"
+        "検査の依頼理由（遺伝子パネルの対象疾患など）がそのまま登録されることもあり、この変異と"
+        "その疾患の因果関係を示すとは限りません。件数は提出数で、件数の少ない疾患名は特に"
+        "この点に注意してください。総称（not provided など）は除いています",
+        "Conditions are as entered by each submitter and are not verified by ClinVar. The "
+        "reason for testing (e.g. the conditions on a gene panel) is sometimes entered as is, "
+        "so a listed condition does not necessarily reflect a causal relationship. Counts are "
+        "numbers of submissions; treat conditions with few submissions with particular "
+        "caution. Generic entries (e.g. not provided) are omitted",
+    ),
     "row.clinvar_name": ("ClinVar 表記", "ClinVar name"),
     "note.variation_id": ("VariationID {id}", "VariationID {id}"),
     "clinvar.none": ("ClinVar に登録なし", "Not in ClinVar"),

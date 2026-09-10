@@ -17,6 +17,7 @@ from .acmg import Assignment, assign, binary_cutoff
 from .config import FUNCVEP_MODELS
 from .i18n import get_lang, has, join, t
 from .clingen import GeneDisease
+from .clinvar_api import ConditionResult, is_generic_condition
 from .gnomad import GnomadResult
 from .mavedb import MaveResult
 from .spliceai import SpliceResult
@@ -111,6 +112,7 @@ class VariantReport:
     residue_rows: list[Row] = field(default_factory=list)
     splice: SpliceResult | None = None
     mave_rows: list[Row] = field(default_factory=list)
+    conditions: ConditionResult | None = None
 
 
 @dataclass
@@ -311,9 +313,6 @@ def matches_phenotype(disease: str, phenotypes: list[str], gene: str | None = No
     return False
 
 
-_GENERIC_PHENOTYPES = {"not provided", "not specified", "see cases", "inborn genetic diseases", "-"}
-
-
 def primary_phenotype(raw: str | None) -> str | None:
     """ClinVar の表現型欄の筆頭の疾患名。
 
@@ -323,12 +322,23 @@ def primary_phenotype(raw: str | None) -> str | None:
     """
     for part in str(raw or "").split("|"):
         p = part.strip()
-        low = p.lower()
-        if (not p or low in _GENERIC_PHENOTYPES or ";" in p or "-related" in low
-                or re.fullmatch(r"\d+ conditions", low)):
+        if not p or is_generic_condition(p):
             continue
         return p
     return None
+
+
+def _condition_row(c: ConditionResult, fallback_raw: str | None, limit: int = 6) -> Row:
+    """ClinVar の疾患名の行。提出件数が取れていれば件数順に、無ければ索引の一覧で。"""
+    rows = c.specific if c and c.status == "found" else []
+    if not rows:
+        return Row(t("row.phenotypes"), _phenotypes(fallback_raw), t("note.phenotypes"))
+    items = [t("cond.item", name=r.condition, cls=r.classification or t("dash"),
+               n=r.submissions, stars=clinvar_stars(r.review_status)) for r in rows[:limit]]
+    value = t("sep.list").join(items)
+    if len(rows) > limit:
+        value += t("phenotypes.more", n=len(rows) - limit)
+    return Row(t("row.conditions"), value, t("note.conditions"))
 
 
 def _clingen_rows(gene_validity: list[GeneDisease] | None, retrieved: str,
@@ -476,7 +486,8 @@ def build(res: Resolution, thresholds: dict | None,
           gene_validity: list[GeneDisease] | None = None,
           splice_results: dict[str, SpliceResult] | None = None,
           mave_result: MaveResult | None = None,
-          organization: str = "") -> Report:
+          organization: str = "",
+          condition_results: dict[str, ConditionResult] | None = None) -> Report:
     wide = t("sep.wide")
     seen_terms: set[str] = set()
     rep = Report(
@@ -521,10 +532,13 @@ def build(res: Resolution, thresholds: dict | None,
         ]
     else:
         rep.gene_rows = [Row(t("row.gene"), gene_value)]
-    # 照合には ClinVar の筆頭の疾患だけを使う（候補が複数なら最初に見つかったもの）
+    # 照合には ClinVar の主な疾患だけを使う。提出件数が取れていれば最多のもの、
+    # 無ければ索引の一覧の筆頭（候補が複数なら最初に見つかったもの）
     phenotypes: list[str] = []
     for rv in res.variants:
-        top = primary_phenotype((rv.evidence.clinvar or {}).get("phenotypes"))
+        c = (condition_results or {}).get(rv.genomic.funcvep_id)
+        top = (c.top_condition if c and c.status == "found" else None) \
+            or primary_phenotype((rv.evidence.clinvar or {}).get("phenotypes"))
         if top:
             phenotypes = [top]
             break
@@ -546,6 +560,7 @@ def build(res: Resolution, thresholds: dict | None,
         vr = VariantReport(variant=rv)
         ev = rv.evidence
         vr.splice = (splice_results or {}).get(rv.genomic.funcvep_id)
+        vr.conditions = (condition_results or {}).get(rv.genomic.funcvep_id)
         vr.mave_rows = _mave_rows(mave_result, gnomad_online)
         if gnomad_online and vr.splice and vr.splice.level in ("moderate", "high"):
             rep.warnings.append(t("warn.spliceai", ds=f"{vr.splice.max_ds:.2f}",
@@ -618,7 +633,8 @@ def build(res: Resolution, thresholds: dict | None,
                     t("note.review", stars=stars, status=cv.get("review_status"))),
                 Row(t("row.submitters"), str(cv.get("n_submitters") or t("dash")), ""),
                 Row(t("row.last_evaluated"), str(cv.get("last_evaluated") or t("dash")), ""),
-                Row(t("row.phenotypes"), _phenotypes(cv.get("phenotypes")), ""),
+                _condition_row((condition_results or {}).get(rv.genomic.funcvep_id),
+                               cv.get("phenotypes")),
                 Row(t("row.clinvar_name"), str(cv.get("name") or t("dash"))[:200],
                     t("note.variation_id", id=cv.get("variation_id"))),
             ]

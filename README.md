@@ -116,6 +116,7 @@ ClinVar の欄の下には「同じ残基の既知判定」を出す。手元の
 | SpliceAI | Ensembl VEP REST | 塩基置換がスプライシングを壊す確率。0.2 以上で注意欄にも出す |
 | 機能実験の実測値 | MaveDB API | 大規模機能実験のスコア。実験のある遺伝子だけ節が出る |
 | 文献 | LitVar2（NCBI） | 変異に言及した論文。画面だけに出し、PDF には載せない |
+| ClinVar の疾患別提出件数 | ClinVar E-utilities（VariationID で照会） | 疾患名ごとの判定・提出件数・レビュー段階。ClinVar の欄を件数順にし、ClinGen の照合にも使う |
 
 画面下の「この内容を PDF で保存」で、記録や遺伝カウンセリングに使える PDF が出る。
 

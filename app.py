@@ -16,7 +16,7 @@ from funcvep_report.acmg import binary_cutoff, describe_thresholds
 from funcvep_report.config import FUNCVEP_MODELS
 from funcvep_report.gnomad import lookup as gnomad_lookup
 from funcvep_report.togovar import lookup as togovar_lookup
-from funcvep_report import clingen, litvar, mavedb, spliceai
+from funcvep_report import clingen, clinvar_api, litvar, mavedb, spliceai
 from funcvep_report.i18n import LANG_NAMES, LANGS, set_lang, t
 from funcvep_report.lookup import Store, resolve
 from funcvep_report.pdfout import fonts_for, render_stream
@@ -160,6 +160,11 @@ def _spliceai(chrom: str, pos: int, ref: str, alt: str, enst: str, gene: str):
 
 
 @st.cache_data(ttl=24 * 3600, show_spinner=False)
+def _conditions(variation_id: str):
+    return clinvar_api.lookup(variation_id)
+
+
+@st.cache_data(ttl=24 * 3600, show_spinner=False)
 def _mavedb(gene: str, hgvs_pro: str, refseq_nuc: str):
     return mavedb.lookup(gene, hgvs_pro, cfg.paths.index / "external", online=True,
                          cds=store.cds_for(refseq_nuc))
@@ -182,6 +187,7 @@ gnomad_results = None
 japan_results = None
 splice_results = None
 mave_result = None
+condition_results = None
 gene_validity = None
 if not res.error:
     table = _clingen_table(gnomad_online)
@@ -189,7 +195,7 @@ if not res.error:
         gene_validity = table.get(res.gene, [])
 if gnomad_online and not res.error:
     with st.spinner(t("ui.gnomad_querying")):
-        gnomad_results, japan_results, splice_results = {}, {}, {}
+        gnomad_results, japan_results, splice_results, condition_results = {}, {}, {}, {}
         for rv in res.variants:
             g = rv.genomic
             r = _gnomad(g.chrom, g.pos, g.ref, g.alt)
@@ -205,6 +211,12 @@ if gnomad_online and not res.error:
             if s.status == "error":
                 _spliceai.clear(g.chrom, g.pos, g.ref, g.alt, rv.enst, rv.gene)
             splice_results[g.funcvep_id] = s
+            vid = str((rv.evidence.clinvar or {}).get("variation_id") or "")
+            if vid:
+                c = _conditions(vid)
+                if c.status == "error":
+                    _conditions.clear(vid)
+                condition_results[g.funcvep_id] = c
         first = res.variants[0]
         hgvs_pro = "p." + AA1_TO_3[first.aa_ref] + str(first.position) + AA1_TO_3[first.aa_alt]
         mave_result = _mavedb(first.gene, hgvs_pro, first.refseq_nuc)
@@ -223,6 +235,7 @@ rep = build_report(
     splice_results=splice_results,
     mave_result=mave_result,
     organization=cfg.organization(st.session_state["lang"]),
+    condition_results=condition_results,
 )
 
 if rep.error:
