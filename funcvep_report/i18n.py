@@ -665,8 +665,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
                    "{d} of {n} predictors damaging (discordant)"),
 
     "disclaimer.1": (
-        'FuncVEP が予測するのはタンパク質の働きへの影響（damaging / neutral）であり、病気を起こすかどう'
-        'か（臨床的病原性）そのものではありません。両者を混同しないようにご注意ください。',
+        'FuncVEP が予測するのはタンパク質の働きへの影響（damaging / '
+        'neutral）であり、病気を起こすかどうか（臨床的病原性）そのものではありません。両者を混同しないようにしてください。',
         'FuncVEP predicts functional impact (damaging / neutral), not'
         ' clinical pathogenicity; the two must not be conflated.',
     ),
@@ -687,8 +687,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         ' SpliceAI entry for splicing.',
     ),
     "disclaimer.4": (
-        '本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはいけません。家系内での分離、症状との一致、機能実験、専'
-        '門家の検討と併せて評価してください。',
+        '本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としては使用できません。家系内での分離、症状との一致、機能実験'
+        '、専門家の検討と併せて評価してください。',
         'This report is an aid to variant interpretation and must not'
         ' serve as the sole basis for clinical decisions. It should '
         'be weighed together with segregation, phenotype concordance,'
