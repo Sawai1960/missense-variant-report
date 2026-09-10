@@ -248,6 +248,11 @@ def _summary_box(doc: _Doc, rows: list[Row], kind: str, label_w: float = 42.0) -
                 doc.set_text_color(*INK)
             doc.mc(avail - label_w - pad, 5.5 if is_summary else 5, r.value)
             doc.set_y(max(after_label, doc.get_y()) + 1.2)
+        # 箱を見た人が必ず目にする位置に、最も重要な注意を一行
+        doc.set_x(doc.l_margin + pad)
+        doc.set_font("jp", size=7.5)
+        doc.set_text_color(*MUTED)
+        doc.mc(avail - 2 * pad, 4, t("conc.caveat"))
         return doc.get_y() + pad - y0
 
     # 高さを測る（描いた内容は捨てる）

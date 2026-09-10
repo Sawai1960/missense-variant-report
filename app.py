@@ -348,6 +348,7 @@ for i, vr in enumerate(rep.variants, 1):
             _lines.append(f"### {r.value}")
         else:
             _lines.append(f"**{r.label}** {r.value}")
+    _lines.append(t('conc.caveat'))
     _box("\n\n".join(_lines))
 
     st.subheader(t("ui.clinvar"))

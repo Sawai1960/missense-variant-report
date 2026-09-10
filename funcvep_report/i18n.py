@@ -646,6 +646,12 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "gloss.ambiguous": ("ambiguous（判定保留）", "ambiguous"),
     "gloss.likely_benign": ("likely_benign（良性の可能性が高い）", "likely_benign"),
 
+    "conc.caveat": (
+        "※ 予測ツールの判定が揃っているかを示すもので、病気を起こすかどうか（臨床的病原性）の"
+        "判定ではありません。末尾の「解釈上の注意」を参照してください。",
+        "Note: this shows whether the predictors agree; it is not a judgement of clinical "
+        "pathogenicity. See the interpretation notes at the end.",
+    ),
     "row.damaging_side": ("damaging（機能を損なう）側", "damaging"),
     "row.neutral_side": ("neutral（影響なし）側", "neutral"),
     "conc.no_tool": ("なし", "none"),
