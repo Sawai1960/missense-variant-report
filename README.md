@@ -272,5 +272,7 @@ HGVS 転写産物表記での入力を試し、それでも止まる場合はこ
 たまたま同じアミノ酸が来ているだけで、指しているのは別の場所である。採用すると
 遠く離れた座標のスコアを表示してしまうため止めている。上と同じ対処をとる。
 
-**PDF の日本語が出ない** — `config.yaml` の `pdf_font` が実在する TTF を指しているか確認する。
+**PDF の日本語が出ない** — `config.yaml` の `pdf_font` が実在するフォントを指しているか確認する。
+既定は Windows 同梱の BIZ UDP ゴシック（`BIZ-UDGothicR.ttc` と `BIZ-UDGothicB.ttc`、
+`pdf_font_face: "BIZ UDPGothic"`）。無い環境では `NotoSansJP-VF.ttf` を `pdf_font` に指定する。
 既定は Windows 同梱の `C:/Windows/Fonts/NotoSansJP-VF.ttf`。

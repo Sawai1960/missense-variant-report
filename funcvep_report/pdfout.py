@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
@@ -23,9 +24,57 @@ ACCENT = (28, 78, 128)
 _WEIGHTS = {"regular": 400, "bold": 700}
 
 
-def prepare_fonts(src: Path, cache_dir: Path) -> dict[str, Path]:
-    """可変フォントから静的なウェイトを切り出す。既にあれば作り直さない。"""
+@dataclass(frozen=True)
+class FontSpec:
+    """PDF の本文フォント。
+
+    regular  通常の書体。TTF（静的・可変どちらも可）または TTC
+    bold     太字の書体。省略時は regular から作る（可変フォントなら太いウェイト、
+             そうでなければ同じ書体）
+    face     TTC の中の書体名（例 "BIZ UDPGothic"）。TTC でなければ無視
+    """
+    regular: Path
+    bold: Path | None = None
+    face: str | None = None
+
+
+def _extract_from_ttc(src: Path, face: str | None, dest: Path) -> Path:
+    """TTC から 1 書体を取り出して TTF として保存する。既にあれば作り直さない。"""
+    if dest.exists():
+        return dest
+    from fontTools.ttLib import TTCollection
+
+    col = TTCollection(str(src))
+    want = (face or "").replace(" ", "").lower()
+    chosen = col.fonts[0]
+    if want:
+        for f in col.fonts:
+            name = (f["name"].getDebugName(1) or "").replace(" ", "").lower()
+            if name == want:
+                chosen = f
+                break
+    chosen.save(str(dest))
+    return dest
+
+
+def prepare_fonts(src: Path | FontSpec, cache_dir: Path) -> dict[str, Path]:
+    """使うフォントファイルを整える。
+
+    TTC なら書体を取り出し、可変フォントなら静的なウェイトを切り出す。
+    既定の C:/Windows/Fonts は書き込めないので、結果は cache_dir に置く。
+    """
     cache_dir.mkdir(parents=True, exist_ok=True)
+    spec = src if isinstance(src, FontSpec) else FontSpec(regular=src)
+    if spec.regular.suffix.lower() == ".ttc":
+        tag = (spec.face or "0").replace(" ", "")
+        regular = _extract_from_ttc(spec.regular, spec.face, cache_dir / f"{spec.regular.stem}-{tag}.ttf")
+        bold = regular
+        if spec.bold and spec.bold.exists():
+            bold = _extract_from_ttc(spec.bold, spec.face, cache_dir / f"{spec.bold.stem}-{tag}.ttf")
+        return {"regular": regular, "bold": bold}
+    if spec.bold and spec.bold.exists() and "fvar" not in _tables(spec.regular):
+        return {"regular": spec.regular, "bold": spec.bold}
+    src = spec.regular
     out = {}
     for name, wght in _WEIGHTS.items():
         dest = cache_dir / f"{src.stem}-{wght}.ttf"
@@ -154,16 +203,21 @@ def _para(doc: _Doc, text: str, size: float = 8.5,
     doc.ln(0.8)
 
 
-def render(rep: Report, font_path: Path, cache_dir: Path | None = None) -> bytes:
+def _tables(path: Path) -> set[str]:
+    from fontTools.ttLib import TTFont
+    return set(TTFont(str(path), lazy=True).keys())
+
+
+def render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None = None) -> bytes:
     """レポートを PDF にする。見出しの言語はレポート作成時の言語に合わせる。"""
     with use_lang(rep.lang):
         return _render(rep, font_path, cache_dir)
 
 
-def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
-    if not font_path.exists():
-        raise FileNotFoundError(t("pdf.font_missing", path=font_path))
-    # 既定の C:\Windows\Fonts は書き込めないので、必ず書ける場所に切り出す
+def _render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None) -> bytes:
+    regular = font_path.regular if isinstance(font_path, FontSpec) else font_path
+    if not regular.exists():
+        raise FileNotFoundError(t("pdf.font_missing", path=regular))
     fonts = prepare_fonts(
         font_path,
         cache_dir or (Path.home() / ".cache" / "funcvep_report" / "fonts"),
@@ -265,13 +319,13 @@ def _render(rep: Report, font_path: Path, cache_dir: Path | None) -> bytes:
     return bytes(doc.output())
 
 
-def render_to(rep: Report, font_path: Path, dest: Path,
+def render_to(rep: Report, font_path: Path | FontSpec, dest: Path,
               cache_dir: Path | None = None) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(render(rep, font_path, cache_dir))
     return dest
 
 
-def render_stream(rep: Report, font_path: Path,
+def render_stream(rep: Report, font_path: Path | FontSpec,
                   cache_dir: Path | None = None) -> BytesIO:
     return BytesIO(render(rep, font_path, cache_dir))

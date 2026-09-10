@@ -44,5 +44,9 @@ organization:
   ja: "兵庫医科大学病院 遺伝子医療部"
   en: "Department of Clinical Genetics, Hyogo Medical University Hospital"
 
-# レポート PDF に使う日本語フォント（Windows 同梱）
-pdf_font: "C:/Windows/Fonts/NotoSansJP-VF.ttf"
+# レポート PDF に使う日本語フォント（Windows 同梱の BIZ UDP ゴシック。読みやすさで選んだ）。
+# TTC（複数書体を束ねたファイル）のときは pdf_font_face で書体名を指定する。
+# 可変フォント（例 NotoSansJP-VF.ttf）を pdf_font に指定すれば pdf_font_bold は不要。
+pdf_font: "C:/Windows/Fonts/BIZ-UDGothicR.ttc"
+pdf_font_bold: "C:/Windows/Fonts/BIZ-UDGothicB.ttc"
+pdf_font_face: "BIZ UDPGothic"

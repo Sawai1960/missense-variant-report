@@ -77,6 +77,8 @@ class Config:
         self.primary_model: str = raw.get("primary_model", "FuncVEP_CTI")
         self.gnomad_af_mode: str = raw.get("gnomad_af_mode", "manual")
         self.pdf_font = Path(raw.get("pdf_font", ""))
+        self.pdf_font_bold = Path(raw["pdf_font_bold"]) if raw.get("pdf_font_bold") else None
+        self.pdf_font_face: str | None = raw.get("pdf_font_face") or None
         self._organization = raw.get("organization") or {}
         self._acmg = raw.get("acmg", {})
 
