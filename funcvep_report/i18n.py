@@ -62,9 +62,8 @@ def join(items, wide: bool = False) -> str:
 
 # 著者私信で共通する注意書き。何度も出るのでここにまとめる。
 _NO_INFO_JA = (
-    "スコアが無いこと自体は、病気との関係についても予測の確からしさについても"
-    "何の情報も持たない（著者らに確認済み）。AlphaMissense・REVEL・ClinVar の"
-    "情報で判断すること。"
+    'スコアが無いこと自体は、病気との関係についても予測の確からしさについても何の情報も持ちません（著者らに確認済み）。Alp'
+    'haMissense・REVEL・ClinVar の情報で判断してください。'
 )
 _NO_INFO_EN = (
     "The absence of a score carries no information about pathogenicity or "
@@ -119,22 +118,23 @@ _STRINGS: dict[str, tuple[str, str]] = {
 
     # ------------------------------------------------------------ report.py
     "intro.funcvep": (
-        "FuncVEP は Kayaalp ら（Nature Genetics, 2026）が開発した予測ツール。"
-        "従来の多くのツールが ClinVar などの臨床判定や一般の人々の変異データで"
-        "学習しているのに対し、FuncVEP は機能実験（変異がタンパク質の働きに"
-        "与える影響を実際に測ったデータ）で学習している点が特徴で、論文では"
-        "既存の 48 種のツールを上回る精度が報告されている（機能実験に基づく評価で "
-        "78.8%→84.6%、臨床判定に基づく評価で 90.1%→92.4%）。本レポートは論文と"
-        "ともに公開された予測済みスコア（約 7,300 万変異）を引いており、再計算は"
-        "していない。",
-        "FuncVEP (Kayaalp et al., Nature Genetics 2026) is a family of variant "
-        "effect predictors trained on functional assay data rather than on "
-        "clinical classifications or population patterns, which the authors "
-        "identify as sources of limited generalizability and circularity in "
-        "existing predictors. In the paper it outperforms 48 existing predictors "
-        "(functional benchmarks 78.8%→84.6%; clinical benchmarks 90.1%→92.4%). "
-        "This report retrieves the precomputed scores released with the paper "
-        "(~73 million missense variants); no scores are recomputed.",
+        'FuncVEP は Kayaalp ら（Nature Genetics, '
+        '2026）が開発した予測ツールです。従来の多くのツールが ClinVar '
+        'などの臨床判定や一般の人々の変異データで学習しているのに対し、FuncVEP '
+        'は機能実験（変異がタンパク質の働きに与える影響を実際に測ったデータ）で学習している点が特徴で、論文では既存の 48 '
+        '種のツールを上回る精度が報告されています（機能実験に基づく評価で 78.8%→84.6%、臨床判定に基づく評価で '
+        '90.1%→92.4%）。本レポートは論文とともに公開された予測済みスコア（約 7,300 '
+        '万変異）を引いており、再計算はしていません。',
+        'FuncVEP (Kayaalp et al., Nature Genetics 2026) is a family '
+        'of variant effect predictors trained on functional assay '
+        'data rather than on clinical classifications or population '
+        'patterns, which the authors identify as sources of limited '
+        'generalizability and circularity in existing predictors. In '
+        'the paper it outperforms 48 existing predictors (functional '
+        'benchmarks 78.8%→84.6%; clinical benchmarks 90.1%→92.4%). '
+        'This report retrieves the precomputed scores released with '
+        'the paper (~73 million missense variants); no scores are '
+        'recomputed.',
     ),
 
     "missing_label.blank": ("非公開（モデルの学習に使用された変異）",
@@ -149,9 +149,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "missing_label.default": ("スコアなし", "No score"),
 
     "missing_note.blank": (
-        'この変異は、FuncVEP の一部のモデルの学習データ（既知の判定を持つ変異の集合）に含まれていた。学習に用いた変異に対'
-        'する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは該当モデルのスコアを公開していない。予測'
-        'に失敗したのではない。'
+        'この変異は、FuncVEP の一部のモデルの学習データ（既知の判定を持つ変異の集合）に含まれていました。学習に用いた変異'
+        'に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは該当モデルのスコアを公開していません'
+        '。予測に失敗したのではありません。'
         + _NO_INFO_JA,
         'This variant was part of the training data (variants with '
         'known classifications) for some of the FuncVEP models. A '
@@ -162,9 +162,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
         + _NO_INFO_EN,
     ),
     "missing_note.absent": (
-        'この変異は、FuncVEP の 6 つのモデルの学習データ（既知の判定を持つ変異の集合）にすべて含まれていた。学習に用い'
-        'た変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは各モデルの予測対象から学習デー'
-        'タの変異を除外している。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しない。'
+        'この変異は、FuncVEP の 6 つのモデルの学習データ（既知の判定を持つ変異の集合）にすべて含まれていました。学習に'
+        '用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは各モデルの予測対象から学習'
+        'データの変異を除外しています。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しません。'
         + _NO_INFO_JA,
         'This variant was part of the training data (variants with '
         'known classifications) for all six FuncVEP models. A '
@@ -176,20 +176,21 @@ _STRINGS: dict[str, tuple[str, str]] = {
         + _NO_INFO_EN,
     ),
     "missing_note.absent_unexplained": (
-        "この変異は公開された予測表に無く、公開されている学習データの"
-        "一覧にも見当たらない。著者らの照合（2026-09-07 私信）によれば、この種の"
-        "未収録は予測表を作る工程の都合（注釈の違いによる除外・元データに無い・"
-        "処理の抜け）で生じたものである。" + _NO_INFO_JA,
-        "This variant has no row in the released table and is not in any "
-        "published training set. According to the authors (personal "
-        "communication, 2026-09-07), such absences arose during assembly of the "
-        "released table (transcript-annotation differences, absence from the "
-        "source variant set, or loss during processing). "
+        'この変異は公開された予測表に無く、公開されている学習データの一覧にも見当たりません。著者らの照合（2026-09-07 '
+        '私信）によれば、この種の未収録は予測表を作る工程の都合（注釈の違いによる除外・元データに無い・処理の抜け）で生じたもので'
+        'す。'
+        + _NO_INFO_JA,
+        'This variant has no row in the released table and is not in '
+        'any published training set. According to the authors '
+        '(personal communication, 2026-09-07), such absences arose '
+        'during assembly of the released table (transcript-annotation'
+        ' differences, absence from the source variant set, or loss '
+        'during processing). '
         + _NO_INFO_EN,
     ),
     "missing_note.unknown": (
-        "FuncVEP の索引がないため照会できない。",
-        "The FuncVEP index is unavailable; no lookup was performed.",
+        'FuncVEP の索引がないため照会できません。',
+        'The FuncVEP index is unavailable; no lookup was performed.',
     ),
     "trained_models": (
         "　学習に使用したモデル: {models}",
@@ -197,24 +198,24 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
 
     "model_note.FuncVEP_CTI": (
-        "ClinVar などの臨床判定で学習した他の予測ツールの結果も材料に含めたモデル。"
-        "論文の比較では最も高精度だが、ClinVar と同じ答えになりやすく、"
-        "ClinVar から独立した証拠としては弱い",
-        "Includes clinically trained predictors among its input features. Highest"
-        " benchmark performance, but the greatest risk of circularity with "
-        "ClinVar",
+        'ClinVar '
+        'などの臨床判定で学習した他の予測ツールの結果も材料に含めたモデルです。論文の比較では最も高精度ですが、ClinVar '
+        'と同じ答えになりやすく、ClinVar から独立した証拠としては弱いといえます',
+        'Includes clinically trained predictors among its input '
+        'features. Highest benchmark performance, but the greatest '
+        'risk of circularity with ClinVar',
     ),
     "model_note.FuncVEP_CTE": (
-        "臨床判定で学習した他ツールの結果を材料から外したモデル。"
-        "ClinVar から独立した証拠として扱いやすい",
-        "Excludes clinically trained predictors from its features; more "
-        "independent of ClinVar",
+        '臨床判定で学習した他ツールの結果を材料から外したモデルです。ClinVar から独立した証拠として扱いやすいといえます',
+        'Excludes clinically trained predictors from its features; '
+        'more independent of ClinVar',
     ),
     "model_note.FuncVEP_SP": (
-        "他の予測ツールの結果を一切使わず、配列と構造の情報だけで予測するモデル。"
-        "最も独立しているが、単独の精度は上の 2 つに劣る",
-        "Uses no predictor-derived features (sequence- and structure-based only)."
-        " Most independent, with lower standalone performance",
+        '他の予測ツールの結果を一切使わず、配列と構造の情報だけで予測するモデルです。最も独立していますが、単独の精度は上の 2 '
+        'つに劣ります',
+        'Uses no predictor-derived features (sequence- and '
+        'structure-based only). Most independent, with lower '
+        'standalone performance',
     ),
     "model_note.ClinVEP_CTI": (
         "FuncVEP-CTI と同じ材料を、機能実験ではなく ClinVar の臨床判定で"
@@ -249,11 +250,11 @@ _STRINGS: dict[str, tuple[str, str]] = {
                            "Unconstrained: most LoF variants are tolerated"),
     "note.pli": (
         '機能喪失変異とは、ナンセンス変異・フレームシフト変異・スプライス部位変異など、遺伝子産物が作られなくなるか働かなくなる変'
-        '異を指す（ミスセンス変異は含まない）。pLI は 0〜1 の確率で、0.9 以上を「機能喪失変異に耐えられない（制約が強'
-        'い）遺伝子」とみなす（gnomAD）。これは、片方のアレルの機能喪失だけで発症し、その人が一般集団に現れにくい程度に重い'
-        '影響を持つことを意味する。片方のアレルの機能喪失を対象とする指標であるため、片方のアレルの機能喪失（ハプロ不全）で発症す'
-        'る顕性遺伝（優性遺伝）の疾患の原因遺伝子では高値となり、両アレルの機能喪失で発症する潜性遺伝（劣性遺伝）の疾患の原因遺伝'
-        '子では低値となる。機能獲得型の変異で発症する顕性遺伝の疾患では、必ずしも高値とはならない',
+        '異を指します（ミスセンス変異は含みません）。pLI は 0〜1 の確率で、0.9 以上を「機能喪失変異に耐えられない（制'
+        '約が強い）遺伝子」とみなします（gnomAD）。これは、片方のアレルの機能喪失だけで発症し、その人が一般集団に現れにくい'
+        '程度に重い影響を持つことを意味します。片方のアレルの機能喪失を対象とする指標であるため、片方のアレルの機能喪失（ハプロ不'
+        '全）で発症する顕性遺伝（優性遺伝）の疾患の原因遺伝子では高値となり、両アレルの機能喪失で発症する潜性遺伝（劣性遺伝）の疾'
+        '患の原因遺伝子では低値となります。機能獲得型の変異で発症する顕性遺伝の疾患では、必ずしも高値とはなりません',
         'Loss-of-function (LoF) variants are those that abolish the '
         'gene product or its function, such as nonsense, frameshift '
         'and essential splice-site variants (missense variants are '
@@ -269,10 +270,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "note.mis_z": (
         'ミスセンス変異について、一般集団で実際に観察された数（観察数）と、変異が無害であった場合に観察されると見込まれる数（期待'
-        '数）とを比較した z スコア。観察数が期待数と等しければ 0 となり、観察数が期待数より少ないほど正の大きな値となる。観'
-        '察数が少ないのは、ミスセンス変異を持つ人が疾患のため一般集団に現れにくいことを反映する。3.09 以上で「制約が強い（ミ'
-        'スセンス変異が害になりやすい）遺伝子」とみなす（gnomAD）。遺伝子全体の傾向を示す指標であり、個々の変異の判定は上の'
-        'スコアによる',
+        '数）とを比較した z スコアです。観察数が期待数と等しければ 0 となり、観察数が期待数より少ないほど正の大きな値となり'
+        'ます。観察数が少ないのは、ミスセンス変異を持つ人が疾患のため一般集団に現れにくいことを反映しています。3.09 以上で「'
+        '制約が強い（ミスセンス変異が害になりやすい）遺伝子」とみなします（gnomAD）。遺伝子全体の傾向を示す指標であり、個々'
+        'の変異の判定は上のスコアによります',
         'z-score comparing the number of missense variants observed '
         'in the general population with the number expected if such '
         'variants were neutral. It is 0 when observed equals expected'
@@ -293,17 +294,17 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "af.ba1": ("BA1 該当（0.05 超）", "BA1 (above 0.05)"),
     "af.filtered": ("　品質フィルタ: {filters}", "  quality filters: {filters}"),
     "note.af": (
-        "gnomAD v4（エクソームとゲノムの合算、{retrieved} 取得）。0.05 を超える場合は "
-        "BA1（良性の単独で十分な根拠）。疾患の頻度に照らして高い場合は BS1 を検討する",
-        "gnomAD v4 (exomes and genomes combined, retrieved {retrieved}). Above 0.05 "
-        "meets BA1 (stand-alone benign); consider BS1 if high relative to disease "
-        "prevalence",
+        'gnomAD v4（エクソームとゲノムの合算、{retrieved} 取得）。0.05 を超える場合は '
+        'BA1（良性の単独で十分な根拠）に該当します。疾患の頻度に照らして高い場合は BS1 を検討してください',
+        'gnomAD v4 (exomes and genomes combined, retrieved '
+        '{retrieved}). Above 0.05 meets BA1 (stand-alone benign); '
+        'consider BS1 if high relative to disease prevalence',
     ),
     "note.af_manual": (
-        "画面で入力された値。0.05 を超える場合は BA1（良性の単独で十分な根拠）。"
-        "疾患の頻度に照らして高い場合は BS1 を検討する",
-        "Entered manually. Above 0.05 meets BA1 (stand-alone benign); consider BS1 "
-        "if high relative to disease prevalence",
+        '画面で入力された値です。0.05 を超える場合は '
+        'BA1（良性の単独で十分な根拠）に該当します。疾患の頻度に照らして高い場合は BS1 を検討してください',
+        'Entered manually. Above 0.05 meets BA1 (stand-alone benign);'
+        ' consider BS1 if high relative to disease prevalence',
     ),
     "row.hom": ("ホモ接合体数", "Homozygotes"),
     "note.hom": ("常染色体潜性（劣性）遺伝の疾患で 0 でないなら BS2 を検討",
@@ -311,41 +312,46 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "af.absent": ("収録なし（約 80 万人で観察されず）",
                   "Absent (not observed in about 800,000 individuals)"),
     "note.af_absent": (
-        "gnomAD v4（{retrieved} 取得）。集団データベースに存在しないことは "
-        "PM2_supporting（病的方向の弱い根拠）の候補となる。この位置の読み取り深度は"
-        "平均 {depth}（20 リード以上の割合 {frac}）で十分である",
-        "gnomAD v4 (retrieved {retrieved}). Absence from population databases is a "
-        "candidate for PM2_supporting. Coverage at this position is adequate "
-        "(mean depth {depth}; fraction over 20 reads {frac})",
+        'gnomAD v4（{retrieved} 取得）。集団データベースに存在しないことは '
+        'PM2_supporting（病的方向の弱い根拠）の候補となります。この位置の読み取り深度は平均 {depth}（20 '
+        'リード以上の割合 {frac}）で十分です',
+        'gnomAD v4 (retrieved {retrieved}). Absence from population '
+        'databases is a candidate for PM2_supporting. Coverage at '
+        'this position is adequate (mean depth {depth}; fraction over'
+        ' 20 reads {frac})',
     ),
     "note.af_absent_lowcov": (
-        "gnomAD v4（{retrieved} 取得）。この位置の読み取り深度が不十分（平均 {depth}、"
-        "20 リード以上の割合 {frac}）なため、収録が無いことを根拠としない",
-        "gnomAD v4 (retrieved {retrieved}). Coverage at this position is inadequate "
-        "(mean depth {depth}; fraction over 20 reads {frac}), so absence is not "
-        "used as evidence",
+        'gnomAD v4（{retrieved} 取得）。この位置の読み取り深度が不十分（平均 {depth}、20 '
+        'リード以上の割合 {frac}）なため、収録が無いことを根拠とはしません',
+        'gnomAD v4 (retrieved {retrieved}). Coverage at this position'
+        ' is inadequate (mean depth {depth}; fraction over 20 reads '
+        '{frac}), so absence is not used as evidence',
     ),
     "note.af_absent_nocov": (
-        "gnomAD v4（{retrieved} 取得）。集団データベースに存在しないことは "
-        "PM2_supporting（病的方向の弱い根拠）の候補となる。この位置の読み取り深度は"
-        "取得できなかった",
-        "gnomAD v4 (retrieved {retrieved}). Absence from population databases is a "
-        "candidate for PM2_supporting. Coverage at this position could not be "
-        "retrieved",
+        'gnomAD v4（{retrieved} 取得）。集団データベースに存在しないことは '
+        'PM2_supporting（病的方向の弱い根拠）の候補となります。この位置の読み取り深度は取得できませんでした',
+        'gnomAD v4 (retrieved {retrieved}). Absence from population '
+        'databases is a candidate for PM2_supporting. Coverage at '
+        'this position could not be retrieved',
     ),
-    "af.failed": ("取得できなかった", "Could not be retrieved"),
+    "af.failed": (
+        '取得できませんでした',
+        'Could not be retrieved',
+    ),
     "note.af_failed": (
-        "gnomAD への接続に失敗した（{reason}）。検査報告書に記載された gnomAD の値、"
-        "または gnomAD のサイトで確認した値を画面で入力すると表示される",
-        "The gnomAD query failed ({reason}). Enter the gnomAD value from the "
-        "laboratory report, or from the gnomAD website, to include it",
+        'gnomAD への接続に失敗しました（{reason}）。検査報告書に記載された gnomAD の値、または '
+        'gnomAD のサイトで確認した値を画面で入力すると表示されます',
+        'The gnomAD query failed ({reason}). Enter the gnomAD value '
+        'from the laboratory report, or from the gnomAD website, to '
+        'include it',
     ),
     "af.offline": ("未取得（オンライン照会が無効）", "Not retrieved (online lookup disabled)"),
     "note.af_offline": (
-        "サイドバーで gnomAD のオンライン照会を有効にするか、検査報告書に記載された "
-        "gnomAD の値、または gnomAD のサイトで確認した値を画面で入力する",
-        "Enable online gnomAD lookup in the sidebar, or enter the gnomAD value from "
-        "the laboratory report or the gnomAD website",
+        'サイドバーで外部データベースへの照会を有効にするか、検査報告書に記載された gnomAD の値、または gnomAD '
+        'のサイトで確認した値を画面で入力してください',
+        'Enable online gnomAD lookup in the sidebar, or enter the '
+        'gnomAD value from the laboratory report or the gnomAD '
+        'website',
     ),
     "af.zero": ("観察されず（0 / {an} アレル）", "Not observed (0 / {an} alleles)"),
     "row.eas": ("東アジア集団（gnomAD）", "East Asian (gnomAD)"),
@@ -362,31 +368,34 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "japan.ref_absent": ("ToMMo 54KJPN に記録なし", "Not in ToMMo 54KJPN"),
     "japan.supplementary": ("　参考: {items}", "  Supplementary: {items}"),
     "note.japan_supplementary_only": (
-        "。健常者中心の集団（ToMMo 54KJPN）には無く、患者由来または研究コホートの"
-        "データにのみ記録がある。疾患群の偏りや解析上の見かけの値の可能性を考慮し、"
-        "一般集団の頻度としては扱わない",
-        ". Absent from the general-population cohort (ToMMo 54KJPN) and present only "
-        "in patient-derived or research cohorts; consider cohort bias or technical "
-        "artefact, and do not treat as a general-population frequency",
+        '。健常者中心の集団（ToMMo 54KJPN）には無く、患者由来または研究コホートのデータにのみ記録があります。疾患群の'
+        '偏りや解析上の見かけの値の可能性を考慮し、一般集団の頻度としては扱いません',
+        '. Absent from the general-population cohort (ToMMo 54KJPN) '
+        'and present only in patient-derived or research cohorts; '
+        'consider cohort bias or technical artefact, and do not treat'
+        ' as a general-population frequency',
     ),
     "note.japan": (
-        "TogoVar（NBDC/DBCLS、{retrieved} 取得）が集約する日本人集団のデータ。一般集団の"
-        "参照は ToMMo 54KJPN（東北メディカル・メガバンク機構、健常者中心の約 54,000 人の"
-        "全ゲノム）とする。参考として示す NCBN（国立高度専門医療研究センターの患者由来"
-        "バイオバンク）、GEM-J WGA、JGA は疾患群の偏りがありうる",
-        "Japanese population datasets aggregated by TogoVar (NBDC/DBCLS, retrieved "
-        "{retrieved}). The general-population reference is ToMMo 54KJPN (about 54,000 "
-        "whole genomes, mostly healthy residents, Tohoku Medical Megabank). NCBN "
-        "(patient-derived biobanks of the national centres), GEM-J WGA and JGA are "
-        "shown as supplementary and may carry cohort bias",
+        'TogoVar（NBDC/DBCLS、{retrieved} 取得）が集約する日本人集団のデータです。一般集団の参照は '
+        'ToMMo 54KJPN（東北メディカル・メガバンク機構、健常者中心の約 54,000 '
+        '人の全ゲノム）とします。参考として示す NCBN（国立高度専門医療研究センターの患者由来バイオバンク）、GEM-J '
+        'WGA、JGA は疾患群の偏りがありえます',
+        'Japanese population datasets aggregated by TogoVar '
+        '(NBDC/DBCLS, retrieved {retrieved}). The general-population '
+        'reference is ToMMo 54KJPN (about 54,000 whole genomes, '
+        'mostly healthy residents, Tohoku Medical Megabank). NCBN '
+        '(patient-derived biobanks of the national centres), GEM-J '
+        'WGA and JGA are shown as supplementary and may carry cohort '
+        'bias',
     ),
     "note.japan_absent": (
-        "TogoVar（{retrieved} 取得）の日本人集団データ（ToMMo 54KJPN 約 54,000 人、"
-        "NCBN、GEM-J WGA、JGA）に記録が無い。読み取り深度は確認できないため、"
-        "gnomAD の収録状況と併せて判断する",
-        "No record in the Japanese datasets aggregated by TogoVar (retrieved "
-        "{retrieved}): ToMMo 54KJPN (about 54,000 individuals), NCBN, GEM-J WGA, "
-        "JGA. Coverage cannot be verified here; weigh together with gnomAD",
+        'TogoVar（{retrieved} 取得）の日本人集団データ（ToMMo 54KJPN 約 54,000 '
+        '人、NCBN、GEM-J WGA、JGA）に記録がありません。読み取り深度は確認できないため、gnomAD '
+        'の収録状況と併せて判断してください',
+        'No record in the Japanese datasets aggregated by TogoVar '
+        '(retrieved {retrieved}): ToMMo 54KJPN (about 54,000 '
+        'individuals), NCBN, GEM-J WGA, JGA. Coverage cannot be '
+        'verified here; weigh together with gnomAD',
     ),
     "note.japan_failed": (
         "TogoVar への接続に失敗した（{reason}）",
@@ -402,83 +411,95 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "residue.item": ("{cdna} {pdot} {sig}（{stars} 星）", "{cdna} {pdot} {sig} ({stars}-star)"),
     "residue.none": ("なし", "None"),
     "note.ps1": (
-        "同じアミノ酸置換を生じる別の塩基置換が病的と判定されているため、PS1（病的方向の"
-        "強い根拠）の候補となる。ただしスプライシングへの影響は塩基置換ごとに異なりうる"
-        "ため、その点を確認する",
-        "A different nucleotide change producing the same amino-acid substitution is "
-        "classified pathogenic, so PS1 (strong) is a candidate. Splicing effects can "
-        "differ between nucleotide changes and should be checked",
+        '同じアミノ酸置換を生じる別の塩基置換が病的と判定されているため、PS1（病的方向の強い根拠）の候補となります。ただしスプ'
+        'ライシングへの影響は塩基置換ごとに異なりうるため、その点を確認してください',
+        'A different nucleotide change producing the same amino-acid '
+        'substitution is classified pathogenic, so PS1 (strong) is a '
+        'candidate. Splicing effects can differ between nucleotide '
+        'changes and should be checked',
     ),
     "note.pm5": (
-        "同じ残基の別のミスセンス変異 {n} 件が病的と判定されているため、PM5（病的方向の"
-        "中等度の根拠）の候補となる",
-        "{n} other missense change(s) at this residue are classified pathogenic, so "
-        "PM5 (moderate) is a candidate",
+        '同じ残基の別のミスセンス変異 {n} 件が病的と判定されているため、PM5（病的方向の中等度の根拠）の候補となります',
+        '{n} other missense change(s) at this residue are classified '
+        'pathogenic, so PM5 (moderate) is a candidate',
     ),
     "note.pm5_benign_too": (
-        "。一方で良性と判定された置換も {n} 件あり、置換後のアミノ酸の性質によって"
-        "影響が異なる残基である",
-        ". However, {n} substitution(s) at this residue are classified benign, so the "
-        "effect depends on the substituted amino acid",
+        '。一方で良性と判定された置換も {n} 件あり、置換後のアミノ酸の性質によって影響が異なる残基です',
+        '. However, {n} substitution(s) at this residue are '
+        'classified benign, so the effect depends on the substituted '
+        'amino acid',
     ),
     "note.residue_benign": (
-        "同じ残基の別の置換 {n} 件が良性と判定されている。この残基が置換に寛容である"
-        "可能性を示すが、置換後のアミノ酸が異なるため直接の根拠にはならない",
-        "{n} substitution(s) at this residue are classified benign. This suggests "
-        "tolerance at the residue but is not direct evidence, as the substituted amino "
-        "acid differs",
+        '同じ残基の別の置換 {n} 件が良性と判定されています。この残基が置換に寛容である可能性を示しますが、置換後のアミノ酸が'
+        '異なるため直接の根拠にはなりません',
+        '{n} substitution(s) at this residue are classified benign. '
+        'This suggests tolerance at the residue but is not direct '
+        'evidence, as the substituted amino acid differs',
     ),
     "row.clingen": ("ClinGen の評価（遺伝子と疾患）", "ClinGen gene-disease validity"),
     "clingen.item": ("{disease}（{moi}、{cls}、{date}）", "{disease} ({moi}, {cls}, {date})"),
-    "clingen.none": ("未登録（ClinGen が評価した遺伝子と疾患の組み合わせに含まれていない）",
-                     "Not curated (no ClinGen gene-disease assertion)"),
+    "clingen.none": (
+        '未登録（ClinGen が評価した遺伝子と疾患の組み合わせに含まれていません）',
+        'Not curated (no ClinGen gene-disease assertion)',
+    ),
     "note.clingen": (
-        "ClinGen の専門家パネルによる、遺伝子と疾患の関係の確立度（一覧を {retrieved} に取得）。"
-        "Definitive / Strong / Moderate / Limited / Disputed / Refuted の順に弱くなる。"
-        "遺伝形式は pLI の読み方、BS2（ホモ接合体の扱い）、PM2 の重みづけの前提になる",
-        "Strength of the gene-disease relationship as curated by ClinGen expert panels "
-        "(list retrieved {retrieved}), from Definitive down through Strong, Moderate, "
-        "Limited, Disputed and Refuted. The mode of inheritance frames pLI, BS2 and PM2",
+        'ClinGen の専門家パネルによる、遺伝子と疾患の関係の確立度です（一覧を {retrieved} '
+        'に取得）。Definitive / Strong / Moderate / Limited / Disputed / '
+        'Refuted の順に弱くなります。遺伝形式は pLI の読み方、BS2（ホモ接合体の扱い）、PM2 '
+        'の重みづけの前提になります',
+        'Strength of the gene-disease relationship as curated by '
+        'ClinGen expert panels (list retrieved {retrieved}), from '
+        'Definitive down through Strong, Moderate, Limited, Disputed '
+        'and Refuted. The mode of inheritance frames pLI, BS2 and PM2',
     ),
     "note.clingen_none": (
-        "ClinGen が未評価であることは、疾患との関係が無いことを意味しない。OMIM や文献で確認する",
-        "Absence of a ClinGen curation does not imply absence of a disease relationship; "
-        "consult OMIM and the literature",
+        'ClinGen が未評価であることは、疾患との関係が無いことを意味しません。OMIM や文献で確認してください',
+        'Absence of a ClinGen curation does not imply absence of a '
+        'disease relationship; consult OMIM and the literature',
     ),
     "splice.value": ("Δ {ds}（{kind}、変異から {dp:+d} 塩基）", "Δ {ds} ({kind}, {dp:+d} nt from the variant)"),
     "splice.kind.AG": ("アクセプター獲得", "acceptor gain"),
     "splice.kind.AL": ("アクセプター喪失", "acceptor loss"),
     "splice.kind.DG": ("ドナー獲得", "donor gain"),
     "splice.kind.DL": ("ドナー喪失", "donor loss"),
-    "splice.level.low": ("スプライシングへの影響は低い", "Low splicing impact"),
+    "splice.level.low": (
+        'スプライシングへの影響は低いと考えられます',
+        'Low splicing impact',
+    ),
     "splice.level.moderate": ("スプライシングに影響する可能性（要確認）",
                               "Possible splicing impact (review)"),
-    "splice.level.high": ("スプライシングを損なう可能性が高い", "Likely splicing disruption"),
+    "splice.level.high": (
+        'スプライシングを損なう可能性が高いと考えられます',
+        'Likely splicing disruption',
+    ),
     "splice.none": ("スコアなし", "No score"),
     "note.spliceai": (
-        "塩基置換がスプライス部位を新設・消失させる確率（Jaganathan ら 2019, Cell。"
-        "Ensembl VEP 経由）。4 種類のうち最大の Δ スコアを示す。0.2 以上で感度重視、"
-        "0.5 以上が推奨、0.8 以上で精度重視の閾値。0.5 以上ならミスセンスではなく"
-        "スプライシング異常として評価し直す必要があり、FuncVEP の予測の前提が崩れる",
-        "Probability that the nucleotide change creates or removes a splice site "
-        "(Jaganathan et al. 2019, Cell; via Ensembl VEP). The largest of the four delta "
-        "scores is shown. Thresholds: 0.2 high recall, 0.5 recommended, 0.8 high "
-        "precision. At 0.5 or above the variant should be re-evaluated as a splicing "
-        "variant, which invalidates the missense-based FuncVEP prediction",
+        '塩基置換がスプライス部位を新設・消失させる確率です（Jaganathan ら 2019, Cell。Ensembl '
+        'VEP 経由）。4 種類のうち最大の Δ スコアを示します。0.2 以上で感度重視、0.5 以上が推奨、0.8 '
+        '以上で精度重視の閾値です。0.5 以上ならミスセンスではなくスプライシング異常として評価し直す必要があり、FuncVEP'
+        ' の予測の前提が崩れます',
+        'Probability that the nucleotide change creates or removes a '
+        'splice site (Jaganathan et al. 2019, Cell; via Ensembl VEP).'
+        ' The largest of the four delta scores is shown. Thresholds: '
+        '0.2 high recall, 0.5 recommended, 0.8 high precision. At 0.5'
+        ' or above the variant should be re-evaluated as a splicing '
+        'variant, which invalidates the missense-based FuncVEP '
+        'prediction',
     ),
     "note.spliceai_none": (
-        "この転写産物について SpliceAI のスコアが返らなかった",
-        "No SpliceAI score was returned for this transcript",
+        'この転写産物について SpliceAI のスコアが返りませんでした',
+        'No SpliceAI score was returned for this transcript',
     ),
     "note.spliceai_failed": (
         "Ensembl VEP への接続に失敗した（{reason}）",
         "The Ensembl VEP query failed ({reason})",
     ),
     "warn.spliceai": (
-        "{hgvs}（{genomic}）は SpliceAI の Δ スコアが {ds}（{kind}）で、スプライシングへの"
-        "影響が示唆される。ミスセンスとしての予測だけで判断しないこと。",
-        "{hgvs} ({genomic}) has a SpliceAI delta score of {ds} ({kind}), suggesting a "
-        "splicing effect. Do not rely on the missense prediction alone.",
+        '{hgvs}（{genomic}）は SpliceAI の Δ スコアが '
+        '{ds}（{kind}）で、スプライシングへの影響が示唆されます。ミスセンスとしての予測だけで判断しないでください。',
+        '{hgvs} ({genomic}) has a SpliceAI delta score of {ds} '
+        '({kind}), suggesting a splicing effect. Do not rely on the '
+        'missense prediction alone.',
     ),
     "pdf.mave": ("機能実験の実測値（MaveDB）", "Functional assay data (MaveDB)"),
     "ui.mave": ("機能実験の実測値（MaveDB）", "Functional assay data (MaveDB)"),
@@ -486,57 +507,77 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "mave.no_match": ("この遺伝子の実験データセット {n} 件に、この置換の測定値なし",
                       "Not measured in the {n} dataset(s) available for this gene"),
     "note.mave_no_match": (
-        "MaveDB に登録された大規模機能実験のうち、この置換を含むものが無い。"
-        "実験の対象領域外か、測定から漏れた置換である",
-        "None of the multiplexed functional assays in MaveDB for this gene covers this "
-        "substitution (outside the assayed region, or dropped from the measurement)",
+        'MaveDB '
+        'に登録された大規模機能実験のうち、この置換を含むものがありません。実験の対象領域外か、測定から漏れた置換です',
+        'None of the multiplexed functional assays in MaveDB for this'
+        ' gene covers this substitution (outside the assayed region, '
+        'or dropped from the measurement)',
     ),
     "note.mave_failed": ("MaveDB への接続に失敗した（{reason}）", "The MaveDB query failed ({reason})"),
-    "mave.class.normal": ("正常（機能は保たれる）", "Normal (function retained)"),
-    "mave.class.abnormal": ("異常（機能が損なわれる）", "Abnormal (function lost)"),
+    "mave.class.normal": (
+        '正常（機能は保たれます）',
+        'Normal (function retained)',
+    ),
+    "mave.class.abnormal": (
+        '異常（機能が損なわれます）',
+        'Abnormal (function lost)',
+    ),
     "mave.class.uncalibrated": ("区分なし（生の値）", "Uncalibrated (raw score)"),
     "note.mave": (
-        "MaveDB {urn}（{citation}、測定 {n} 変異）。大規模機能実験の実測値で、ACMG の "
-        "PS3/BS3（機能実験による証拠）の材料になる。スコアの尺度はデータセットごとに異なる",
-        "MaveDB {urn} ({citation}; {n} variants measured). Experimental measurement that "
-        "can support PS3/BS3. Score scales differ between datasets",
+        'MaveDB {urn}（{citation}、測定 {n} 変異）。大規模機能実験の実測値で、ACMG の '
+        'PS3/BS3（機能実験による証拠）の材料になります。スコアの尺度はデータセットごとに異なります',
+        'MaveDB {urn} ({citation}; {n} variants measured). '
+        'Experimental measurement that can support PS3/BS3. Score '
+        'scales differ between datasets',
     ),
-    "note.mave_calibration": ("。区分は「{title}」による", ". Classes follow \"{title}\""),
+    "note.mave_calibration": (
+        '。区分は「{title}」によります',
+        '. Classes follow "{title}"',
+    ),
     "note.mave_numbering": (
-        "。対象配列が全長の転写産物でないため、残基番号の基準が本レポートと一致しない可能性がある",
-        ". The target sequence is not a full-length transcript, so residue numbering "
-        "may not match this report",
+        '。対象配列が全長の転写産物でないため、残基番号の基準が本レポートと一致しない可能性があります',
+        '. The target sequence is not a full-length transcript, so '
+        'residue numbering may not match this report',
     ),
     "ui.litvar": ("文献（LitVar2）", "Literature (LitVar2)"),
-    "ui.litvar_count": ("この変異（{rsid}）に言及した論文: {n} 件。新しい順に最大 10 件を示す。",
-                        "Publications mentioning this variant ({rsid}): {n}. Up to 10 most recent shown."),
-    "ui.litvar_none": ("LitVar2 にこの変異の記載は見つからなかった。",
-                       "No LitVar2 record was found for this variant."),
+    "ui.litvar_count": (
+        'この変異（{rsid}）に言及した論文: {n} 件。新しい順に最大 10 件を示します。',
+        'Publications mentioning this variant ({rsid}): {n}. Up to 10'
+        ' most recent shown.',
+    ),
+    "ui.litvar_none": (
+        'LitVar2 にこの変異の記載は見つかりませんでした。',
+        'No LitVar2 record was found for this variant.',
+    ),
     "ui.litvar_failed": ("LitVar2 への接続に失敗した（{reason}）", "The LitVar2 query failed ({reason})"),
-    "ui.litvar_more": ("LitVar2 で全件を見る", "See all in LitVar2"),
+    "ui.litvar_more": (
+        'LitVar2 の全件一覧',
+        'See all in LitVar2',
+    ),
     "uncalibrated": ("PP3/BP4 の判定基準なし", "No PP3/BP4 thresholds"),
 
     "row.clinvep": ("ClinVEP（比較用）", "ClinVEP (control)"),
     "note.clinvep": (
-        "FuncVEP と同じ材料を ClinVar の臨床判定で学習させた比較用のスコア。"
-        "FuncVEP（タンパク質の働きへの影響）と ClinVEP（臨床判定の予測）が大きく"
-        "食い違うときは、働きへの影響と病気との関係がずれている変異かもしれない",
-        "Control models trained on the same features with ClinVar labels. Marked "
-        "disagreement between FuncVEP (functional impact) and ClinVEP (predicted "
-        "clinical classification) may indicate divergence between functional "
-        "effect and clinical pathogenicity",
+        'FuncVEP と同じ材料を ClinVar '
+        'の臨床判定で学習させた比較用のスコアです。FuncVEP（タンパク質の働きへの影響）と '
+        'ClinVEP（臨床判定の予測）が大きく食い違うときは、働きへの影響と病気との関係がずれている変異かもしれません',
+        'Control models trained on the same features with ClinVar '
+        'labels. Marked disagreement between FuncVEP (functional '
+        'impact) and ClinVEP (predicted clinical classification) may '
+        'indicate divergence between functional effect and clinical '
+        'pathogenicity',
     ),
     "note.clinvep_trained": (
-        "この変異は {models} の学習に使用されているため、比較用のスコアは公開されていない",
-        "Training variant for {models}; control scores withheld",
+        'この変異は {models} の学習に使用されているため、比較用のスコアは公開されていません',
+        'Training variant for {models}; control scores withheld',
     ),
     "note.alphamissense": (
-        "Google DeepMind の予測ツール（Cheng ら 2023, Science）。一般の人々での"
-        "変異の頻度を手がかりに学習している。likely_pathogenic / ambiguous / "
-        "likely_benign の 3 区分",
-        "Cheng et al. 2023 (Science); semi-supervised, with weak labels derived "
-        "from population frequency. Classes: likely_pathogenic / ambiguous / "
-        "likely_benign",
+        'Google DeepMind の予測ツールです（Cheng ら 2023, '
+        'Science）。一般の人々での変異の頻度を手がかりに学習しています。likely_pathogenic / '
+        'ambiguous / likely_benign の 3 区分です',
+        'Cheng et al. 2023 (Science); semi-supervised, with weak '
+        'labels derived from population frequency. Classes: '
+        'likely_pathogenic / ambiguous / likely_benign',
     ),
     "note.revel": (
         "複数の予測ツールを統合した従来型のスコア（Ioannidis ら 2016）。"
@@ -569,7 +610,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "row.neutral_side": ("neutral 側", "neutral"),
     "conc.no_tool": ("なし", "none"),
     "conc.none": (
-        '判定できる予測ツールがない',
+        '判定できる予測ツールがありません',
         'No predictor yielded a call',
     ),
     "conc.single_damaging": ("判定できた予測ツールは 1 つで、damaging 側",
@@ -584,30 +625,29 @@ _STRINGS: dict[str, tuple[str, str]] = {
                    "{d} of {n} predictors damaging (discordant)"),
 
     "disclaimer.1": (
-        "FuncVEP が予測するのはタンパク質の働きへの影響（damaging / neutral）であり、"
-        "病気を起こすかどうか（臨床的病原性）そのものではない。両者を混同しないこと。",
-        "FuncVEP predicts functional impact (damaging / neutral), not clinical "
-        "pathogenicity; the two must not be conflated.",
+        'FuncVEP が予測するのはタンパク質の働きへの影響（damaging / '
+        'neutral）であり、病気を起こすかどうか（臨床的病原性）そのものではありません。両者を混同しないでください。',
+        'FuncVEP predicts functional impact (damaging / neutral), not'
+        ' clinical pathogenicity; the two must not be conflated.',
     ),
     "disclaimer.2": (
-        "ACMG/AMP 基準では、コンピュータ予測による証拠 PP3/BP4 として扱う。"
-        "実験で機能を確かめた証拠 PS3/BS3 にはならない。",
-        "Under ACMG/AMP, these scores constitute computational evidence "
-        "(PP3/BP4), not functional assay evidence (PS3/BS3).",
+        'ACMG/AMP 基準では、コンピュータ予測による証拠 PP3/BP4 として扱います。実験で機能を確かめた証拠 '
+        'PS3/BS3 にはなりません。',
+        'Under ACMG/AMP, these scores constitute computational '
+        'evidence (PP3/BP4), not functional assay evidence (PS3/BS3).',
     ),
     "disclaimer.3": (
-        "対象はミスセンス変異（アミノ酸置換）のみ。スプライシングへの影響、"
-        "フレームシフト、ナンセンス変異は評価されない。",
-        "Missense variants only; effects on splicing, frameshift and nonsense "
-        "variants are not assessed.",
+        '対象はミスセンス変異（アミノ酸置換）のみです。スプライシングへの影響、フレームシフト、ナンセンス変異は評価されません。',
+        'Missense variants only; effects on splicing, frameshift and '
+        'nonsense variants are not assessed.',
     ),
     "disclaimer.4": (
-        "本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはならない。"
-        "家系内での分離、症状との一致、機能実験、専門家の検討と併せて評価すること。",
-        "This report is an aid to variant interpretation and must not serve as "
-        "the sole basis for clinical decisions. It should be weighed together "
-        "with segregation, phenotype concordance, functional studies and expert "
-        "review.",
+        '本レポートは変異解釈の補助資料であり、単独で臨床判断の根拠としてはなりません。家系内での分離、症状との一致、機能実験、専'
+        '門家の検討と併せて評価してください。',
+        'This report is an aid to variant interpretation and must not'
+        ' serve as the sole basis for clinical decisions. It should '
+        'be weighed together with segregation, phenotype concordance,'
+        ' functional studies and expert review.',
     ),
 
     # ---------------------------------------------------------- 参考文献
@@ -619,10 +659,19 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "by the authors, 2026-09-05)",
     ),
     "ref.tiers": (
-        _REF_TIERS + "（証拠の段階 Supporting / Moderate / Intermediate / Strong の定義。"
-        "FuncVEP の著者の指示による）",
-        _REF_TIERS + " (defines the Supporting / Moderate / Intermediate / Strong "
-        "tiers; as indicated by the FuncVEP authors)",
+        'Bergquist T, Stenton SL, Nadeau EAW, et al. Calibration of '
+        'additional computational tools expands ClinGen '
+        'recommendation options for variant classification with '
+        'PP3/BP4 criteria. Genet Med 27, 101402 (2025). '
+        'doi:10.1016/j.gim.2025.101402（証拠の段階 Supporting / Moderate / '
+        'Intermediate / Strong の定義。FuncVEP の著者の指示に基づきます）',
+        'Bergquist T, Stenton SL, Nadeau EAW, et al. Calibration of '
+        'additional computational tools expands ClinGen '
+        'recommendation options for variant classification with '
+        'PP3/BP4 criteria. Genet Med 27, 101402 (2025). '
+        'doi:10.1016/j.gim.2025.101402 (defines the Supporting / '
+        'Moderate / Intermediate / Strong tiers; as indicated by the '
+        'FuncVEP authors)',
     ),
     "ref.alphamissense": (_REF_AM, _REF_AM),
     "ref.revel": (_REF_REVEL, _REF_REVEL),
@@ -634,18 +683,18 @@ _STRINGS: dict[str, tuple[str, str]] = {
     # -------------------------------------------------------------- acmg.py
     "acmg.none": ("該当なし（中間域）", "None (intermediate range)"),
     "thr.explain": (
-        "PP3 / BP4 は ACMG/AMP 基準の証拠項目で、PP3 はコンピュータ予測が「病的」を"
-        "支持する証拠、BP4 は「良性」を支持する証拠。強さは Supporting → Moderate → "
-        "Intermediate → Strong の順に強い。どちらの基準にも達しないスコアは"
-        "「該当なし（中間域）」で、証拠として数えない。",
-        "PP3/BP4 are the ACMG/AMP criteria for computational evidence (PP3 "
-        "pathogenic, BP4 benign). Tier strength follows Supporting → Moderate → "
-        "Intermediate → Strong. Scores between the BP4 and PP3 thresholds are not"
-        " applied as evidence.",
+        'PP3 / BP4 は ACMG/AMP 基準の証拠項目で、PP3 はコンピュータ予測が「病的」を支持する証拠、BP4 '
+        'は「良性」を支持する証拠です。強さは Supporting → Moderate → Intermediate → '
+        'Strong の順に強くなります。どちらの基準にも達しないスコアは「該当なし（中間域）」で、証拠として数えません。',
+        'PP3/BP4 are the ACMG/AMP criteria for computational evidence'
+        ' (PP3 pathogenic, BP4 benign). Tier strength follows '
+        'Supporting → Moderate → Intermediate → Strong. Scores '
+        'between the BP4 and PP3 thresholds are not applied as '
+        'evidence.',
     ),
     "thr.uncalibrated": (
-        'PP3/BP4 の判定基準が設定されていない。scripts/03_calibrate_acmg.py '
-        'を実行すると、手元の ClinVar から算出される。',
+        'PP3/BP4 の判定基準が設定されていません。scripts/03_calibrate_acmg.py '
+        'を実行すると、手元の ClinVar から算出されます。',
         'PP3/BP4 thresholds are not configured. Run '
         'scripts/03_calibrate_acmg.py to derive them from local '
         'ClinVar data.',
@@ -672,15 +721,15 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "replicates.",
     ),
     "thr.local_warn": (
-        '論文の公表値ではないため、論文の判定とは一致しない。',
+        '論文の公表値ではないため、論文の判定とは一致しません。',
         'These are not the published values; calls will differ from '
         'the paper.',
     ),
     "thr.pp3_line": ("PP3: {parts} 以上", "PP3: {parts} or above"),
     "thr.bp4_line": ("BP4: {parts} 以下", "BP4: {parts} or below"),
     "thr.binary": (
-        "damaging/neutral の境: {cut:.4f}（モデルごとに異なる。0.5 ではない）",
-        "damaging/neutral cutoff: {cut:.4f} (model-specific; not 0.5)",
+        'damaging/neutral の境: {cut:.4f}（モデルごとに異なります。0.5 ではありません）',
+        'damaging/neutral cutoff: {cut:.4f} (model-specific; not 0.5)',
     ),
 
     # ------------------------------------------------------------ pdfout.py
@@ -791,7 +840,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "FuncVEP covers missense variants only.",
     ),
     "lk.gene_mismatch": (
-        '入力の遺伝子名 {input_gene} と転写産物の遺伝子 {tx_gene} が一致しない。転写産物側を採用した。',
+        '入力の遺伝子名 {input_gene} と転写産物の遺伝子 {tx_gene} '
+        'が一致しません。転写産物側を採用しました。',
         'The gene entered ({input_gene}) does not match the '
         "transcript's gene ({tx_gene}). The transcript's gene was "
         'used.',
@@ -822,15 +872,15 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "Try HGVS notation with the transcript from the report.",
     ),
     "lk.multi_mane": (
-        '{gene} には複数の MANE 転写産物がある。参照アミノ酸が一致した '
-        '{refseq}（{status}）を使った。他: {others}',
+        '{gene} には複数の MANE 転写産物があります。参照アミノ酸が一致した '
+        '{refseq}（{status}）を使いました。他: {others}',
         '{gene} has more than one MANE transcript. {refseq} '
         '({status}), whose reference amino acid matched, was used. '
         'Others: {others}',
     ),
     "lk.offset_warn": (
         'AlphaMissense は別のアイソフォームを使っており、残基番号が {offset:+d} '
-        'ずれている。{gene} p.{pv} を p.{am_pv} として照会した。',
+        'ずれています。{gene} p.{pv} を p.{am_pv} として照会しました。',
         'AlphaMissense uses a different isoform with residue '
         'numbering shifted by {offset:+d}. {gene} p.{pv} was looked '
         'up as p.{am_pv}.',
@@ -849,20 +899,21 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "change to genomic coordinates. Run scripts/02_build_index.py alphamissense.",
     ),
     "lk.multi_nuc": (
-        '同じアミノ酸置換を生じる塩基置換が {n} 通りある。すべて表示する。検査報告書の塩基座標と照合すること。',
+        '同じアミノ酸置換を生じる塩基置換が {n} 通りあります。すべて表示します。検査報告書の塩基座標と照合してください。',
         '{n} different nucleotide substitutions produce this '
         'amino-acid change. All are shown; match them against the '
         'coordinate in the laboratory report.',
     ),
     "lk.ensg_mismatch": (
-        'FuncVEP 側の遺伝子 {fv_ensg} が {ensg} と一致しない。重複遺伝子領域の可能性がある。',
+        'FuncVEP 側の遺伝子 {fv_ensg} が {ensg} と一致しません。重複遺伝子領域の可能性があります。',
         'The gene in FuncVEP ({fv_ensg}) does not match {ensg}. This '
         'may be an overlapping-gene region.',
     ),
     "lk.warn_blank": (
-        'FuncVEP のスコアは空欄である。この変異は一部のモデルの学習データ（既知の判定を持つ変異の集合）に含まれており、学'
-        '習に用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは該当モデルのスコアを公'
-        '開していない。予測に失敗したのではない。AlphaMissense・REVEL・ClinVar により判断すること。',
+        'FuncVEP のスコアは空欄です。この変異は一部のモデルの学習データ（既知の判定を持つ変異の集合）に含まれており、学習'
+        'に用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、著者らは該当モデルのスコアを公開'
+        'していません。予測に失敗したのではありません。AlphaMissense・REVEL・ClinVar '
+        'により判断してください。',
         'FuncVEP scores are blank. This variant was part of the '
         'training data (variants with known classifications) for some'
         ' of the models. A prediction for a training variant would '
@@ -872,10 +923,11 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'should rely on AlphaMissense, REVEL and ClinVar.',
     ),
     "lk.warn_absent": (
-        'この変異は、FuncVEP の 6 つのモデルすべての学習データ（既知の判定を持つ変異の集合）に含まれていた。学習に用い'
-        'た変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、各モデルの予測対象から学習データの変異'
-        'は除外されている。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しない。収録が無いこと自体は病気'
-        'との関係について何の情報も持たない。AlphaMissense・REVEL・ClinVar により判断すること。',
+        'この変異は、FuncVEP の 6 つのモデルすべての学習データ（既知の判定を持つ変異の集合）に含まれていました。学習に'
+        '用いた変異に対する予測は既知の判定を再現するに過ぎず、予測としての意味を持たないため、各モデルの予測対象から学習データの'
+        '変異は除外されています。6 モデルすべてで除外された結果、公開された予測表にこの変異の行は存在しません。収録が無いこと自'
+        '体は病気との関係について何の情報も持ちません。AlphaMissense・REVEL・ClinVar '
+        'により判断してください。',
         'This variant was part of the training data (variants with '
         'known classifications) for all six FuncVEP models. A '
         'prediction for a training variant would merely reproduce a '
@@ -887,9 +939,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'AlphaMissense, REVEL and ClinVar.',
     ),
     "lk.warn_absent_unexplained": (
-        'この変異は公開された予測表になく、公開されている学習データの一覧にも見当たらない。著者らの照合によれば予測表を作る工程の'
-        '都合で生じた未収録であり、収録が無いこと自体は病気との関係について何の情報も持たない。AlphaMissense・REV'
-        'EL・ClinVar で判断すること。',
+        'この変異は公開された予測表になく、公開されている学習データの一覧にも見当たりません。著者らの照合によれば予測表を作る工程'
+        'の都合で生じた未収録であり、収録が無いこと自体は病気との関係について何の情報も持ちません。AlphaMissense・R'
+        'EVEL・ClinVar で判断してください。',
         'This variant has no row in the released table and is not in '
         'any published training set. According to the authors, such '
         'absences arose during assembly of the released table and '
@@ -897,8 +949,9 @@ _STRINGS: dict[str, tuple[str, str]] = {
         ' REVEL and ClinVar.',
     ),
     "lk.warn_mixed": (
-        'FuncVEP のスコアが得られない（候補ごとに理由が異なる）。AlphaMissense・REVEL・ClinVar '
-        'で判断すること。',
+        'FuncVEP '
+        'のスコアが得られません（候補ごとに理由が異なります）。AlphaMissense・REVEL・ClinVar '
+        'で判断してください。',
         'No FuncVEP score is available (the reason differs between '
         'candidates). See AlphaMissense, REVEL and ClinVar.',
     ),
@@ -987,7 +1040,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "Normally retrieved from gnomAD automatically. Enter values here if the lookup "
         "fails or to include the values printed on the laboratory report.",
     ),
-    "ui.gnomad_online": ("外部データベースに照会する", "Query external databases"),
+    "ui.gnomad_online": (
+        '外部データベースへの照会',
+        'Query external databases',
+    ),
     "ui.af_prompt_failed": (
         "gnomAD から集団頻度を取得できませんでした。検査報告書の値か gnomAD のサイトの"
         "値を「集団頻度を手入力する」に入力すると、報告書に反映されます。",
