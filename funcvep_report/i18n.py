@@ -987,12 +987,6 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "fails or to include the values printed on the laboratory report.",
     ),
     "ui.gnomad_online": ("外部データベースに照会する", "Query external databases"),
-    "ui.gnomad_online_help": (
-        "変異のゲノム座標だけを gnomAD の公開 API に送り、アレル頻度とホモ接合体数を"
-        "取得します。患者情報は送りません。",
-        "Sends only the genomic coordinates of the variant to the public gnomAD API "
-        "to retrieve allele frequency and homozygote count. No patient data is sent.",
-    ),
     "ui.af_prompt_failed": (
         "gnomAD から集団頻度を取得できませんでした。検査報告書の値か gnomAD のサイトの"
         "値を「集団頻度を手入力する」に入力すると、報告書に反映されます。",

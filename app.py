@@ -79,7 +79,6 @@ with st.sidebar:
     gnomad_online = st.checkbox(
         t("ui.gnomad_online"),
         value=st.session_state.get("gnomad_online", cfg.gnomad_af_mode == "api"),
-        help=t("ui.gnomad_online_help"),
     )
     st.session_state["gnomad_online"] = gnomad_online
     st.caption(t("ui.online_help"))
