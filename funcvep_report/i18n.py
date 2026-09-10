@@ -900,19 +900,14 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "This substitution creates a stop codon (p.{aa_ref}{position}Ter). "
         "FuncVEP covers missense variants only.",
     ),
-    "lk.tx_assumed_ok": (
-        "転写産物の指定が無いため、c. 表記を MANE の転写産物 {refseq}（{status}）に当てはめました。"
-        "併記された {given} と一致したので、転写産物は報告書と整合していると考えられます。",
-        "No transcript was given, so the c. notation was applied to the MANE transcript "
-        "{refseq} ({status}). It agrees with the accompanying {given}, so the transcript is "
-        "considered consistent with the report.",
-    ),
     "lk.tx_assumed": (
-        "転写産物の指定が無いため、c. 表記を MANE の転写産物 {refseq}（{status}）に当てはめました。"
-        "検査報告書の転写産物と異なる場合は座標がずれるので、転写産物番号付きで入力してください。",
-        "No transcript was given, so the c. notation was applied to the MANE transcript "
-        "{refseq} ({status}). If the laboratory report used a different transcript the "
-        "coordinates may differ; enter the transcript accession to be sure.",
+        "入力に転写産物番号（NM_ 番号）が無いため、c. 表記を標準転写産物 {refseq}（{status}）の"
+        "座標として解釈しました。検査報告書が別の転写産物を使っている場合は座標がずれます。"
+        "p. 表記を併記するか、転写産物番号付きで入力すると確認できます。",
+        "No transcript accession (NM_ number) was given, so the c. notation was interpreted "
+        "on the reference transcript {refseq} ({status}). If the laboratory report used a "
+        "different transcript the coordinates may differ; add the p. notation or the "
+        "transcript accession to confirm.",
     ),
     "lk.protein_mismatch": (
         "c. 表記から求めたアミノ酸置換は {from_cds} ですが、入力に併記された {given} と一致しません"

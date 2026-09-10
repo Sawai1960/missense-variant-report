@@ -605,13 +605,10 @@ def resolve(text: str, store: Store) -> Resolution:
             res.error = last_error or t("lk.no_cds", refseq=rows[0]["refseq_nuc"])
             return res
         row, (aa_ref, position, aa_alt) = chosen
-        if not parsed.transcript:
-            if parsed.protein and (aa_ref, position, aa_alt) == parsed.protein:
-                pr, pp, pa = parsed.protein
-                res.warnings.append(t("lk.tx_assumed_ok", refseq=row["refseq_nuc"], status=row.get("mane_status", ""),
-                                      given=f"p.{AA1_TO_3.get(pr, pr)}{pp}{AA1_TO_3.get(pa, pa)}"))
-            else:
-                res.warnings.append(t("lk.tx_assumed", refseq=row["refseq_nuc"], status=row.get("mane_status", "")))
+        # 遺伝子名・c. 表記・p. 表記が揃い、c. から求めた置換が p. と一致すれば曖昧さは
+        # 無いので注意を出さない。p. が無く確認できないときだけ、当てはめた旨を出す
+        if not parsed.transcript and not (parsed.protein and (aa_ref, position, aa_alt) == parsed.protein):
+            res.warnings.append(t("lk.tx_assumed", refseq=row["refseq_nuc"], status=row.get("mane_status", "")))
         if parsed.protein and (aa_ref, position, aa_alt) != parsed.protein:
             pr, pp, pa = parsed.protein
             res.warnings.append(t(
