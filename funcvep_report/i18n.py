@@ -235,11 +235,15 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "gene_value": ("{gene}（{ensg}）", "{gene} ({ensg})"),
     # 値の横に添える一言。pLI は 0.9、z は 3.09（gnomAD の慣例）で 2 段階に分ける
     "constraint.pli_high": (
-        "片方のアレルの機能喪失で発症しうる（ハプロ不全）遺伝子",
-        "Loss of one copy can cause disease (haploinsufficient gene)"),
+        "片方のアレルの機能喪失だけで表現型に影響が出て、機能喪失変異を持つ人が"
+        "一般集団にほとんど検出されない（ハプロ不全）遺伝子",
+        "Loss of a single copy affects the phenotype, and carriers of loss-of-function "
+        "variants are rarely found in the general population (haploinsufficient gene)"),
     "constraint.pli_low": (
-        "片方のアレルが機能喪失しても健常な人が一般集団に多くみられる遺伝子",
-        "Healthy people commonly carry one broken copy of this gene"),
+        "片方のアレルが機能喪失しても表現型への影響が小さく、機能喪失変異を持つ"
+        "健常な人が一般集団に多く検出される遺伝子",
+        "Loss of a single copy has little effect on the phenotype, and healthy carriers "
+        "of loss-of-function variants are common in the general population"),
     "constraint.mis_high": ("制約が強く、ミスセンス変異が害になりやすい遺伝子",
                             "Constrained: missense variants tend to be damaging"),
     "constraint.mis_low": ("制約は弱く、ミスセンス変異の大半は害がない遺伝子",
