@@ -89,7 +89,72 @@ class TestRejections(unittest.TestCase):
         self._rejects("なにか変な入力", "認識できません")
 
     def test_indel_not_supported(self):
-        self._rejects("NM_007294.4:c.5095_5096del", "認識できません")
+        self._rejects("NM_007294.4:c.5095_5096del", "対象外")
+
+
+class TestFlexibleInputs(unittest.TestCase):
+    """検査報告書にある多様な書き方。"""
+
+    def test_gene_plus_cds(self):
+        v = parse("SDHB c.574T>C")
+        self.assertIsInstance(v, CodingInput)
+        self.assertEqual((v.gene, v.transcript, v.cds_position, v.ref_base, v.alt_base),
+                         ("SDHB", None, 574, "T", "C"))
+        self.assertIsNone(v.protein)
+
+    def test_gene_cds_with_protein_in_parentheses(self):
+        v = parse("SDHB c.574T>C (p.Cys192Arg)")
+        self.assertIsInstance(v, CodingInput)
+        self.assertEqual(v.protein, ("C", 192, "R"))
+
+    def test_protein_first_then_cds(self):
+        v = parse("SDHB p.Cys192Arg (c.574T>C)")
+        self.assertIsInstance(v, CodingInput)
+        self.assertEqual(v.cds_position, 574)
+        self.assertEqual(v.protein, ("C", 192, "R"))
+
+    def test_transcript_cds_protein(self):
+        v = parse("NM_003000.3:c.574T>C (p.Cys192Arg)")
+        self.assertEqual((v.transcript, v.gene, v.protein), ("NM_003000.3", None, ("C", 192, "R")))
+
+    def test_gene_with_transcript_in_parentheses(self):
+        v = parse("SDHB(NM_003000.3):c.574T>C")
+        self.assertEqual((v.transcript, v.gene), ("NM_003000.3", "SDHB"))
+
+    def test_separators_and_fullwidth(self):
+        for text in ("SDHB:c.574T>C", "SDHB c.574 T>C", "ＳＤＨＢ　ｃ．５７４Ｔ＞Ｃ", "SDHB, c.574T>C", "SDHB／c.574T>C"):
+            v = parse(text)
+            self.assertIsInstance(v, CodingInput, text)
+            self.assertEqual((v.gene, v.cds_position, v.ref_base, v.alt_base), ("SDHB", 574, "T", "C"), text)
+
+    def test_protein_without_p_and_lowercase(self):
+        self.assertEqual(parse("SDHB Cys192Arg").protein_variant, "C192R")
+        self.assertEqual(parse("sdhb c192r").protein_variant, "C192R")
+        self.assertEqual(parse("SDHB (p.Cys192Arg)").protein_variant, "C192R")
+
+    def test_protein_with_transcript_noted(self):
+        v = parse("SDHB p.Cys192Arg NM_003000.3")
+        self.assertIsInstance(v, ProteinInput)
+        self.assertEqual(v.transcript, "NM_003000.3")
+
+    def test_gene_that_looks_like_a_substitution(self):
+        # C1R は遺伝子名だが R100W にも見える。2 語あれば最初を遺伝子とする
+        v = parse("C1R p.Arg100Trp")
+        self.assertEqual((v.gene, v.protein_variant), ("C1R", "R100W"))
+        v = parse("C1R R100W")
+        self.assertEqual((v.gene, v.protein_variant), ("C1R", "R100W"))
+
+    def test_helpful_errors(self):
+        with self.assertRaises(ParseError) as ctx:
+            parse("c.574T>C")
+        self.assertIn("遺伝子記号か転写産物番号", str(ctx.exception))
+        with self.assertRaises(ParseError) as ctx:
+            parse("SDHB")
+        self.assertIn("SDHB", str(ctx.exception))
+        self.assertIn("変異の表記", str(ctx.exception))
+        with self.assertRaises(ParseError) as ctx:
+            parse("SDHB c.574_575del")
+        self.assertIn("対象外", str(ctx.exception))
 
 
 class TestCodon(unittest.TestCase):

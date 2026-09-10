@@ -900,6 +900,28 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "This substitution creates a stop codon (p.{aa_ref}{position}Ter). "
         "FuncVEP covers missense variants only.",
     ),
+    "lk.tx_assumed_ok": (
+        "転写産物の指定が無いため、c. 表記を MANE の転写産物 {refseq}（{status}）に当てはめました。"
+        "併記された {given} と一致したので、転写産物は報告書と整合していると考えられます。",
+        "No transcript was given, so the c. notation was applied to the MANE transcript "
+        "{refseq} ({status}). It agrees with the accompanying {given}, so the transcript is "
+        "considered consistent with the report.",
+    ),
+    "lk.tx_assumed": (
+        "転写産物の指定が無いため、c. 表記を MANE の転写産物 {refseq}（{status}）に当てはめました。"
+        "検査報告書の転写産物と異なる場合は座標がずれるので、転写産物番号付きで入力してください。",
+        "No transcript was given, so the c. notation was applied to the MANE transcript "
+        "{refseq} ({status}). If the laboratory report used a different transcript the "
+        "coordinates may differ; enter the transcript accession to be sure.",
+    ),
+    "lk.protein_mismatch": (
+        "c. 表記から求めたアミノ酸置換は {from_cds} ですが、入力に併記された {given} と一致しません"
+        "（転写産物 {refseq}）。c. 表記を優先しました。報告書の転写産物が MANE と異なる可能性が"
+        "あるので、転写産物番号を確認してください。",
+        "The c. notation translates to {from_cds}, which does not match the accompanying "
+        "{given} (transcript {refseq}). The c. notation was used. The report may be based "
+        "on a different transcript; check the accession.",
+    ),
     "lk.gene_mismatch": (
         '入力の遺伝子名 {input_gene} と転写産物の遺伝子 {tx_gene} '
         'が一致しません。転写産物側を採用しました。',
@@ -1020,6 +1042,32 @@ _STRINGS: dict[str, tuple[str, str]] = {
     # ----------------------------------------------------------- variant.py
     "vp.bad_aa": ("アミノ酸として解釈できません: {token}",
                   "Not a recognisable amino acid: {token}"),
+    "vp.no_gene_for_cds": (
+        "{cds} は読み取れましたが、遺伝子記号か転写産物番号がありません。"
+        "例) SDHB c.574T>C、NM_003000.3:c.574T>C",
+        "{cds} was recognised, but no gene symbol or transcript accompanies it. "
+        "Example: SDHB c.574T>C or NM_003000.3:c.574T>C",
+    ),
+    "vp.no_gene_for_protein": (
+        "{prot} は読み取れましたが、遺伝子記号がありません。例) SDHB {prot}",
+        "{prot} was recognised, but no gene symbol accompanies it. Example: SDHB {prot}",
+    ),
+    "vp.unsupported_change": (
+        "{token} は対象外の変異表記です。扱えるのは 1 塩基置換によるミスセンス変異"
+        "（c.574T>C や p.Cys192Arg の形）だけで、欠失・挿入・重複・スプライス部位の表記は"
+        "認識できません。",
+        "{token} is not a supported notation. Only single-nucleotide missense changes "
+        "(c.574T>C or p.Cys192Arg) are handled; deletions, insertions, duplications and "
+        "splice-site notations are not recognised.",
+    ),
+    "vp.recognized_gene": ("遺伝子記号 {gene}", "gene symbol {gene}"),
+    "vp.recognized_tx": ("転写産物 {tx}", "transcript {tx}"),
+    "vp.no_change": (
+        "{recognized} は読み取れましたが、変異の表記が見つかりません。"
+        "c.574T>C や p.Cys192Arg（C192R でも可）の形で変異を添えてください。",
+        "{recognized} recognised, but no variant was found. Add the change as "
+        "c.574T>C or p.Cys192Arg (C192R is also accepted).",
+    ),
     "vp.empty": ("入力が空です。", "The input is empty."),
     "vp.synonymous": (
         "同義置換（p.Xxx123=）は対象外です。FuncVEP はミスセンス変異のみを扱います。",
@@ -1153,11 +1201,21 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.formats": ("入力できる形式", "Accepted formats"),
     "ui.formats_body": (
         "- **遺伝子記号 + アミノ酸置換** — `BRCA1 p.Arg1699Trp` / `BRCA1 R1699W` / `TP53:p.R175H`\n"
+        "- **遺伝子記号 + c. 表記** — `SDHB c.574T>C` / `SDHB c.574T>C (p.Cys192Arg)`\n"
         "- **HGVS 転写産物表記** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`\n\n"
-        "転写産物は MANE Select を参照します。対象はミスセンス変異のみです。",
-        "- **Gene symbol + amino-acid substitution** — `BRCA1 p.Arg1699Trp` / `BRCA1 R1699W` / `TP53:p.R175H`\n"
-        "- **HGVS transcript notation** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`\n\n"
-        "Transcripts are resolved against MANE Select. Missense variants only.",
+        "括弧・コロン・空白・全角文字の違いは吸収します。c. 表記と p. 表記が併記されていれば "
+        "c. 表記を使い、p. 表記と食い違えば注意欄に出します。転写産物の指定が無い c. 表記は "
+        "MANE Select に当てはめます。対象はミスセンス変異のみです。",
+        "- **Gene symbol + amino-acid substitution** — `BRCA1 p.Arg1699Trp` / `BRCA1 R1699W` / `TP53:p.R175H`
+"
+        "- **Gene symbol + c. notation** — `SDHB c.574T>C` / `SDHB c.574T>C (p.Cys192Arg)`
+"
+        "- **HGVS transcript notation** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`
+
+"
+        "Parentheses, colons, spaces and full-width characters are tolerated. When both c. and "
+        "p. notations are given, the c. notation is used and any disagreement is flagged. A c. "
+        "notation without a transcript is applied to MANE Select. Missense variants only.",
     ),
     "ui.missing_index": ("必要な索引がありません: {items}", "Required index missing: {items}"),
     "ui.resolving": ("照合しています…", "Looking up…"),

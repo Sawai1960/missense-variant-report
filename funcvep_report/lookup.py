@@ -568,22 +568,58 @@ def resolve(text: str, store: Store) -> Resolution:
 
     # --- 転写産物と遺伝子を決める ---
     if isinstance(parsed, CodingInput):
-        rows = store.mane_by_transcript(parsed.transcript)
-        if not rows:
-            res.error = t("lk.tx_not_found", tx=parsed.transcript)
+        if parsed.transcript:
+            rows = store.mane_by_transcript(parsed.transcript)
+            if not rows:
+                res.error = t("lk.tx_not_found", tx=parsed.transcript)
+                return res
+        else:
+            # 転写産物の指定が無い c. 表記は、遺伝子の MANE 転写産物に当てはめる
+            rows = store.mane_by_gene(parsed.gene)
+            if not rows:
+                hints = store.gene_suggestions(parsed.gene)
+                res.error = t("lk.gene_not_found", gene=parsed.gene) + (
+                    t("lk.hints", hints=", ".join(hints)) if hints else ""
+                )
+                return res
+        # 候補が複数（MANE Select と Plus Clinical）なら、併記の p. 表記と合う方、
+        # それも無ければ参照塩基が合う最初のものを採る
+        chosen = None
+        last_error: str | None = None
+        for cand in rows:
+            cds = store.cds_for(cand["refseq_nuc"])
+            if cds is None:
+                last_error = t("lk.no_cds", refseq=cand["refseq_nuc"])
+                continue
+            try:
+                trial = apply_cds_substitution(cds, parsed.cds_position, parsed.ref_base, parsed.alt_base)
+            except ParseError as exc:
+                last_error = str(exc)
+                continue
+            if chosen is None:
+                chosen = (cand, trial)
+            if parsed.protein and (trial[0], trial[1], trial[2]) == parsed.protein:
+                chosen = (cand, trial)
+                break
+        if chosen is None:
+            res.error = last_error or t("lk.no_cds", refseq=rows[0]["refseq_nuc"])
             return res
-        row = rows[0]
-        cds = store.cds_for(row["refseq_nuc"])
-        if cds is None:
-            res.error = t("lk.no_cds", refseq=row["refseq_nuc"])
-            return res
-        try:
-            aa_ref, position, aa_alt = apply_cds_substitution(
-                cds, parsed.cds_position, parsed.ref_base, parsed.alt_base
-            )
-        except ParseError as exc:
-            res.error = str(exc)
-            return res
+        row, (aa_ref, position, aa_alt) = chosen
+        if not parsed.transcript:
+            if parsed.protein and (aa_ref, position, aa_alt) == parsed.protein:
+                pr, pp, pa = parsed.protein
+                res.warnings.append(t("lk.tx_assumed_ok", refseq=row["refseq_nuc"], status=row.get("mane_status", ""),
+                                      given=f"p.{AA1_TO_3.get(pr, pr)}{pp}{AA1_TO_3.get(pa, pa)}"))
+            else:
+                res.warnings.append(t("lk.tx_assumed", refseq=row["refseq_nuc"], status=row.get("mane_status", "")))
+        if parsed.protein and (aa_ref, position, aa_alt) != parsed.protein:
+            pr, pp, pa = parsed.protein
+            res.warnings.append(t(
+                "lk.protein_mismatch",
+                from_cds=f"p.{AA1_TO_3.get(aa_ref, aa_ref)}{position}{AA1_TO_3.get(aa_alt, aa_alt)}",
+                given=f"p.{AA1_TO_3.get(pr, pr)}{pp}{AA1_TO_3.get(pa, pa)}",
+                refseq=row["refseq_nuc"],
+            ))
         if aa_ref == aa_alt:
             res.error = t("lk.synonymous", aa_ref=aa_ref, position=position)
             return res
