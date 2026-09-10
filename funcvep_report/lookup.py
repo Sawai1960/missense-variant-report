@@ -12,6 +12,7 @@ FuncVEP のスコア表は chr-pos-ref-alt でしか引けず、アミノ酸変�
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -162,6 +163,10 @@ class Store:
         self.cfg = cfg
         self.p = cfg.paths
         self._con: duckdb.DuckDBPyConnection | None = None
+        # DuckDB の接続はスレッド間で共有できない。Streamlit は利用者の操作ごとに別の
+        # スレッドで動くので、スレッドごとにカーソル（接続の複製）を持つ
+        self._local = threading.local()
+        self._lock = threading.Lock()
         # 予備経路での一致率の計算結果。同じ照会で何度も引かないため。
         self._mane_residues: dict[str, dict[int, str]] = {}
         self._agreement: dict[tuple[str, str], tuple[float, int]] = {}
@@ -169,10 +174,21 @@ class Store:
     # -- 接続と可用性 ------------------------------------------------------
     @property
     def con(self) -> duckdb.DuckDBPyConnection:
-        if self._con is None:
-            self._con = duckdb.connect()
-            self._con.execute("PRAGMA memory_limit='4GB'")
-        return self._con
+        """呼び出したスレッド専用のカーソルを返す。
+
+        1 つの接続を複数スレッドから同時に使うと、結果が None で返るなど壊れる
+        （画面で「評価する」を連打したときに起きた）。DuckDB の推奨どおり、
+        接続は 1 つ、カーソルはスレッドごとに作る。
+        """
+        with self._lock:
+            if self._con is None:
+                self._con = duckdb.connect()
+                self._con.execute("PRAGMA memory_limit='4GB'")
+            cur = getattr(self._local, "cur", None)
+            if cur is None:
+                cur = self._con.cursor()
+                self._local.cur = cur
+            return cur
 
     @staticmethod
     def _ready(path: Path) -> bool:
