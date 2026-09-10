@@ -123,8 +123,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'などの臨床判定や一般の人々の変異データで学習しているのに対し、FuncVEP '
         'は機能実験（変異がタンパク質の働きに与える影響を実際に測ったデータ）で学習している点が特徴で、論文では既存の 48 '
         '種のツールを上回る精度が報告されています（機能実験に基づく評価で 78.8%→84.6%、臨床判定に基づく評価で '
-        '90.1%→92.4%）。本レポートは論文とともに公開された予測済みスコア（約 7,300 '
-        '万変異）を引いており、再計算はしていません。',
+        '90.1%→92.4%）。本レポートは、論文とともに公開された予測済みスコアの表（約 7,300 '
+        '万変異）からこの変異の値を取り出して表示しており、再計算はしていません。',
         'FuncVEP (Kayaalp et al., Nature Genetics 2026) is a family '
         'of variant effect predictors trained on functional assay '
         'data rather than on clinical classifications or population '
