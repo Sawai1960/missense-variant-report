@@ -52,6 +52,18 @@ def main() -> None:
         date = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d")
         out[key] = {"label": label, "label_en": label_en, "version": version, "version_en": version_en,
                     "date": date, "file": fname, "bytes": f.stat().st_size, "source": source}
+    # 学習セットは scripts/05 が raw/training_sets/ に置く（配布 zip を手で置いた場合は上の training を使う）
+    ts_dir = raw / "training_sets"
+    if "training" not in out and ts_dir.is_dir():
+        files = [f for f in ts_dir.iterdir() if f.is_file()]
+        if files:
+            newest = max(f.stat().st_mtime for f in files)
+            out["training"] = {"label": "FuncVEP 学習データ（学習セットの照合用）",
+                               "label_en": "FuncVEP training sets (for membership checks)",
+                               "version": "GitHub OzcelikLab/FuncVEP", "version_en": "GitHub OzcelikLab/FuncVEP",
+                               "date": datetime.fromtimestamp(newest).strftime("%Y-%m-%d"),
+                               "file": "training_sets/", "bytes": sum(f.stat().st_size for f in files),
+                               "source": "https://github.com/OzcelikLab/FuncVEP"}
     newest_index = max((p.stat().st_mtime for p in cfg.paths.index.glob("*.parquet")), default=None)
     out["_index"] = {
         "built": datetime.fromtimestamp(newest_index).strftime("%Y-%m-%d") if newest_index else "",

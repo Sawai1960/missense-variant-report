@@ -410,6 +410,7 @@ def build_transcript_map(cfg, con: duckdb.DuckDBPyConnection) -> None:
                         (cfg.paths.mane, "mane")):
         if not need.exists():
             print(f"  {label} の索引が先に必要です。飛ばします。")
+            SKIPPED.append(f"transcript_map（{label} の索引が必要）")
             return
 
     am = f"read_parquet('{cfg.paths.alphamissense.as_posix()}/**/*.parquet')"
@@ -649,15 +650,20 @@ def _fit_numbering_offsets(cfg, con: duckdb.DuckDBPyConnection, map_path: Path,
     print(f"       残り {len(genes) - resolved:,} 件は照会時に理由を示して止めます")
 
 
+# 並び順は依存関係の順。transcript_map は alphamissense・funcvep・mane の索引を使うので最後
 STEPS = {
     "mane": [build_mane, build_cds],
-    "transcript_map": [build_transcript_map],
     "constraint": [build_constraint],
     "clinvar": [build_clinvar],
     "alphamissense": [build_alphamissense],
     "revel": [build_revel],
     "funcvep": [build_funcvep],
+    "transcript_map": [build_transcript_map],
 }
+
+
+# 依存する索引が無くて飛ばした段階。最後にまとめて知らせる
+SKIPPED: list[str] = []
 
 
 def main(argv: list[str]) -> int:
@@ -687,6 +693,7 @@ def main(argv: list[str]) -> int:
                 src_missing = exc
             if src_missing:
                 print(f"  未取得のため飛ばします: {src_missing}")
+                SKIPPED.append(f"{key}（{src_missing}）")
 
     # このスクリプトが作った中間ファイルだけを対象にする。
     # 利用者が置いた他のファイルには触らない。
@@ -706,6 +713,11 @@ def main(argv: list[str]) -> int:
         print(f"\n変換用の中間ファイルが {cfg.paths.tmp} に {human(total)} 残っています。")
         print("索引ができていれば不要です。--cleanup を付けて再実行すると削除します。")
 
+    if SKIPPED:
+        print("\n次の段階は飛ばしました。原因を直して再実行してください:")
+        for item in SKIPPED:
+            print(f"  - {item}")
+        return 1
     print("\n索引の作成が終わりました。streamlit run app.py で起動できます。")
     return 0
 
