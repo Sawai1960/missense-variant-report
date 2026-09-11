@@ -38,7 +38,8 @@ A Streamlit UI (`app.py`) is the front end.
 
 1. **No recomputation.** FuncVEP is never re-run; the tool only looks up your
    precomputed scores. The released TSV is converted once into a local
-   DuckDB/Parquet index (~30 GB) for fast per-variant retrieval.
+   DuckDB/Parquet index (about 4 GB; the downloaded sources take another
+   7 GB) for fast per-variant retrieval.
 2. **Functional impact ≠ clinical pathogenicity.** The report states this
    prominently, and the user guide walks through HBB p.Glu7Val and
    CFTR p.Arg117His as worked examples of the distinction — following the
@@ -69,14 +70,28 @@ predictions from Zenodo themselves (`scripts/01_download.py`).
 
 ## Running it
 
+Requirements: Python 3.11 or later (verified on 3.14), about 12 GB of disk
+space, and network access for the downloads. Before the first run, open
+`config.yaml` and set `data_root` to the directory that will hold the
+downloaded sources and the index (default `D:/FuncVEP`). On macOS or Linux
+also point `pdf_font` / `pdf_font_bold` (Japanese) and `pdf_font_en` /
+`pdf_font_en_bold` (English) to TrueType fonts present on your system; the
+defaults are Windows font paths. Then:
+
 ```bash
 python -m pip install -r requirements.txt
 python scripts/01_download.py        # references, ~5.5 GB
 python scripts/02_build_index.py     # builds the local index, ~1 h
 python scripts/05_fetch_training_sets.py   # optional: training-set membership
 python scripts/07_write_versions.py        # record reference-data versions
-streamlit run app.py
+streamlit run app.py                 # opens http://localhost:8501
 ```
+
+The index build downloads the released FuncVEP/ClinVEP table from Zenodo
+(about 4 GB) together with MANE, ClinVar, AlphaMissense, REVEL and the gnomAD
+constraint table; all of these are public downloads. Switch the interface to
+English with the language selector in the sidebar (or open
+`http://localhost:8501/?lang=en`).
 
 On Windows, double-clicking `start_report_tool.bat` does the last step and opens
 a browser tab (`レポートツールを起動.bat` is the same launcher with a Japanese
