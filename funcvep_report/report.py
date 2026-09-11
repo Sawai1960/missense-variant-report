@@ -455,10 +455,11 @@ def provenance_rows(res: Resolution, versions: dict | None, code_version: str,
         for key, v in versions.items():
             if key.startswith("_"):
                 continue
-            label = v.get("label") or key
-            ver = v.get("version") or t("dash")
+            en = get_lang() == "en"
+            label = (v.get("label_en") if en else v.get("label")) or v.get("label") or key
+            ver = (v.get("version_en") if en else v.get("version")) or v.get("version") or t("dash")
             date = v.get("date") or ""
-            items.append(f"{label}: {ver}" + (f"（{date}）" if date else ""))
+            items.append(f"{label}: {ver}" + ((f" ({date})" if en else f"（{date}）") if date else ""))
         built = (versions.get("_index") or {}).get("built") or ""
         rows.append(Row(t("row.data_versions"), t("sep.list").join(items),
                         t("note.data_versions", built=built) if built else ""))
@@ -682,7 +683,7 @@ def build(res: Resolution, thresholds: dict | None,
                     head = _qualify_bp4(head, vr.splice, gnomad_online)
                 head += t("acmg.adopted") if model == vr.adopted_model else t("acmg.reference")
             vr.predictions.append(
-                Row(model.replace("_", "-"), value, head + "｜" + model_note(model))
+                Row(model.replace("_", "-"), value, head + t("sep.note") + model_note(model))
             )
         pm = primary_model.replace("_", "-")
         if vr.adopted_model is None:

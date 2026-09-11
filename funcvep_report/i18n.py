@@ -114,6 +114,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
     # ---------------------------------------------------------------- 共通
     "sep.list": ("、", ", "),
     "sep.wide": ("　", "  "),
+    "sep.note": ("｜", " | "),
+    "ui.et_al": (" ら", " et al."),
     "dash": ("—", "—"),
 
     # ------------------------------------------------------------ report.py
@@ -142,8 +144,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "missing_label.absent": ("未収録（全モデルの学習に使用された変異）",
                              "Not in released table (training variant for all models)"),
     "missing_label.absent_unexplained": (
-        "未収録（予測表の作成上の理由。著者確認済み）",
-        "Not in released table (dataset assembly; confirmed by the authors)",
+        "未収録（学習セットにも無し。原因は未確定）",
+        "Not in released table (not in any training set; cause undetermined)",
     ),
     "missing_label.unknown": ("FuncVEP の索引なし", "FuncVEP index unavailable"),
     "missing_label.default": ("スコアなし", "No score"),
@@ -220,15 +222,15 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "model_note.ClinVEP_CTI": (
         "FuncVEP-CTI と同じ材料を、機能実験ではなく ClinVar の臨床判定で"
-        "学習させた比較用モデル",
+        "学習させた比較用モデルです",
         "Control model trained on the same features with ClinVar labels",
     ),
     "model_note.ClinVEP_CTE": (
-        "同上（臨床判定で学習した他ツールの結果を外したもの）",
+        "同上です（臨床判定で学習した他ツールの結果を外したもの）",
         "As above, excluding clinically trained predictors",
     ),
     "model_note.ClinVEP_SP": (
-        "同上（他の予測ツールの結果を使わないもの）",
+        "同上です（他の予測ツールの結果を使わないもの）",
         "As above, without predictor-derived features",
     ),
 
@@ -295,7 +297,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'scores above',
     ),
     "note.lof_z": (
-        "missense z と同じ考え方で機能喪失変異を数えた z スコア",
+        "missense z と同じ考え方で機能喪失変異を数えた z スコアです",
         "The corresponding z-score for loss-of-function variants",
     ),
     "row.af": ("gnomAD アレル頻度", "gnomAD allele frequency"),
@@ -430,7 +432,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "af.zero": ("観察されず（0 / {an} アレル）", "Not observed (0 / {an} alleles)"),
     "row.eas": ("東アジア集団（gnomAD）", "East Asian (gnomAD)"),
     "note.eas": (
-        "gnomAD v4 の東アジア集団（中国・日本・韓国などを含む）の頻度。エクソームとゲノムの合算",
+        "gnomAD v4 の東アジア集団（中国・日本・韓国などを含む）の頻度です（エクソームとゲノムの合算）",
         "gnomAD v4 East Asian population (includes Chinese, Japanese and Korean "
         "samples), exomes and genomes combined",
     ),
@@ -472,7 +474,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'verified here; weigh together with gnomAD',
     ),
     "note.japan_failed": (
-        "TogoVar への接続に失敗した（{reason}）",
+        "TogoVar への接続に失敗しました（{reason}）",
         "The TogoVar query failed ({reason})",
     ),
     "pdf.residue": ("ClinVar（同じアミノ酸位置に登録されている他の変異）",
@@ -564,7 +566,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'スプライシングへの影響は低いと考えられます',
         'Low splicing impact',
     ),
-    "splice.level.moderate": ("スプライシングに影響する可能性（要確認）",
+    "splice.level.moderate": ("スプライシングに影響する可能性があります（要確認）",
                               "Possible splicing impact (review)"),
     "splice.level.high": (
         'スプライシングを損なう可能性が高いと考えられます',
@@ -589,7 +591,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'No SpliceAI score was returned for this transcript',
     ),
     "note.spliceai_failed": (
-        "Ensembl VEP への接続に失敗した（{reason}）",
+        "Ensembl VEP への接続に失敗しました（{reason}）",
         "The Ensembl VEP query failed ({reason})",
     ),
     "warn.spliceai": (
@@ -611,7 +613,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         ' gene covers this substitution (outside the assayed region, '
         'or dropped from the measurement)',
     ),
-    "note.mave_failed": ("MaveDB への接続に失敗した（{reason}）", "The MaveDB query failed ({reason})"),
+    "note.mave_failed": ("MaveDB への接続に失敗しました（{reason}）", "The MaveDB query failed ({reason})"),
     "mave.class.normal": (
         '正常（機能は保たれます）',
         'Normal (function retained)',
@@ -649,7 +651,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'LitVar2 にこの変異の記載は見つかりませんでした。',
         'No LitVar2 record was found for this variant.',
     ),
-    "ui.litvar_failed": ("LitVar2 への接続に失敗した（{reason}）", "The LitVar2 query failed ({reason})"),
+    "ui.litvar_failed": ("LitVar2 への接続に失敗しました（{reason}）", "The LitVar2 query failed ({reason})"),
     "ui.litvar_more": (
         'LitVar2 の全件一覧',
         'See all in LitVar2',
@@ -814,8 +816,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         'likely_pathogenic / ambiguous / likely_benign',
     ),
     "note.revel": (
-        "複数の予測ツールを統合した従来型のスコア（Ioannidis ら 2016）。"
-        "{cutoff} を境に damaging / neutral と読むのが慣例",
+        "複数の予測ツールを統合した従来型のスコアです（Ioannidis ら 2016）。"
+        "{cutoff} を境に damaging / neutral と読むのが慣例です",
         "Ensemble score (Ioannidis et al. 2016); conventional binary call at "
         "{cutoff}",
     ),
@@ -887,7 +889,7 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "row.clinvar_name": ("ClinVar 表記", "ClinVar name"),
     "note.variation_id": ("VariationID {id}", "VariationID {id}"),
     "clinvar.none": ("ClinVar に登録なし", "Not in ClinVar"),
-    "note.clinvar_none": ("新規変異、あるいは未提出の変異である可能性",
+    "note.clinvar_none": ("新規の変異、あるいは未提出の変異の可能性があります",
                           "Possibly novel, or not yet submitted"),
     "phenotypes.none": ("記載なし", "Not stated"),
     "phenotypes.more": ("　ほか {n} 件", " and {n} more"),
@@ -905,8 +907,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "Note: predictor calls do not reliably predict whether the variant causes disease "
         "(clinical pathogenicity). See the interpretation notes at the end.",
     ),
-    "row.damaging_side": ("damaging（機能を損なう）側", "damaging"),
-    "row.neutral_side": ("neutral（影響なし）側", "neutral"),
+    "row.damaging_side": ("damaging（機能を損なう）側", "damaging side"),
+    "row.neutral_side": ("neutral（影響なし）側", "neutral side"),
     "conc.no_tool": ("なし", "none"),
     "conc.none": (
         '判定できる予測ツールがありません',
@@ -1011,16 +1013,16 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "thr.local_head": (
         "判定基準の由来: ClinVar（{date} 時点、レビュー {stars} 星以上）の "
-        "病的 {n_p:,} 件 / 良性 {n_b:,} 件から当方で算出。",
+        "病的 {n_p:,} 件 / 良性 {n_b:,} 件から当方で算出しました。",
         "Thresholds derived locally from ClinVar ({date}; review status ≥{stars} "
         "stars; {n_p:,} pathogenic / {n_b:,} benign).",
     ),
     "thr.local_head_short": (
-        "判定基準の由来: ClinVar（{date} 時点）から当方で算出。",
+        "判定基準の由来: ClinVar（{date} 時点）から当方で算出しました。",
         "Thresholds derived locally from ClinVar ({date}).",
     ),
     "thr.local_params": (
-        "事前確率 {prior}、ブートストラップ {boot} 回の保守的な下限を採用。",
+        "事前確率 {prior}、ブートストラップ {boot} 回の保守的な下限を採用しています。",
         "Prior {prior}; conservative lower bound over {boot} bootstrap "
         "replicates.",
     ),
@@ -1137,10 +1139,10 @@ _STRINGS: dict[str, tuple[str, str]] = {
     ),
     "lk.tx_not_found": (
         "転写産物 {tx} が MANE に見つかりません。\n"
-        "MANE Select 以外の転写産物は対象外です。"
+        "MANE（Select と Plus Clinical）以外の転写産物は対象外です。"
         "遺伝子記号とアミノ酸置換での入力をお試しください。",
         "Transcript {tx} was not found in MANE.\n"
-        "Only MANE Select transcripts are supported. "
+        "Only MANE (Select and Plus Clinical) transcripts are supported. "
         "Try gene symbol plus amino-acid substitution.",
     ),
     "lk.no_cds": (
@@ -1471,13 +1473,13 @@ _STRINGS: dict[str, tuple[str, str]] = {
         "- **遺伝子記号 + c. 表記** — `SDHB c.574T>C` / `SDHB c.574T>C (p.Cys192Arg)`\n"
         "- **HGVS 転写産物表記** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`\n\n"
         "括弧・コロン・空白・全角文字の違いは吸収します。c. 表記と p. 表記が併記されていれば "
-        "c. 表記を使い、p. 表記と食い違えば注意欄に出します。転写産物の指定が無い c. 表記は "
+        "c. 表記を使い、p. 表記と食い違えば評価を止めて確認を促します。転写産物の指定が無い c. 表記は "
         "MANE Select に当てはめます。対象はミスセンス変異のみです。",
         "- **Gene symbol + amino-acid substitution** — `BRCA1 p.Arg1699Trp` / `BRCA1 R1699W` / `TP53:p.R175H`\n"
         "- **Gene symbol + c. notation** — `SDHB c.574T>C` / `SDHB c.574T>C (p.Cys192Arg)`\n"
         "- **HGVS transcript notation** — `NM_007294.4:c.5095C>T` / `NM_007294.4(BRCA1):c.5095C>T`\n\n"
         "Parentheses, colons, spaces and full-width characters are tolerated. When both c. and "
-        "p. notations are given, the c. notation is used and any disagreement is flagged. A c. "
+        "p. notations are given, the c. notation is used and any disagreement stops the evaluation. A c. "
         "notation without a transcript is applied to MANE Select. Missense variants only.",
     ),
     "ui.missing_index": ("必要な索引がありません: {items}", "Required index missing: {items}"),
@@ -1489,8 +1491,8 @@ _STRINGS: dict[str, tuple[str, str]] = {
     "ui.funcvep": ("FuncVEP（タンパク質の働きへの影響の予測）",
                    "FuncVEP (predicted functional impact)"),
     "ui.funcvep_caption": (
-        "スコアはタンパク質の働きを損なう（damaging）と予測される確率（0〜1）。"
-        "damaging と neutral の境はモデルごとに異なる（{cuts}）。",
+        "スコアはタンパク質の働きを損なう（damaging）と予測される確率です（0〜1）。"
+        "damaging と neutral の境はモデルごとに異なります（{cuts}）。",
         "Score = predicted probability of functional damage (0–1); binary cutoffs"
         " are model-specific ({cuts}).",
     ),

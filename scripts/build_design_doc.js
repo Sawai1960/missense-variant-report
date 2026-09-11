@@ -91,7 +91,7 @@ function contentJA() {
   B.push(h1("3. 利用者と動作環境"));
   B.push(...bullets([
     "利用者: 遺伝子医療部の医師・遺伝カウンセラー。変異の表記を報告書から転記できることを前提とします。",
-    "動作環境: 院内の Windows PC 1 台。Python と Streamlit によるローカルの Web アプリで、ブラウザから操作します。参照データの索引は D: ドライブに置きます。",
+    "動作環境: 院内の Windows PC 1 台。Python と Streamlit によるローカルの Web アプリで、ブラウザから操作します。参照データの索引は院内 PC のローカルドライブに置きます。",
     "通信: 索引の照会はオフラインで完結します。集団頻度など一部の情報は公開データベースの API に問い合わせます（5 節）。送るのは変異の座標などに限られ、患者情報は送りません。切り替えでオフライン運用もできます。",
     "言語: 画面と PDF は日本語・英語を切り替えられます。",
   ]));
@@ -146,13 +146,13 @@ function contentJA() {
 
   B.push(h1("6. 処理の流れ"));
   B.push(...numbered([
-    "入力の解析: 部品を拾って、遺伝子・転写産物・c. 表記・p. 表記を決める（4 節）。",
-    "転写産物とアミノ酸置換の確定: 参照アミノ酸が一致する MANE の転写産物（Select、または Plus Clinical）を選び、c. 表記は CDS 配列で翻訳する。併記の p. と食い違えば止める。",
-    "ゲノム座標の確定: AlphaMissense の索引で、その転写産物・残基番号・置換に対応する chr-pos-ref-alt を求める。c. 表記があれば入力の塩基置換と一致する候補だけを残し、p. 表記だけなら同じアミノ酸置換を生じる塩基置換をすべて候補にする。転写産物 ID の世代差やアイソフォームのずれは対応表と、採用条件付きの予備経路（4 節）で吸収する。",
-    "証拠の収集: 座標で FuncVEP・REVEL・ClinVar を引き、遺伝子で制約指標と MANE の情報を引く。同じアミノ酸位置の他の ClinVar 変異も集める。",
-    "オンライン照会: gnomAD、TogoVar、SpliceAI、ClinGen、MaveDB、ClinVar 疾患別件数を取得する（オフラインなら省く）。",
-    "証拠の整理: ACMG の基準に対応づける（7 節）。予測ツールの判定をまとめる。",
-    "報告書の組み立てと出力: 日本語または英語の文言で節を組み立て、画面に表示し、PDF（A4、発行元とページ番号入り）を生成する。末尾に、参照データの版・閾値の版・コードの版・取得日時・転写産物の解決経路・PP3/BP4 の採用モデルを記録する。",
+    "入力の解析: 部品を拾って、遺伝子・転写産物・c. 表記・p. 表記を決めます（4 節）。",
+    "転写産物とアミノ酸置換の確定: 参照アミノ酸が一致する MANE の転写産物（Select、または Plus Clinical）を選び、c. 表記は CDS 配列で翻訳します。併記の p. と食い違えば止めます。",
+    "ゲノム座標の確定: AlphaMissense の索引で、その転写産物・残基番号・置換に対応する chr-pos-ref-alt を求めます。c. 表記があれば入力の塩基置換と一致する候補だけを残し、p. 表記だけなら同じアミノ酸置換を生じる塩基置換をすべて候補にします。転写産物 ID の世代差やアイソフォームのずれは対応表と、採用条件付きの予備経路（4 節）で吸収します。",
+    "証拠の収集: 座標で FuncVEP・REVEL・ClinVar を引き、遺伝子で制約指標と MANE の情報を引きます。同じアミノ酸位置の他の ClinVar 変異も集めます。",
+    "オンライン照会: gnomAD、TogoVar、SpliceAI、ClinGen、MaveDB、ClinVar 疾患別件数を取得します（オフラインなら省きます）。",
+    "証拠の整理: ACMG の基準に対応づけます（7 節）。予測ツールの判定をまとめます。",
+    "報告書の組み立てと出力: 日本語または英語の文言で節を組み立て、画面に表示し、PDF（A4、発行元とページ番号入り）を生成します。末尾に、参照データの版・閾値の版・コードの版・取得日時・転写産物の解決経路・PP3/BP4 の採用モデルを記録します。",
   ]));
 
   B.push(h1("7. 証拠と ACMG 基準の対応"));
@@ -200,10 +200,10 @@ function contentJA() {
   B.push(h1("8. FuncVEP のスコアが無い変異の扱い"));
   B.push(p("公開された予測表では、学習に用いた変異のスコアが出ません。報告書は、行の有無、モデル別のスコアの有無、公開されている学習セットとの一致、原因の確認状態を分けて書きます。"));
   B.push(...bullets([
-    "表に行はあるがスコアが空欄: 公開されている学習セットとの照合で、一部のモデルの学習データに含まれていたことが確認できた変異。該当モデルのスコアは公開されない（著者確認済み、2026-09-05）。",
-    "表に行そのものが無く、6 モデルすべての学習セットに含まれる: 各モデルの推論から除外され、統合表に現れない（著者確認済み、2026-09-05）。",
-    "行が無く、公開されている学習セットにも見当たらない: 原因は手元では確認できない。著者の照合（2026-09-07）では、この種の未収録に元データに無い・注釈の違いによる除外・処理の抜けが原因のものがあると説明されたが、個々の変異について確定したものではない。報告書もそのように書く。",
-    "いずれの場合も「スコアが無いこと自体は病原性についても予測の確からしさについても情報を持たない」と明記し、AlphaMissense・REVEL・ClinVar で判断するよう案内する。どのモデルの学習に使われたかは、公開されている学習セットとの照合で表示する。",
+    "表に行はあるがスコアが空欄: 公開されている学習セットとの照合で、一部のモデルの学習データに含まれていたことが確認できた変異です。該当モデルのスコアは公開されません（著者確認済み、2026-09-05）。",
+    "表に行そのものが無く、6 モデルすべての学習セットに含まれる: 各モデルの推論から除外され、統合表に現れません（著者確認済み、2026-09-05）。",
+    "行が無く、公開されている学習セットにも見当たらない: 原因は手元では確認できません。著者の照合（2026-09-07）では、この種の未収録に元データに無い・注釈の違いによる除外・処理の抜けが原因のものがあると説明されましたが、個々の変異について確定したものではありません。報告書もそのように書きます。",
+    "いずれの場合も「スコアが無いこと自体は病原性についても予測の確からしさについても情報を持たない」と明記し、AlphaMissense・REVEL・ClinVar で判断するよう案内します。どのモデルの学習に使われたかは、公開されている学習セットとの照合で表示します。",
   ]));
   B.push(p("著者の説明を引用する箇所の対象範囲: 手元の照合は、ClinVar variant_summary（2026-08-27 取得）でレビュー段階が 2 星以上、MANE Select 転写産物上の 1 塩基置換によるミスセンス変異に限って行いました。著者に送付した不一致表（2026-09-06）もこの範囲のものです。"));
   B.push(p("手元の実測（scripts/06_missing_scores_audit.py、2026-09-10 再実行）: 対象は上記の範囲の ClinVar の行 63,329 件（変異としては 63,275 件。複数の遺伝子に登録された変異は行ごとに数えています）。病的（P/LP）24,716 件のうち、行なし 1,232 件（5.0%）、空欄 1,545 件（6.3%）、合わせて 2,777 件（11.2%）でスコアが得られません。良性（B/LB）38,613 件では、行なし 1,716 件（4.4%）、空欄 866 件（2.2%）、合わせて 2,582 件（6.7%）です。行の無い 2,948 件のうち 2,457 件（83.3%）は 6 モデルすべての学習セットに含まれ、4 件は一部のモデルの学習セットに含まれ、残る 487 件はどの学習セットにも見当たりません（上記 3 番目）。版 1.0 の数値（24,010 件、11.3% など）は、終止コドン喪失などの除外条件が異なる以前の集計によるもので、本版の数値に置き換えます。"));
@@ -212,7 +212,7 @@ function contentJA() {
   B.push(...numbered([
     "表題、発行元、入力、作成日時",
     "評価対象の変異: アミノ酸置換、ゲノム座標（GRCh38）、転写産物。候補が複数なら全部",
-    "注意: 入力の解釈に関わる事項（候補が複数、SpliceAI の警告）。該当が無ければ出ない。転写産物の当てはめは「評価対象の変異」の欄に添え、p. の食い違いは評価を止める",
+    "注意: 入力の解釈に関わる事項（候補が複数、SpliceAI の警告）。該当が無ければ出ません。転写産物の当てはめは「評価対象の変異」の欄に添え、p. の食い違いは評価を止めます",
     "遺伝子: pLI、missense z、LoF z（値ごとの一言と解説）、ClinGen の評価（遺伝子単位の関連疾患）",
     "変異ごと（帯状の見出し。2 つ目以降は改ページ）: 集団頻度（gnomAD）、FuncVEP、他の予測ツール（ClinVEP、AlphaMissense、REVEL、SpliceAI）、機能実験の実測値（MaveDB、あれば）、予測ツールの判定のまとめ（色付きの箱）、ClinVar（この変異の登録）、ClinVar（同じアミノ酸位置に登録されている他の変異）",
     "PP3/BP4 の判定基準について、解釈上の注意（帯状の見出し）",
@@ -224,7 +224,7 @@ function contentJA() {
   B.push(h1("10. 検証"));
   B.push(...bullets([
     "単体テスト 70 件（入力解析、コドン翻訳、各 API の応答の読み取り、同じ位置の判定の振り分け、PP3/BP4 の閾値の境界、SpliceAI と BP4 の連動、集団頻度の取得状態、版と解決経路の節）と、索引を使う統合テスト 4 件（下表）。",
-    "セルフテスト: 既知の 25 変異（HGVS 表記との突き合わせ、拒否されるべき入力を含む）で OK 19 / 注意 6 / NG 0。注意 6 件は学習データによるスコア欠落で、いずれも説明が付く。",
+    "セルフテスト: 既知の入力 25 件（HGVS 表記との突き合わせ、拒否されるべき入力を含む）で OK 19 / 注意 6 / NG 0。注意 6 件は学習データによるスコア欠落で、いずれも説明が付きます。",
     "座標系の確認: TP53 p.Arg175His が GRCh38 の chr17:7,675,088 に一致。転写産物 ID の世代差、アイソフォームのずれについて予備経路の安全性を実測で確認。",
     "公開予測表の網羅性の実測と、著者への照合（2026-09-06 に不一致表を共有）。",
   ]));
@@ -283,16 +283,16 @@ function contentJA() {
   ]));
   B.push(h1("付録 D. 版 1.0 からの変更点（設計文書レビューへの対応）"));
   B.push(...bullets([
-    "c. 表記の入力では、入力した塩基置換と一致する候補だけを評価する（4 節）。",
-    "c. と p. の食い違い、遺伝子と転写産物の食い違いは評価を止める。版だけが違う転写産物は解決して注記する（4 節）。",
-    "BA1 は「候補」に留め、集団別の最大頻度を示す。BS2 の前提を注記する（7 節）。",
-    "PP3/BP4 の採用モデルを固定し、代替の順序を明記する（7.1 節）。",
-    "SpliceAI の Δ 0.5 以上で BP4 を保留し、まとめの箱を橙にする。未取得は未評価と明記する（7.1 節）。",
-    "MaveDB は塩基で照合し、アミノ酸置換だけの照合と区別する。PS3/BS3 の適用に確認が必要と明記する（7 節）。",
-    "ClinVar の疾患名と提出件数の性質、生殖細胞系列の分類であること、3 星以上の強調、PS1/PM5 の評価日と疾患名、1 星以下の弱い候補（7 節、11 節）。",
-    "未収録の原因を断定せず、確認状態を分けて書く。実測の数値を再集計し、分母と重複の扱いを明記する（8 節）。",
-    "読み取り深度が未取得の「収録なし」を PM2 の候補にしない。取得状態の一覧（7.2 節）。",
-    "報告書末尾に「データの版と解決経路」の節を設け、参照データの版を索引フォルダーに記録する（9 節）。レビューの 6 ケースをテストに追加した（10 節）。",
+    "c. 表記の入力では、入力した塩基置換と一致する候補だけを評価します（4 節）。",
+    "c. と p. の食い違い、遺伝子と転写産物の食い違いは評価を止めます。版だけが違う転写産物は解決して注記します（4 節）。",
+    "BA1 は「候補」に留め、集団別の最大頻度を示します。BS2 の前提を注記します（7 節）。",
+    "PP3/BP4 の採用モデルを固定し、代替の順序を明記します（7.1 節）。",
+    "SpliceAI の Δ 0.5 以上で BP4 を保留し、まとめの箱を橙にします。未取得は未評価と明記します（7.1 節）。",
+    "MaveDB は塩基で照合し、アミノ酸置換だけの照合と区別します。PS3/BS3 の適用に確認が必要と明記します（7 節）。",
+    "ClinVar の疾患名と提出件数の性質、生殖細胞系列の分類であること、3 星以上の強調、PS1/PM5 の評価日と疾患名、1 星以下の弱い候補を明記します（7 節、11 節）。",
+    "未収録の原因を断定せず、確認状態を分けて書きます。実測の数値を再集計し、分母と重複の扱いを明記します（8 節）。",
+    "読み取り深度が未取得の「収録なし」を PM2 の候補にしません。取得状態を一覧にします（7.2 節）。",
+    "報告書末尾に「データの版と解決経路」の節を設け、参照データの版を索引フォルダーに記録します（9 節）。レビューの 6 ケースをテストに追加しました（10 節）。",
   ]));
   return B;
 }
@@ -398,7 +398,7 @@ function contentEN() {
     ["Allele frequency, maximum population frequency, homozygotes", "gnomAD, TogoVar", "BA1 candidate, BS1, BS2", "Frequency and allele counts; BA1 candidate when the maximum population frequency exceeds 0.05. The report states that disease- and gene-specific exceptions, the population, allele counts and the premises of BS2 (inheritance, age of onset, penetrance, health status) are not verified"],
     ["Absence from population databases", "gnomAD", "PM2_supporting candidate", "Candidate only when coverage at the position is adequate; not a candidate when coverage is inadequate or unavailable, on lookup failure, or offline (section 7.2)"],
     ["Measured functional-assay results", "MaveDB", "Material for PS3 / BS3", "Measured score and investigator-defined class. Nucleotide-matched measurements are distinguished from measurements matched by amino-acid substitution only. Target transcript, number of variants, class names and citation are shown; applying PS3/BS3 requires checking the assay"],
-    ["Effect on splicing", "SpliceAI", "Premise of the missense evaluation", "Delta 0.5 or above: BP4 withheld and the summary box turns amber. 0.2 to 0.5: BP4 marked for review. Not retrieved: stated as not assessed (section 7.1)"],
+    ["Effect on splicing", "SpliceAI", "Premise of the missense evaluation", "Delta 0.5 or above: BP4 withheld and the summary box turns amber. 0.2 to below 0.5: BP4 marked for review. Not retrieved: stated as not assessed (section 7.1)"],
     ["Gene–disease relationship, inheritance", "ClinGen", "Context for pLI, BS2 and PM2", "Gene-level associated diseases; the entry whose name matches the ClinVar condition with the most submissions is marked (for reference)"],
     ["Clinical classification of this variant", "ClinVar", "Existing classification", "Germline significance, review stars (three stars or more emphasised as an expert-panel classification), conditions ordered by submission count, with a note that conditions are submitter-entered and unverified and that counts are submissions, not cases. The mode of inheritance entered by submitters is summarised in one line as AD/AR counts (for reference; ClinGen remains the basis)"],
   ], [24, 16, 20, 40]));

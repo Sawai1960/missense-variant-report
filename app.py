@@ -365,7 +365,7 @@ for i, vr in enumerate(rep.variants, 1):
                 unsafe_allow_html=True,
             )
             # PDF と同じ判定文（採用／参考、BP4 の保留や未評価の注記を含む）
-            st.caption(prow.note.split("｜")[0])
+            st.caption(prow.note.split(t("sep.note"))[0])
 
     if vr.adoption_note:
         st.caption(vr.adoption_note)
@@ -426,7 +426,7 @@ for i, vr in enumerate(rep.variants, 1):
             else:
                 st.write(t("ui.litvar_count", n=f"{lit.count:,}", rsid=lit.rsid or t("dash")))
                 for p in lit.papers:
-                    st.markdown(f"- [{p.title}]({p.url}) — {p.first_author} ら, *{p.journal}* {p.year}, PMID {p.pmid}")
+                    st.markdown(f"- [{p.title}]({p.url}) — {p.first_author}{t('ui.et_al')}, *{p.journal}* {p.year}, PMID {p.pmid}")
                 if lit.url:
                     st.markdown(f"[{t('ui.litvar_more')}]({lit.url})")
 
