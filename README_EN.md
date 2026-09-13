@@ -100,6 +100,18 @@ name for in-house users).
 `config.yaml` sets the data directory (`data_root`) and the PDF font.
 `scripts/04_selftest.py` runs a set of known variants end to end.
 
+### Server mode (restricted access for invited users)
+
+On the machine that holds the index, `scripts/start_server.bat` runs the app
+headless on 127.0.0.1:8501 and restarts it if it exits; a Startup-folder
+shortcut launches it at logon through `scripts/start_server_hidden.vbs`.
+Invited users reach that instance at https://missense.human-genetics.uk
+through a Cloudflare Tunnel, behind Cloudflare Access: only registered e-mail
+addresses can log in (one-time code by e-mail), and the application and index
+never leave our machine. This is how department members and the FuncVEP
+authors can try the tool without installing anything. Setup notes (Japanese)
+are in `docs/限定公開_Cloudflare手順.md`.
+
 ## Repository layout
 
 | Path | Contents |

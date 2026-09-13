@@ -17,3 +17,6 @@ venv/
 # OS
 Thumbs.db
 desktop.ini
+
+# サーバーモードのログ（scripts/start_server.bat が書く）
+/logs/
