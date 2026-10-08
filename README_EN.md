@@ -68,6 +68,10 @@ license. **This repository contains only our own code and documentation** —
 no FuncVEP data, no derived index. Anyone cloning it must obtain the released
 predictions from Zenodo themselves (`scripts/01_download.py`).
 
+Our own code and documentation are released under the MIT License (see
+`LICENSE`). The data sources listed in the Japanese README keep their own
+licenses and are not part of this repository.
+
 ## Running it
 
 Requirements: Python 3.11 or later (verified on 3.14), about 12 GB of disk
@@ -110,7 +114,7 @@ through a Cloudflare Tunnel, behind Cloudflare Access: only registered e-mail
 addresses can log in (one-time code by e-mail), and the application and index
 never leave our machine. This is how department members and the FuncVEP
 authors can try the tool without installing anything. Setup notes (Japanese)
-are in `docs/限定公開_Cloudflare手順.md`.
+are kept in an internal guide (docs/限定公開_Cloudflare手順.md in the in-house working copy; not part of the public repository).
 
 ## Repository layout
 
