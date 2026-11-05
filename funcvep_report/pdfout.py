@@ -218,11 +218,13 @@ _SUMMARY_COLORS = {
 }
 
 
-def _summary_box(doc: _Doc, rows: list[Row], kind: str, label_w: float = 42.0) -> None:
+def _summary_box(doc: _Doc, rows: list[Row], kind: str, label_w: float = 42.0,
+                 heading: str | None = None) -> None:
     """予測ツールの判定のまとめを、色付きの箱で目立たせて描く。
 
     高さは中身次第で決まるので、一度描いて高さを測り、背景を描いてから描き直す。
     箱の途中で改ページしないよう、余白が足りなければ先に改ページする。
+    heading を渡すと節見出しも一緒に測り、見出しだけがページ末に残らないようにする。
     """
     bg, fg = _SUMMARY_COLORS.get(kind, _SUMMARY_COLORS["none"])
     avail = doc.w - doc.l_margin - doc.r_margin
@@ -255,21 +257,29 @@ def _summary_box(doc: _Doc, rows: list[Row], kind: str, label_w: float = 42.0) -
         doc.mc(avail - 2 * pad, 4, t("conc.caveat"))
         return doc.get_y() + pad - y0
 
-    # 高さを測る（描いた内容は捨てる）
-    start_page = doc.page
+    # 高さを測る（描いた内容は捨てる）。測る間は自動改ページを止める。
+    # 止めないと、箱がページ下端近くから始まるとき測定の途中で改ページが起き、
+    # 高さが負の値になって背景が上向きに塗られ、前の本文を覆い隠す（2026-11-05 に発生）
     y_start = doc.get_y()
-    with doc._disable_writing():
-        height = draw(True)
-    if doc.page != start_page:
-        # 測定中に改ページが起きた: 箱ごと次のページへ
-        doc.page = start_page
-        doc.set_y(y_start)
-    if y_start + height > doc.h - doc.b_margin:
+    auto, margin = doc.auto_page_break, doc.b_margin
+    doc.set_auto_page_break(False)
+    try:
+        with doc._disable_writing():
+            if heading:
+                _h2(doc, heading)
+            head_h = doc.get_y() - y_start
+            height = draw(True)
+    finally:
+        doc.set_auto_page_break(auto, margin)
+    if y_start + head_h + height > doc.h - doc.b_margin:
+        # ページに収まらない: 見出しと箱をまとめて次のページへ
         doc.add_page()
-        y_start = doc.get_y()
+    if heading:
+        _h2(doc, heading)
+    y_box = doc.get_y()
     doc.set_fill_color(*bg)
-    doc.rect(doc.l_margin, y_start, avail, height, style="F")
-    doc.set_y(y_start)
+    doc.rect(doc.l_margin, y_box, avail, height, style="F")
+    doc.set_y(y_box)
     draw(False)
     doc.ln(1.5)
 
@@ -373,8 +383,8 @@ def _render(rep: Report, font_path: Path | FontSpec, cache_dir: Path | None) -> 
             _h2(doc, t("pdf.mave"))
             _rows(doc, vr.mave_rows)
 
-        _h2(doc, t("pdf.concordance"))
-        _summary_box(doc, vr.concordance_rows, vr.concordance_kind)
+        _summary_box(doc, vr.concordance_rows, vr.concordance_kind,
+                     heading=t("pdf.concordance"))
 
         _h2(doc, t("pdf.clinvar"))
         _rows(doc, vr.clinvar_rows)
