@@ -1,6 +1,7 @@
 @echo off
 rem Server-mode launcher for the missense variant report tool.
-rem Used by the scheduled task "MissenseReportServer" at Windows logon, and can
+rem Started at Windows logon by the Startup-folder shortcut "MissenseReportServer"
+rem (through start_server_hidden.vbs), and can
 rem also be double-clicked to run the app without opening a browser.
 rem Differences from the interactive launcher in the parent folder:
 rem   - headless: no browser tab is opened

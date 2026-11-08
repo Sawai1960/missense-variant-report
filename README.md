@@ -289,9 +289,9 @@ git push backup master
 git clone D:/backup/missense-variant-report.git
 ```
 
-このフォルダー自体は OneDrive に同期されているので、マシンが壊れても失われない。
-ただし **`.git` を OneDrive に同期させると、競合でリポジトリが壊れることがある**。
-その場合は壊れた状態がそのまま同期されるので、上のベアリポジトリから復元する。
+このフォルダーは 2026-11-08 に OneDrive の外（`D:\claude-dev\missense-variant-report`）へ移した。
+OneDrive には同期されないので、履歴の保全は上のベアリポジトリへのプッシュ（`git push backup master`）で行う。
+**`.git` を OneDrive に同期させると競合で壊れることがある**ため、作業コピーを OneDrive に置かない。
 バックアップ先は C: とは別の物理ディスクに置いてある。
 
 ---
