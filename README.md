@@ -292,7 +292,10 @@ git clone D:/backup/missense-variant-report.git
 このフォルダーは 2026-11-08 に OneDrive の外（`D:\claude-dev\missense-variant-report`）へ移した。
 OneDrive には同期されないので、履歴の保全は上のベアリポジトリへのプッシュ（`git push backup master`）で行う。
 **`.git` を OneDrive に同期させると競合で壊れることがある**ため、作業コピーを OneDrive に置かない。
-バックアップ先は C: とは別の物理ディスクに置いてある。
+リモート backup は 2 か所に同時にプッシュする。`D:\backup\missense-variant-report.git`（作業コピーと
+同じ内蔵ディスク）と `F:\backup\missense-variant-report.git`（USB 接続の外付け HDD。別の物理ディスク）。
+F: が外れているときはプッシュが F: の分だけ失敗するので、つないでから `git push backup master` をやり直す。
+復元はどちらのベアリポジトリからでもできる。
 
 ---
 
